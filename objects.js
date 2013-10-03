@@ -1026,6 +1026,11 @@ SpriteMorph.prototype.initBlocks = function () {
             spec: 'add %s to %l',
             defaults: [localize('thing')]
         },
+        doConcatToList : {
+            type: 'command',
+            category: 'lists',
+            spec: 'concatenate %l to %l',
+        },
         doDeleteFromList: {
             type: 'command',
             category: 'lists',
@@ -1846,6 +1851,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportListContainsItem'));
         blocks.push('-');
         blocks.push(block('doAddToList'));
+        blocks.push(block('doConcatToList'));
         blocks.push(block('doDeleteFromList'));
         blocks.push(block('doInsertInList'));
         blocks.push(block('doReplaceInList'));
@@ -1943,6 +1949,7 @@ SpriteMorph.prototype.freshPalette = function (category) {
                         'reportListLength',
                         'reportListContainsItem',
                         'doAddToList',
+                        'doConcatToList',
                         'doDeleteFromList',
                         'doInsertInList',
                         'doReplaceInList'
@@ -4477,6 +4484,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportListContainsItem'));
         blocks.push('-');
         blocks.push(block('doAddToList'));
+        blocks.push(block('doConcatToList'));
         blocks.push(block('doDeleteFromList'));
         blocks.push(block('doInsertInList'));
         blocks.push(block('doReplaceInList'));
