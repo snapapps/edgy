@@ -3686,11 +3686,56 @@ StageMorph.prototype.init = function (globals) {
     this.trailsCanvas = null;
     this.isThreadSafe = false;
 
+    this.G = jsnx.DiGraph();
+    this.G.add_nodes_from([1,2,3,4,5,[9,{color: '#008A00'}]], {color: '#0064C7'});
+    this.G.add_cycle([1,2,3,4,5]);
+    this.G.add_edges_from([[1,9], [9,1]]);
+
+    // Protect against double initialization if loading from save.
+    this.graphEl = d3.select('#graph-display');
+    if(this.graphEl.empty())
+    {
+        this.graphEl = d3.select(document.body)
+            .append('div')
+            .attr('id', 'graph-display')
+            .style('position', 'absolute');
+    }
+
     StageMorph.uber.init.call(this);
 
     this.acceptsDrops = false;
     this.setColor(new Color(255, 255, 255));
     this.fps = this.frameRate;
+
+    this.drawGraph();
+};
+
+StageMorph.prototype.changed = function() {
+    this.drawGraph();
+};
+
+StageMorph.prototype.drawGraph = function() {
+    this.updateGraphEl();
+
+    jsnx.draw(this.G, {
+        element: this.graphEl.node(),
+        with_labels: true,
+        node_style: {
+            fill: function(d) {
+                return d.data.color;
+            }
+        },
+        label_style: {fill: 'white' }
+    }, true);
+};
+
+StageMorph.prototype.updateGraphEl = function () {
+    this.graphEl.style({
+        top: this.top() + "px",
+        left: this.left() + "px",
+        width: this.width() + "px",
+        height: this.height() + "px"
+    });
 };
 
 // StageMorph scaling
