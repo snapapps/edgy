@@ -87,6 +87,16 @@ SpriteMorph.prototype.init = (function init (oldInit) {
 
 // Graph block bindings
 
+SpriteMorph.prototype.newGraph = function()
+{
+    this.G = jsnx.Graph();
+};
+
+SpriteMorph.prototype.newDiGraph = function()
+{
+    this.G = jsnx.DiGraph();
+};
+
 SpriteMorph.prototype.numberOfNodes = function () {
     return this.G.size();
 };
@@ -133,6 +143,16 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
 
     var blockName, graphBlocks = {
         // Graph
+        newGraph: {
+            type: 'command',
+            category: 'graph',
+            spec: 'new undirected graph',
+        },
+        newDiGraph: {
+            type: 'command',
+            category: 'graph',
+            spec: 'new directed graph',
+        },
         numberOfNodes: {
             type: 'reporter',
             category: 'graph',
@@ -200,6 +220,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         var blocks = [];
         if(category === 'graph')
         {
+            blocks.push(block('newGraph'));
+            blocks.push(block('newDiGraph'));
             blocks.push(block('numberOfNodes'));
             blocks.push(block('addNode'));
             blocks.push(block('removeNode'));
