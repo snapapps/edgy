@@ -96,8 +96,7 @@ StageMorph.prototype.changed = (function changed (oldChanged) {
     };
 }(StageMorph.prototype.changed));
 
-function placeholderGraph ()
-{
+function placeholderGraph () {
     var G = jsnx.DiGraph();
     G.add_nodes_from([1,2,3,4,5,[9,{color: '#008A00'}]], {color: '#0064C7'});
     G.add_cycle([1,2,3,4,5]);
@@ -120,13 +119,11 @@ SpriteMorph.prototype.init = (function init (oldInit) {
 
 // Graph block bindings
 
-SpriteMorph.prototype.newGraph = function()
-{
+SpriteMorph.prototype.newGraph = function() {
     this.G = jsnx.Graph();
 };
 
-SpriteMorph.prototype.newDiGraph = function()
-{
+SpriteMorph.prototype.newDiGraph = function() {
     this.G = jsnx.DiGraph();
 };
 
