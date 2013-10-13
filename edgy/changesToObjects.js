@@ -97,6 +97,10 @@ SpriteMorph.prototype.newDiGraph = function()
     this.G = jsnx.DiGraph();
 };
 
+SpriteMorph.prototype.setActiveGraph = function() {
+    setGraphToDisplay(this.G);
+};
+
 SpriteMorph.prototype.numberOfNodes = function () {
     return this.G.size();
 };
@@ -152,6 +156,11 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
             type: 'command',
             category: 'graph',
             spec: 'new directed graph',
+        },
+        setActiveGraph: {
+            type: 'command',
+            category: 'graph',
+            spec: 'display current graph'
         },
         numberOfNodes: {
             type: 'reporter',
@@ -222,6 +231,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         {
             blocks.push(block('newGraph'));
             blocks.push(block('newDiGraph'));
+            blocks.push(block('setActiveGraph'));
             blocks.push(block('numberOfNodes'));
             blocks.push(block('addNode'));
             blocks.push(block('removeNode'));
