@@ -10,6 +10,38 @@ var graphEl = d3.select(document.body)
     currentGraph = null, // The current JSNetworkX graph to display.
     layout = null; // The d3.layout instance controlling the graph display.
 
+graphEl.on("contextmenu", function() { d3.event.preventDefault(); })
+
+// We want to forward mouse events to the Snap! canvas.
+function forwardMouseEvent(e, target) {
+    var evtCopy;
+
+    if(target.ownerDocument.createEvent)
+    {
+        // For modern browsers.
+        evtCopy = target.ownerDocument.createEvent('MouseEvents');
+        evtCopy.initMouseEvent(e.type, e.bubbles, e.cancelable, e.view,
+            e.detail, e.pageX || e.layerX, e.pageY || e.layerY, e.clientX,
+            e.clientY, e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, e.button,
+            e.relatedTarget);
+        return !target.dispatchEvent(evtCopy);
+    }
+    else if (target.ownerDocument.createEventObject) {
+        // For IE.
+        evtCopy = target.ownerDocument.createEventObject(e);
+        return target.fireEvent('on' + e, evtCopy);
+    }
+}
+
+function mouseEventForwarder() {
+    forwardMouseEvent(d3.event, document.getElementById("world"));
+}
+
+graphEl.on("mousedown", mouseEventForwarder);
+graphEl.on("mouseup", mouseEventForwarder);
+graphEl.on("mousemove", mouseEventForwarder);
+
+
 function updateGraphDimensions(stage) {
     // console.log("resizing graph element to %dx%d", stage.width(), stage.height());
     graphEl.style({
@@ -38,7 +70,8 @@ function redrawGraph() {
                 return d.data.color;
             }
         },
-        label_style: {fill: 'white' }
+        label_style: {fill: 'white' },
+        pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
     }, true);
 }
 
