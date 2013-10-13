@@ -20,19 +20,17 @@
 		<script type="text/javascript" src="locale.js"></script>
 		<script type="text/javascript" src="cloud.js"></script>
 		<script type="text/javascript" src="sha512.js"></script>
+	</head>
+	<body style="margin: 0;">
+		<canvas id="world" tabindex="1" style="position: absolute;" />
+		<script type="text/javascript" src="edgy/changesToObjects.js"></script>
 		<script type="text/javascript">
-			var world;
-			window.onload = function () {
-				world = new WorldMorph(document.getElementById('world'));
-				new IDE_Morph().openIn(world);
-				setInterval(loop, 1);
-			};
+			var world = new WorldMorph(document.getElementById('world'));
+			new IDE_Morph().openIn(world);
+			setInterval(loop, 1);
 			function loop() {
 				world.doOneCycle();
 			}
 		</script>
-	</head>
-	<body style="margin: 0;">
-		<canvas id="world" tabindex="1" style="position: absolute;" />
     </body>
 </html>

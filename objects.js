@@ -155,7 +155,6 @@ SpriteMorph.uber = PenMorph.prototype;
 SpriteMorph.prototype.categories =
     [
         'motion',
-        'graph',
         'control',
         'looks',
         'sensing',
@@ -169,7 +168,6 @@ SpriteMorph.prototype.categories =
 
 SpriteMorph.prototype.blockColor = {
     motion : new Color(74, 108, 212),
-    graph : new Color(74, 108, 212),
     looks : new Color(143, 86, 227),
     sound : new Color(207, 74, 217),
     pen : new Color(0, 161, 120),
@@ -201,52 +199,6 @@ SpriteMorph.prototype.bubbleMaxTextWidth = 130;
 
 SpriteMorph.prototype.initBlocks = function () {
     SpriteMorph.prototype.blocks = {
-        // Graph
-        graph: {
-            type: 'reporter',
-            category: 'graph',
-            spec: 'the graph'
-        },
-        numberOfNodes: {
-            type: 'reporter',
-            category: 'graph',
-            spec: 'number of nodes in %l'
-        },
-        addNode: {
-            type: 'command',
-            category: 'graph',
-            spec: 'add node %s to %l'
-        },
-        removeNode: {
-            type: 'command',
-            category: 'graph',
-            spec: 'remove node %s from %l'
-        },
-        addEdge: {
-            type: 'command',
-            category: 'graph',
-            spec: 'add edge between %s and %s in %l'
-        },
-        removeEdge: {
-            type: 'command',
-            category: 'graph',
-            spec: 'remove edge between %s and %s in %l'
-        },
-        getNeighbors: {
-            type: 'reporter',
-            category: 'graph',
-            spec: 'neighbors of %s in %l'
-        },
-        setNodeAttrib: {
-            type: 'command',
-            category: 'graph',
-            spec: 'set attribute %s of node %s to %s in %l'
-        },
-        getNodeAttrib: {
-            type: 'reporter',
-            category: 'graph',
-            spec: 'attribute %s of node %s in %l'
-        },
 
         // Motion
         forward: {
@@ -1561,17 +1513,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         return menu;
     }
 
-    if (cat === 'graph') {
-        blocks.push(block('graph'));
-        blocks.push(block('numberOfNodes'));
-        blocks.push(block('addNode'));
-        blocks.push(block('removeNode'));
-        blocks.push(block('addEdge'));
-        blocks.push(block('removeEdge'));
-        blocks.push(block('getNeighbors'));
-        blocks.push(block('setNodeAttrib'));
-        blocks.push(block('getNodeAttrib'));
-    } else if (cat === 'motion') {
+    if (cat === 'motion') {
 
         blocks.push(block('forward'));
         blocks.push(block('turn'));
@@ -2804,52 +2746,6 @@ Morph.prototype.setPosition = function (aPoint, justMe) {
     }
 };
 
-SpriteMorph.prototype.graph = function () {
-    var stage = this.parentThatIsA(StageMorph);
-    return stage.G;
-};
-
-SpriteMorph.prototype.numberOfNodes = function (g) {
-    return g.size();
-};
-
-SpriteMorph.prototype.addNode = function(node, g) {
-    g.add_node(node);
-};
-
-SpriteMorph.prototype.removeNode = function(node, g) {
-    g.remove_node(node);
-};
-
-SpriteMorph.prototype.addEdge = function(a, b, g) {
-    g.add_edge(a, b);
-};
-
-SpriteMorph.prototype.removeEdge = function(a, b, g) {
-    g.remove_edge(a, b);
-};
-
-SpriteMorph.prototype.getNeighbors = function(node, g) {
-    return new List(g.neighbors(node));
-};
-
-SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val, g) {
-    if(g.has_node(node))
-    {
-        var data = {};
-        data[attrib] = val;
-        g.add_node(node, data);
-    }
-};
-
-SpriteMorph.prototype.getNodeAttrib = function(attrib, node, g) {
-    try {
-        return g.node.get(node)[attrib];
-    } catch(e) { // Do not die if we ask about a nonexistent node or attrib.
-        return null;
-    }
-};
-
 SpriteMorph.prototype.forward = function (steps) {
     var dest,
         dist = steps * this.parent.scale || 0;
@@ -3790,56 +3686,11 @@ StageMorph.prototype.init = function (globals) {
     this.trailsCanvas = null;
     this.isThreadSafe = false;
 
-    this.G = jsnx.DiGraph();
-    this.G.add_nodes_from([1,2,3,4,5,[9,{color: '#008A00'}]], {color: '#0064C7'});
-    this.G.add_cycle([1,2,3,4,5]);
-    this.G.add_edges_from([[1,9], [9,1]]);
-
-    // Protect against double initialization if loading from save.
-    this.graphEl = d3.select('#graph-display');
-    if(this.graphEl.empty())
-    {
-        this.graphEl = d3.select(document.body)
-            .append('div')
-            .attr('id', 'graph-display')
-            .style('position', 'absolute');
-    }
-
     StageMorph.uber.init.call(this);
 
     this.acceptsDrops = false;
     this.setColor(new Color(255, 255, 255));
     this.fps = this.frameRate;
-
-    this.drawGraph();
-};
-
-StageMorph.prototype.changed = function() {
-    this.drawGraph();
-};
-
-StageMorph.prototype.drawGraph = function() {
-    this.updateGraphEl();
-
-    jsnx.draw(this.G, {
-        element: this.graphEl.node(),
-        with_labels: true,
-        node_style: {
-            fill: function(d) {
-                return d.data.color;
-            }
-        },
-        label_style: {fill: 'white' }
-    }, true);
-};
-
-StageMorph.prototype.updateGraphEl = function () {
-    this.graphEl.style({
-        top: this.top() + "px",
-        left: this.left() + "px",
-        width: this.width() + "px",
-        height: this.height() + "px"
-    });
 };
 
 // StageMorph scaling
