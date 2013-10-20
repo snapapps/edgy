@@ -175,6 +175,57 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     }
 };
 
+function areDisjoint(a, b) {
+    var nodeName, nodes = b.nodes();
+    for (var i = 0; i < nodes.length; i++) {
+        if(a.has_node(nodes[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function addGraph(G, other) {
+    if(!areDisjoint(G, other)) {
+        throw new Error("The graphs are not disjoint.");
+    }
+    G.add_nodes_from(other.nodes());
+    G.add_edges_from(other.edges());
+}
+
+function renumberAndAdd(G, other, startNum) {
+    var relabeled = jsnx.relabel.relabel_nodes(other, function (n) { return n + startNum; });
+    addGraph(G, relabeled);
+}
+
+SpriteMorph.prototype.generateBalancedTree = function(r, h, n) {
+    var tree = jsnx.generators.classic.balanced_tree(r, h, new this.G.constructor());
+    renumberAndAdd(this.G, tree, n);
+};
+
+SpriteMorph.prototype.generateCycleGraph = function(l, n) {
+    var cycle = jsnx.generators.classic.cycle_graph(l, new this.G.constructor());
+    renumberAndAdd(this.G, cycle, n);
+};
+
+SpriteMorph.prototype.generateCompleteGraph = function(k, n) {
+    var complete = jsnx.generators.classic.complete_graph(k, new this.G.constructor());
+    renumberAndAdd(this.G, complete, n);
+};
+
+SpriteMorph.prototype.generatePathGraph = function(k, n) {
+    var path = jsnx.generators.classic.path_graph(k, new this.G.constructor());
+    renumberAndAdd(this.G, path, n);
+};
+
+SpriteMorph.prototype.generateGridGraph = function(w, h) {
+    var grid = jsnx.generators.classic.grid_2d_graph(w, h, false, new this.G.constructor());
+    // Grid graphs by default come with labels as [x, y], which blow up with
+    // the renderer for some reason. Stringify the labels instead.
+    grid = jsnx.relabel.relabel_nodes(grid, function(x) { return x.toString(); });
+    addGraph(this.G, grid);
+};
+
 (function() {
     SpriteMorph.prototype.categories.push('graph');
     SpriteMorph.prototype.blockColor.graph = new Color(74, 108, 212);
@@ -240,7 +291,32 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
             type: 'reporter',
             category: 'graph',
             spec: 'attribute %s of node %s'
-        }
+        },
+        generateBalancedTree: {
+            type: 'command',
+            category: 'graph',
+            spec: 'generate balanced tree of degree %n and height %n numbered from %n'
+        },
+        generateCycleGraph: {
+            type: 'command',
+            category: 'graph',
+            spec: 'generate cycle graph of length %n numbered from %n'
+        },
+        generateCompleteGraph: {
+            type: 'command',
+            category: 'graph',
+            spec: 'generate complete graph on %n vertices numbered from %n'
+        },
+        generatePathGraph: {
+            type: 'command',
+            category: 'graph',
+            spec: 'generate path graph of length %n numbered from %n'
+        },
+        generateGridGraph: {
+            type: 'command',
+            category: 'graph',
+            spec: 'generate a %n by %n 2D grid graph'
+        },
     };
 
     // Add the new blocks.
@@ -280,6 +356,11 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNeighbors'));
             blocks.push(block('setNodeAttrib'));
             blocks.push(block('getNodeAttrib'));
+            blocks.push(block('generateBalancedTree'));
+            blocks.push(block('generateCycleGraph'));
+            blocks.push(block('generateCompleteGraph'));
+            blocks.push(block('generatePathGraph'));
+            blocks.push(block('generateGridGraph'));
         }
         return blocks.concat(oldBlockTemplates.call(this, category));
     };
