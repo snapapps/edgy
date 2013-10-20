@@ -10,8 +10,6 @@ var graphEl = d3.select(document.body)
     currentGraph = null, // The current JSNetworkX graph to display.
     layout = null; // The d3.layout instance controlling the graph display.
 
-graphEl.on("contextmenu", function() { d3.event.preventDefault(); })
-
 // We want to forward mouse events to the Snap! canvas.
 function forwardMouseEvent(e, target) {
     var evtCopy;
@@ -40,6 +38,8 @@ function mouseEventForwarder() {
 graphEl.on("mousedown", mouseEventForwarder);
 graphEl.on("mouseup", mouseEventForwarder);
 graphEl.on("mousemove", mouseEventForwarder);
+// Prevent the browser's context menu from coming up.
+graphEl.on("contextmenu", function() { d3.event.preventDefault(); })
 
 
 function updateGraphDimensions(stage) {
