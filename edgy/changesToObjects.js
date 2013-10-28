@@ -240,6 +240,21 @@ SpriteMorph.prototype.getIncoming = function(node) {
     return new List(this.G.predecessors(node));
 };
 
+SpriteMorph.prototype.isConnected = function() {
+    if (this.G.is_directed()) {
+        throw new Error("Not allowed for directed graphs. Use 'is strongly/weakly connected.'");
+    }
+
+    if (this.G.size() == 0) {
+        return false;
+    }
+
+    var l = jsnx.single_source_shortest_path_length(this.G,
+        this.G.nodes_iter().next()).count();
+
+    return l == this.G.number_of_nodes();
+};
+
 function areDisjoint(a, b) {
     var nodeName, nodes = b.nodes();
     for (var i = 0; i < nodes.length; i++) {
@@ -407,6 +422,11 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
             category: 'graph',
             spec: 'incoming nodes of %s'
         },
+        isConnected: {
+            type: 'predicate',
+            category: 'graph',
+            spec: 'is connected'
+        },
         generateBalancedTree: {
             type: 'command',
             category: 'graph',
@@ -481,6 +501,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('hasEdge'));
             blocks.push(block('getOutgoing'));
             blocks.push(block('getIncoming'));
+            blocks.push(block('isConnected'));
             blocks.push(block('generateBalancedTree'));
             blocks.push(block('generateCycleGraph'));
             blocks.push(block('generateCompleteGraph'));
