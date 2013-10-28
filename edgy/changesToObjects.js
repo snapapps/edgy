@@ -191,6 +191,39 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, a, b) {
     }
 };
 
+SpriteMorph.prototype.getNodes = function() {
+    return new List(this.G.nodes());
+};
+
+
+SpriteMorph.prototype.getNodesWithAttr = function(attr, val) {
+    var nodes = [];
+    jsnx.forEach(this.G.nodes_iter(true), function (node) {
+        if (node[1][attr] === val) {
+            nodes.push(node[0]);
+        }
+    });
+    return new List(nodes);
+};
+
+SpriteMorph.prototype.getEdges = function() {
+    var edges = [];
+    jsnx.forEach(this.G.edges_iter(), function (edge) {
+        edges.push(new List(edge));
+    });
+    return new List(edges);
+};
+
+SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
+    var edges = [];
+    jsnx.forEach(this.G.edges_iter(), function (edge) {
+        if (edge[2][attr] === val) {
+            edges.push(new List(edge.slice(0, 3)));
+        }
+    });
+    return new List(edges);
+};
+
 function areDisjoint(a, b) {
     var nodeName, nodes = b.nodes();
     for (var i = 0; i < nodes.length; i++) {
@@ -318,6 +351,26 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
             category: 'graph',
             spec: 'attribute %s of edge %s , %s'
         },
+        getNodes: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'all the nodes'
+        },
+        getNodesWithAttr: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'nodes with attribute %s equal to %s'
+        },
+        getEdges: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'all the edges'
+        },
+        getEdgesWithAttr: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'edge with attribute %s equal to %s'
+        },
         generateBalancedTree: {
             type: 'command',
             category: 'graph',
@@ -384,6 +437,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNodeAttrib'));
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getEdgeAttrib'));
+            blocks.push(block('getNodes'));
+            blocks.push(block('getNodesWithAttr'));
+            blocks.push(block('getEdges'));
+            blocks.push(block('getEdgesWithAttr'));
             blocks.push(block('generateBalancedTree'));
             blocks.push(block('generateCycleGraph'));
             blocks.push(block('generateCompleteGraph'));
