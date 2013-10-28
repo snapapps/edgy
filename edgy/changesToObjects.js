@@ -175,6 +175,22 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     }
 };
 
+SpriteMorph.prototype.setEdgeAttrib = function(attrib, a, b, val) {
+    if(this.G.has_edge(a, b)) {
+        var data = {};
+        data[attrib] = val;
+        this.G.add_edge(a, b, data);
+    }
+};
+
+SpriteMorph.prototype.getEdgeAttrib = function(attrib, a, b) {
+    try {
+        return this.G.adj.get(a).get(b)[attrib];
+    } catch(e) { // Do not die if we ask about a nonexistent edge or attrib.
+        return null;
+    }
+};
+
 function areDisjoint(a, b) {
     var nodeName, nodes = b.nodes();
     for (var i = 0; i < nodes.length; i++) {
@@ -292,6 +308,16 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
             category: 'graph',
             spec: 'attribute %s of node %s'
         },
+        setEdgeAttrib: {
+            type: 'command',
+            category: 'graph',
+            spec: 'set attribute %s of edge %s , %s to %s'
+        },
+        getEdgeAttrib: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'attribute %s of edge %s , %s'
+        },
         generateBalancedTree: {
             type: 'command',
             category: 'graph',
@@ -356,6 +382,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNeighbors'));
             blocks.push(block('setNodeAttrib'));
             blocks.push(block('getNodeAttrib'));
+            blocks.push(block('setEdgeAttrib'));
+            blocks.push(block('getEdgeAttrib'));
             blocks.push(block('generateBalancedTree'));
             blocks.push(block('generateCycleGraph'));
             blocks.push(block('generateCompleteGraph'));
