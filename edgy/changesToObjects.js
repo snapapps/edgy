@@ -232,6 +232,14 @@ SpriteMorph.prototype.hasEdge = function(from, to) {
     return this.G.has_edge(from, to);
 };
 
+SpriteMorph.prototype.getOutgoing = function(node) {
+    return new List(this.G.successors(node));
+};
+
+SpriteMorph.prototype.getIncoming = function(node) {
+    return new List(this.G.predecessors(node));
+};
+
 function areDisjoint(a, b) {
     var nodeName, nodes = b.nodes();
     for (var i = 0; i < nodes.length; i++) {
@@ -389,6 +397,16 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
             category: 'graph',
             spec: 'edge from %s to %s exists'
         },
+        getOutgoing: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'outgoing nodes of %s'
+        },
+        getIncoming: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'incoming nodes of %s'
+        },
         generateBalancedTree: {
             type: 'command',
             category: 'graph',
@@ -461,6 +479,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getEdgesWithAttr'));
             blocks.push(block('hasNode'));
             blocks.push(block('hasEdge'));
+            blocks.push(block('getOutgoing'));
+            blocks.push(block('getIncoming'));
             blocks.push(block('generateBalancedTree'));
             blocks.push(block('generateCycleGraph'));
             blocks.push(block('generateCompleteGraph'));
