@@ -136,7 +136,7 @@ SpriteMorph.prototype.clearGraph = function() {
 };
 
 SpriteMorph.prototype.numberOfNodes = function () {
-    return this.G.size();
+    return this.G.number_of_nodes();
 };
 
 SpriteMorph.prototype.addNode = function(node) {
@@ -245,7 +245,7 @@ SpriteMorph.prototype.isConnected = function() {
         throw new Error("Not allowed for directed graphs. Use 'is strongly/weakly connected.'");
     }
 
-    if (this.G.size() == 0) {
+    if (this.G.number_of_nodes() == 0) {
         return false;
     }
 
@@ -260,7 +260,7 @@ SpriteMorph.prototype.isStronglyConnected = function() {
         throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
     }
 
-    if (this.G.size() == 0) {
+    if (this.G.number_of_nodes() == 0) {
         return false;
     }
 
@@ -283,7 +283,7 @@ SpriteMorph.prototype.isWeaklyConnected = function() {
         throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
     }
 
-    if (this.G.size() == 0) {
+    if (this.G.number_of_nodes() == 0) {
         return false;
     }
 
