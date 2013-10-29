@@ -575,4 +575,137 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
     };
 }(SpriteMorph.prototype.blockTemplates));
 
+// Merge source into target, possibly applying fn to (key, value) first.
+function mergeObjectIn(target, source, fn) {
+    var key;
+    for(key in source) {
+        if (source.hasOwnProperty(key)) {
+            if (fn === undefined) {
+                target[key] = source[key];
+            } else {
+                target[key] = fn(key, source[key]);
+            }
+        }
+    }
+}
+
+// Taken from http://stackoverflow.com/a/122190/126977
+function clone(obj){
+    if(obj == null || typeof(obj) != 'object')
+        return obj;
+
+    var temp = obj.constructor(); // changed
+
+    for(var key in obj)
+        temp[key] = clone(obj[key]);
+    return temp;
+}
+
+// Port of the functions in nx.readwrite.json_graph.node_link
+
+//    Copyright (C) 2011-2013 by
+//    Aric Hagberg <hagberg@lanl.gov>
+//    Dan Schult <dschult@colgate.edu>
+//    Pieter Swart <swart@lanl.gov>
+//    All rights reserved.
+//    BSD license.
+
+// Turn a graph into an object ready to be stringified to the NetworkX JSON
+// graph format.
+function graphToObject(G) {
+    var multigraph = G.is_multigraph();
+
+    var mapping = {};
+    var i = 0;
+    jsnx.forEach(G.nodes_iter(), function(node) {
+        mapping[node] = i++;
+    });
+
+    var data = {};
+    data.directed = G.is_directed();
+    data.multigraph = multigraph;
+    data.graph = [];
+    mergeObjectIn(data.graph, G.graph, function(k, v) { return [k, v]; });
+
+    data.nodes = [];
+    jsnx.forEach(G.nodes_iter(true), function(node) {
+        var d = {id: node[0]};
+        mergeObjectIn(d, node[1]);
+        delete d.__d3datum__; // Don't serialize the D3 gunk.
+        data.nodes.push(d);
+    });
+
+    if (multigraph) {
+        data.links = [];
+        jsnx.forEach(G.edges_iter(true, true), function(edge) {
+            var u = edge[0], v = edge[1], k = edge[2], d = edge[3],
+                link = {source: mapping[u], target: mapping[v], key: k};
+            mergeObjectIn(link, d);
+            data.links.push(link);
+        });
+    } else {
+        data.links = [];
+        jsnx.forEach(G.edges_iter(true, true), function(edge) {
+            var u = edge[0], v = edge[1], d = edge[3],
+                link = {source: mapping[u], target: mapping[v]};
+            mergeObjectIn(link, d);
+            data.links.push(link);
+        });
+    }
+
+    return data;
+}
+
+// Transform NetworkX-formatted object to JSNetworkX graph-like object.
+function objectToGraph (data) {
+    var multigraph = data.multigraph,
+        directed = data.directed,
+        mapping = [],
+        graph, d, node, nodedata, link_data, source, target, edgedata;
+
+    if(multigraph) {
+        graph = jsnx.MultiGraph();
+    } else {
+        graph = jsnx.Graph();
+    }
+
+    if(directed) {
+        graph = graph.to_directed();
+    }
+
+    if(data.graph) {
+        for (var i = 0; i < data.graph.length; i++) {
+            var k = data.graph[i], v = data.graph[i];
+            graph.graph[k] = v;
+        }
+    }
+
+    var c = 0;
+    for (var i = 0; i < data.nodes.length; i++) {
+        d = data.nodes[i];
+        if(d.id === undefined) {
+            node = c++;
+        } else {
+            node = d.id;
+        }
+        mapping.push(node);
+        nodedata = clone(d);
+        delete nodedata.id;
+        graph.add_node(node, nodedata);
+    }
+
+    for (var i = 0; i < data.links.length; i++) {
+        d = data.links[i];
+        link_data = clone(d);
+        source = link_data.source;
+        delete link_data.source;
+        target = link_data.target;
+        delete link_data.target;
+        edgedata = link_data;
+        graph.add_edge(mapping[source], mapping[target], edgedata);
+    }
+
+    return graph;
+}
+
 }());
