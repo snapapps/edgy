@@ -255,6 +255,57 @@ SpriteMorph.prototype.isConnected = function() {
     return l == this.G.number_of_nodes();
 };
 
+SpriteMorph.prototype.isStronglyConnected = function() {
+    if (!this.G.is_directed()) {
+        throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
+    }
+
+    if (this.G.size() == 0) {
+        return false;
+    }
+
+    var stack = [this.G.nodes_iter().next()];
+    var visited = new jsnx.contrib.Set();
+    while(stack.length > 0) {
+        var node = stack.pop();
+        visited.add(node);
+        jsnx.forEach(this.G.successors_iter(node), function(successor) {
+            if(!visited.has(successor)) {
+                stack.push(successor);
+            }
+        });
+    }
+    return visited.count() == this.G.number_of_nodes();
+};
+
+SpriteMorph.prototype.isWeaklyConnected = function() {
+    if (!this.G.is_directed()) {
+        throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
+    }
+
+    if (this.G.size() == 0) {
+        return false;
+    }
+
+    var stack = [this.G.nodes_iter().next()];
+    var visited = new jsnx.contrib.Set();
+    while(stack.length > 0) {
+        var node = stack.pop();
+        visited.add(node);
+        jsnx.forEach(this.G.successors_iter(node), function(successor) {
+            if(!visited.has(successor)) {
+                stack.push(successor);
+            }
+        });
+        jsnx.forEach(this.G.predecessors_iter(node), function(predecessor) {
+            if(!visited.has(predecessor)) {
+                stack.push(predecessor);
+            }
+        });
+    }
+    return visited.count() == this.G.number_of_nodes();
+};
+
 function areDisjoint(a, b) {
     var nodeName, nodes = b.nodes();
     for (var i = 0; i < nodes.length; i++) {
@@ -427,6 +478,16 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
             category: 'graph',
             spec: 'is connected'
         },
+        isStronglyConnected: {
+            type: 'predicate',
+            category: 'graph',
+            spec: 'is strongly connected'
+        },
+        isWeaklyConnected: {
+            type: 'predicate',
+            category: 'graph',
+            spec: 'is weakly connected'
+        },
         generateBalancedTree: {
             type: 'command',
             category: 'graph',
@@ -502,6 +563,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getOutgoing'));
             blocks.push(block('getIncoming'));
             blocks.push(block('isConnected'));
+            blocks.push(block('isStronglyConnected'));
+            blocks.push(block('isWeaklyConnected'));
             blocks.push(block('generateBalancedTree'));
             blocks.push(block('generateCycleGraph'));
             blocks.push(block('generateCompleteGraph'));
