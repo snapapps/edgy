@@ -592,6 +592,14 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
     };
 }(SpriteMorph.prototype.blockTemplates));
 
+SpriteMorph.prototype.graphToJSON = function() {
+    return JSON.stringify(graphToObject(this.G));
+};
+
+SpriteMorph.prototype.graphFromJSON = function(json) {
+    this.G = objectToGraph(JSON.parse(json));
+};
+
 // Merge source into target, possibly applying fn to (key, value) first.
 function mergeObjectIn(target, source, fn) {
     var key;
