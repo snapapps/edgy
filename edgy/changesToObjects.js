@@ -357,6 +357,17 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
     addGraph(this.G, grid);
 };
 
+SpriteMorph.prototype.loadGraphFromURL = function(url) {
+    var request = new XMLHttpRequest();
+    request.open('GET', url, false);
+    request.send(null);
+    if (request.status === 200) {
+        addGraph(this.G, objectToGraph(JSON.parse(request.responseText)));
+    } else {
+        throw new Error("Could not load URL: " + request.statusText);
+    }
+};
+
 (function() {
     SpriteMorph.prototype.categories.push('graph');
     SpriteMorph.prototype.blockColor.graph = new Color(74, 108, 212);
@@ -513,6 +524,11 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
             category: 'graph',
             spec: 'generate a %n by %n 2D grid graph'
         },
+        loadGraphFromURL: {
+            type: 'command',
+            category: 'graph',
+            spec: 'load graph from URL: %s'
+        },
     };
 
     // Add the new blocks.
@@ -570,6 +586,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('generateCompleteGraph'));
             blocks.push(block('generatePathGraph'));
             blocks.push(block('generateGridGraph'));
+            blocks.push(block('loadGraphFromURL'));
         }
         return blocks.concat(oldBlockTemplates.call(this, category));
     };
