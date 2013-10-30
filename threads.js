@@ -1215,6 +1215,12 @@ Process.prototype.doAddToList = function (element, list) {
     list.add(element);
 };
 
+Process.prototype.doConcatToList = function (l, list) {
+    list.becomeArray();
+    l.becomeArray();
+    list.contents = list.contents.concat(l.contents);
+};
+
 Process.prototype.doDeleteFromList = function (index, list) {
     var idx = index;
     if (this.inputOption(index) === 'all') {

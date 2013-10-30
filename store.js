@@ -1396,6 +1396,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
             '<variables>%</variables>' +
             '<blocks>%</blocks>' +
             '<scripts>%</scripts>' +
+            '<graph>%</graph>' +
             '</sprite>',
         this.name,
         idx,
@@ -1431,7 +1432,8 @@ SpriteMorph.prototype.toXML = function (serializer) {
         serializer.store(this.variables),
         !this.customBlocks ?
                     '' : serializer.store(this.customBlocks),
-        serializer.store(this.scripts)
+        serializer.store(this.scripts),
+        serializer.escape(this.graphToJSON())
     );
 };
 
