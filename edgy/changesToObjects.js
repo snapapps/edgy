@@ -67,10 +67,22 @@ function redrawGraph() {
         with_labels: true,
         node_style: {
             fill: function(d) {
-                return d.data.color;
+                return d.data.color || "white";
             }
         },
-        label_style: {fill: 'white' },
+        edge_style: {
+            fill: function(d) {
+                return d.data.color || "black";
+            }
+        },
+        label_style: {fill: 'black' },
+        labels: function(d) {
+            if(d.data.label !== undefined) {
+                return d.data.label;
+            } else {
+                return d.node.toString();
+            }
+        },
         pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
     }, true);
 }
