@@ -368,6 +368,10 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
     }
 };
 
+SpriteMorph.prototype.topologicalSort = function() {
+    return new List(jsnx.algorithms.dag.topological_sort(this.G));
+};
+
 (function() {
     SpriteMorph.prototype.categories.push('graph');
     SpriteMorph.prototype.blockColor.graph = new Color(74, 108, 212);
@@ -529,6 +533,11 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
             category: 'graph',
             spec: 'load graph from URL: %s'
         },
+        topologicalSort: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'topological sort'
+        }
     };
 
     // Add the new blocks.
@@ -587,6 +596,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('generatePathGraph'));
             blocks.push(block('generateGridGraph'));
             blocks.push(block('loadGraphFromURL'));
+            blocks.push(block('topologicalSort'));
         }
         return blocks.concat(oldBlockTemplates.call(this, category));
     };
