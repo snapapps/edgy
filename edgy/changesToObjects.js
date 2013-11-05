@@ -320,8 +320,11 @@ function addGraph(G, other) {
     if(!areDisjoint(G, other)) {
         throw new Error("The graphs are not disjoint.");
     }
+    // HACK: for some reason, JSNetworkX throws an exception if I try adding
+    // the nodes along with their attributes in a single pass.
     G.add_nodes_from(other.nodes());
-    G.add_edges_from(other.edges());
+    G.add_nodes_from(other.nodes(true));
+    G.add_edges_from(other.edges(null, true));
 }
 
 function renumberAndAdd(G, other, startNum) {
