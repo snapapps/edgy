@@ -168,10 +168,13 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
 };
 
 SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
-    try {
-        return this.G.node.get(node)[attrib];
-    } catch(e) { // Do not die if we ask about a nonexistent node or attrib.
-        return null;
+    var val = this.G.node.get(node)[attrib];
+    // Can't return undefined, since it is special to Snap, and will cause an
+    // infinite loop.
+    if(val === undefined) {
+        throw new Error("Undefined attribute " + attrib.toString());
+    } else {
+        return val;
     }
 };
 
@@ -184,10 +187,13 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, a, b, val) {
 };
 
 SpriteMorph.prototype.getEdgeAttrib = function(attrib, a, b) {
-    try {
-        return this.G.adj.get(a).get(b)[attrib];
-    } catch(e) { // Do not die if we ask about a nonexistent edge or attrib.
-        return null;
+    var val = his.G.adj.get(a).get(b)[attrib];
+    // Can't return undefined, since it is special to Snap, and will cause an
+    // infinite loop.
+    if(val === undefined) {
+        throw new Error("Undefined attribute " + attrib.toString());
+    } else {
+        return val;
     }
 };
 
