@@ -67,10 +67,22 @@ function redrawGraph() {
         with_labels: true,
         node_style: {
             fill: function(d) {
-                return d.data.color;
+                return d.data.color || "white";
             }
         },
-        label_style: {fill: 'white' },
+        edge_style: {
+            fill: function(d) {
+                return d.data.color || "black";
+            }
+        },
+        label_style: {fill: 'black' },
+        labels: function(d) {
+            if(d.data.label !== undefined) {
+                return d.data.label;
+            } else {
+                return d.node.toString();
+            }
+        },
         pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
     }, true);
 }
@@ -168,10 +180,13 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
 };
 
 SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
-    try {
-        return this.G.node.get(node)[attrib];
-    } catch(e) { // Do not die if we ask about a nonexistent node or attrib.
-        return null;
+    var val = this.G.node.get(node)[attrib];
+    // Can't return undefined, since it is special to Snap, and will cause an
+    // infinite loop.
+    if(val === undefined) {
+        throw new Error("Undefined attribute " + attrib.toString());
+    } else {
+        return val;
     }
 };
 
@@ -184,10 +199,13 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, a, b, val) {
 };
 
 SpriteMorph.prototype.getEdgeAttrib = function(attrib, a, b) {
-    try {
-        return this.G.adj.get(a).get(b)[attrib];
-    } catch(e) { // Do not die if we ask about a nonexistent edge or attrib.
-        return null;
+    var val = his.G.adj.get(a).get(b)[attrib];
+    // Can't return undefined, since it is special to Snap, and will cause an
+    // infinite loop.
+    if(val === undefined) {
+        throw new Error("Undefined attribute " + attrib.toString());
+    } else {
+        return val;
     }
 };
 
@@ -320,8 +338,11 @@ function addGraph(G, other) {
     if(!areDisjoint(G, other)) {
         throw new Error("The graphs are not disjoint.");
     }
+    // HACK: for some reason, JSNetworkX throws an exception if I try adding
+    // the nodes along with their attributes in a single pass.
     G.add_nodes_from(other.nodes());
-    G.add_edges_from(other.edges());
+    G.add_nodes_from(other.nodes(true));
+    G.add_edges_from(other.edges(null, true));
 }
 
 function renumberAndAdd(G, other, startNum) {
@@ -366,6 +387,10 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
     } else {
         throw new Error("Could not load URL: " + request.statusText);
     }
+};
+
+SpriteMorph.prototype.topologicalSort = function() {
+    return new List(jsnx.algorithms.dag.topological_sort(this.G));
 };
 
 (function() {
@@ -529,6 +554,11 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
             category: 'graph',
             spec: 'load graph from URL: %s'
         },
+        topologicalSort: {
+            type: 'reporter',
+            category: 'graph',
+            spec: 'topological sort'
+        }
     };
 
     // Add the new blocks.
@@ -587,6 +617,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('generatePathGraph'));
             blocks.push(block('generateGridGraph'));
             blocks.push(block('loadGraphFromURL'));
+            blocks.push(block('topologicalSort'));
         }
         return blocks.concat(oldBlockTemplates.call(this, category));
     };
