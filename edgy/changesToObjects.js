@@ -123,8 +123,11 @@ SpriteMorph.prototype.init = (function init (oldInit) {
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
         }
+        var retval = oldInit.call(this, globals);
 
-        return oldInit.call(this, globals);
+        this.hide();
+
+        return retval;
     };
 }(SpriteMorph.prototype.init));
 
