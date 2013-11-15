@@ -397,6 +397,7 @@ SpriteMorph.prototype.topologicalSort = function() {
 };
 
 (function() {
+    delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('graph');
     SpriteMorph.prototype.blockColor.graph = new Color(74, 108, 212);
 
