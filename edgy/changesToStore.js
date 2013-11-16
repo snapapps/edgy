@@ -13,6 +13,16 @@ SnapSerializer.prototype.loadObject = (function loadObject (oldLoadObject) {
                 object.graphFromJSON(child.contents);
                 graphLoaded = true;
             }
+            if (child.tag == 'nodeattrs') {
+                child.children.forEach(function (attr) {
+                    object.nodeAttributes.push(attr.attributes.name);
+                });
+            }
+            if (child.tag == 'edgeattrs') {
+                child.children.forEach(function (attr) {
+                    object.edgeAttributes.push(attr.attributes.name);
+                });
+            }
         });
         if(graphLoaded) {
             object.setActiveGraph();

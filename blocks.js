@@ -1057,6 +1057,24 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
             );
             part.isStatic = true;
             break;
+        case '%nodeAttr':
+            part = new InputSlotMorph(
+                null,
+                false,
+                'getNodeAttrsDict',
+                true
+            );
+            part.isStatic = true;
+            break;
+        case '%edgeAttr':
+            part = new InputSlotMorph(
+                null,
+                false,
+                'getEdgeAttrsDict',
+                true
+            );
+            part.isStatic = true;
+            break;
         case '%lst':
             part = new InputSlotMorph(
                 null,

@@ -1348,6 +1348,8 @@ StageMorph.prototype.toXML = function (serializer) {
             '<variables>%</variables>' +
             '<blocks>%</blocks>' +
             '<scripts>%</scripts><sprites>%</sprites>' +
+            '<nodeattrs>%</nodeattrs>' +
+            '<edgeattrs>%</edgeattrs>' +
             '</stage>' +
             '<hidden>$</hidden>' +
             '<headers>%</headers>' +
@@ -1373,6 +1375,8 @@ StageMorph.prototype.toXML = function (serializer) {
         serializer.store(this.customBlocks),
         serializer.store(this.scripts),
         serializer.store(this.children),
+        serializer.store(this.nodeAttributes),
+        serializer.store(this.edgeAttributes),
         Object.keys(StageMorph.prototype.hiddenPrimitives).reduce(
                 function (a, b) {return a + ' ' + b; },
                 ''
@@ -1404,6 +1408,8 @@ SpriteMorph.prototype.toXML = function (serializer) {
             '<blocks>%</blocks>' +
             '<scripts>%</scripts>' +
             '<graph>%</graph>' +
+            '<nodeattrs>%</nodeattrs>' +
+            '<edgeattrs>%</edgeattrs>' +
             '</sprite>',
         this.name,
         idx,
@@ -1440,7 +1446,9 @@ SpriteMorph.prototype.toXML = function (serializer) {
         !this.customBlocks ?
                     '' : serializer.store(this.customBlocks),
         serializer.store(this.scripts),
-        serializer.escape(this.graphToJSON())
+        serializer.escape(this.graphToJSON()),
+        serializer.store(this.nodeAttributes),
+        serializer.store(this.edgeAttributes)
     );
 };
 
