@@ -1407,7 +1407,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
             '<variables>%</variables>' +
             '<blocks>%</blocks>' +
             '<scripts>%</scripts>' +
-            '<graph>%</graph>' +
+            '<graph>@</graph>' +
             '<nodeattrs>%</nodeattrs>' +
             '<edgeattrs>%</edgeattrs>' +
             '</sprite>',
@@ -1446,7 +1446,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
         !this.customBlocks ?
                     '' : serializer.store(this.customBlocks),
         serializer.store(this.scripts),
-        serializer.escape(this.graphToJSON()),
+        this.graphToJSON(),
         serializer.store(this.nodeAttributes),
         serializer.store(this.edgeAttributes)
     );
