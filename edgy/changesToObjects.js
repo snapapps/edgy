@@ -327,6 +327,10 @@ SpriteMorph.prototype.isWeaklyConnected = function() {
     return visited.count() == this.G.number_of_nodes();
 };
 
+SpriteMorph.prototype.isEmpty = function() {
+    return this.G.number_of_nodes() == 0;
+};
+
 function areDisjoint(a, b) {
     var nodeName, nodes = b.nodes();
     for (var i = 0; i < nodes.length; i++) {
@@ -515,6 +519,11 @@ SpriteMorph.prototype.topologicalSort = function() {
             category: 'nodes+edges',
             spec: 'incoming nodes of %s'
         },
+        isEmpty: {
+            type: 'predicate',
+            category: 'network',
+            spec: 'is empty'
+        },
         isConnected: {
             type: 'predicate',
             category: 'network',
@@ -603,6 +612,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
             blocks.push('-');
+            blocks.push(block('isEmpty'));
             blocks.push(block('hasNode'));
             blocks.push(block('hasEdge'));
             blocks.push(block('isConnected'));
