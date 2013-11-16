@@ -711,7 +711,7 @@ SnapSerializer.prototype.loadCustomBlocks = function (
     // private
     var myself = this;
     element.children.forEach(function (child) {
-        var definition, names, inputs, header, code, comment, i;
+        var definition, names, inputs, header, code, comment, password, salt, i;
         if (child.tag !== 'block-definition') {
             return;
         }
@@ -763,6 +763,13 @@ SnapSerializer.prototype.loadCustomBlocks = function (
         comment = child.childNamed('comment');
         if (comment) {
             definition.comment = myself.loadComment(comment);
+        }
+
+        password = child.childNamed('password');
+        salt = child.childNamed('salt');
+        if (password && salt && password.contents && salt.contents) {
+            definition.password = password.contents;
+            definition.salt = salt.contents;
         }
     });
 };
@@ -1654,6 +1661,8 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
             '<header>@</header>' +
             '<code>@</code>' +
             '<inputs>%</inputs>%%' +
+            '<password>@</password>' +
+            '<salt>@</salt>' +
             '</block-definition>',
         this.spec,
         this.type,
@@ -1671,7 +1680,9 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
         this.body ? serializer.store(this.body.expression) : '',
         this.scripts.length > 0 ?
                     '<scripts>' + encodeScripts(this.scripts) + '</scripts>'
-                        : ''
+                        : '',
+        this.password,
+        this.salt
     );
 };
 
