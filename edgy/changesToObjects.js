@@ -399,7 +399,9 @@ SpriteMorph.prototype.topologicalSort = function() {
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('graph');
+    SpriteMorph.prototype.categories.push('nodes+edges');
     SpriteMorph.prototype.blockColor.graph = new Color(74, 108, 212);
+    SpriteMorph.prototype.blockColor['nodes+edges'] = new Color(215, 0, 64);
 
     var blockName, graphBlocks = {
         // Graph
@@ -430,47 +432,47 @@ SpriteMorph.prototype.topologicalSort = function() {
         },
         addNode: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'add node %s'
         },
         removeNode: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'remove node %s'
         },
         addEdge: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'add edge between %s and %s'
         },
         removeEdge: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'remove edge between %s and %s'
         },
         getNeighbors: {
             type: 'reporter',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'neighbors of %s'
         },
         setNodeAttrib: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'set attribute %s of node %s to %s'
         },
         getNodeAttrib: {
             type: 'reporter',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'attribute %s of node %s'
         },
         setEdgeAttrib: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'set attribute %s of edge %s , %s to %s'
         },
         getEdgeAttrib: {
             type: 'reporter',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'attribute %s of edge %s , %s'
         },
         getNodes: {
@@ -495,22 +497,22 @@ SpriteMorph.prototype.topologicalSort = function() {
         },
         hasNode: {
             type: 'predicate',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'node %s exists'
         },
         hasEdge: {
             type: 'predicate',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'edge from %s to %s exists'
         },
         getOutgoing: {
             type: 'reporter',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'outgoing nodes of %s'
         },
         getIncoming: {
             type: 'reporter',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'incoming nodes of %s'
         },
         isConnected: {
@@ -595,23 +597,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
             blocks.push(block('numberOfNodes'));
-            blocks.push(block('addNode'));
-            blocks.push(block('removeNode'));
-            blocks.push(block('addEdge'));
-            blocks.push(block('removeEdge'));
-            blocks.push(block('getNeighbors'));
-            blocks.push(block('setNodeAttrib'));
-            blocks.push(block('getNodeAttrib'));
-            blocks.push(block('setEdgeAttrib'));
-            blocks.push(block('getEdgeAttrib'));
             blocks.push(block('getNodes'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdges'));
             blocks.push(block('getEdgesWithAttr'));
-            blocks.push(block('hasNode'));
-            blocks.push(block('hasEdge'));
-            blocks.push(block('getOutgoing'));
-            blocks.push(block('getIncoming'));
             blocks.push(block('isConnected'));
             blocks.push(block('isStronglyConnected'));
             blocks.push(block('isWeaklyConnected'));
@@ -622,6 +611,20 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('generateGridGraph'));
             blocks.push(block('loadGraphFromURL'));
             blocks.push(block('topologicalSort'));
+        } else if(category === 'nodes+edges') {
+            blocks.push(block('addNode'));
+            blocks.push(block('removeNode'));
+            blocks.push(block('addEdge'));
+            blocks.push(block('removeEdge'));
+            blocks.push(block('getNeighbors'));
+            blocks.push(block('setNodeAttrib'));
+            blocks.push(block('getNodeAttrib'));
+            blocks.push(block('setEdgeAttrib'));
+            blocks.push(block('getEdgeAttrib'));
+            blocks.push(block('hasNode'));
+            blocks.push(block('hasEdge'));
+            blocks.push(block('getOutgoing'));
+            blocks.push(block('getIncoming'));
         }
         return blocks.concat(oldBlockTemplates.call(this, category));
     };
