@@ -493,7 +493,7 @@ SpriteMorph.prototype.topologicalSort = function() {
         getEdgesWithAttr: {
             type: 'reporter',
             category: 'graph',
-            spec: 'edge with attribute %s equal to %s'
+            spec: 'edges with attribute %s equal to %s'
         },
         hasNode: {
             type: 'predicate',
