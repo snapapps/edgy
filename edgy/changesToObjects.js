@@ -398,36 +398,36 @@ SpriteMorph.prototype.topologicalSort = function() {
 
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
-    SpriteMorph.prototype.categories.push('graph');
+    SpriteMorph.prototype.categories.push('network');
     SpriteMorph.prototype.categories.push('nodes+edges');
-    SpriteMorph.prototype.blockColor.graph = new Color(74, 108, 212);
+    SpriteMorph.prototype.blockColor.network = new Color(74, 108, 212);
     SpriteMorph.prototype.blockColor['nodes+edges'] = new Color(215, 0, 64);
 
-    var blockName, graphBlocks = {
-        // Graph
+    var blockName, networkBlocks = {
+        // Network
         newGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'new undirected graph',
         },
         newDiGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'new directed graph',
         },
         setActiveGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'display current graph'
         },
         clearGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'clear graph'
         },
         numberOfNodes: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'number of nodes'
         },
         addNode: {
@@ -477,32 +477,32 @@ SpriteMorph.prototype.topologicalSort = function() {
         },
         getNodes: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'all the nodes'
         },
         getNodesWithAttr: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'nodes with attribute %s equal to %s'
         },
         getEdges: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'all the edges'
         },
         getEdgesWithAttr: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'edges with attribute %s equal to %s'
         },
         hasNode: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'node %s exists'
         },
         hasEdge: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'edge from %s to %s exists'
         },
         getOutgoing: {
@@ -517,60 +517,60 @@ SpriteMorph.prototype.topologicalSort = function() {
         },
         isConnected: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'is connected'
         },
         isStronglyConnected: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'is strongly connected'
         },
         isWeaklyConnected: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'is weakly connected'
         },
         generateBalancedTree: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate balanced tree of degree %n and height %n numbered from %n'
         },
         generateCycleGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate cycle graph of length %n numbered from %n'
         },
         generateCompleteGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate complete graph on %n vertices numbered from %n'
         },
         generatePathGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate path graph of length %n numbered from %n'
         },
         generateGridGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate a %n by %n 2D grid graph'
         },
         loadGraphFromURL: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'load graph from URL: %s'
         },
         topologicalSort: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'topological sort'
         }
     };
 
     // Add the new blocks.
-    for (blockName in graphBlocks) {
-        if(graphBlocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = graphBlocks[blockName];
+    for (blockName in networkBlocks) {
+        if(networkBlocks.hasOwnProperty(blockName)) {
+            SpriteMorph.prototype.blocks[blockName] = networkBlocks[blockName];
         }
     }
 }());
@@ -590,7 +590,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         }
 
         var blocks = [];
-        if(category === 'graph')
+        if(category === 'network')
         {
             blocks.push(block('newGraph'));
             blocks.push(block('newDiGraph'));
