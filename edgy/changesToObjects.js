@@ -116,6 +116,25 @@ function placeholderGraph () {
     return G;
 }
 
+function serializeAttributes(serializer) {
+    return this.reduce(function (result, name) {
+        var val = serializer.format('<attribute name="@"/>', name);
+        return result + val;
+    }, '');
+}
+
+StageMorph.prototype.init = (function init (oldInit) {
+    return function (globals)
+    {
+        this.nodeAttributes = [];
+        this.nodeAttributes.toXML = serializeAttributes;
+        this.edgeAttributes = [];
+        this.edgeAttributes.toXML = serializeAttributes;
+        return oldInit.call(this, globals);
+    };
+}(StageMorph.prototype.init));
+
+
 SpriteMorph.prototype.init = (function init (oldInit) {
     return function (globals)
     {
@@ -123,8 +142,15 @@ SpriteMorph.prototype.init = (function init (oldInit) {
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
         }
+        this.nodeAttributes = [];
+        this.nodeAttributes.toXML = serializeAttributes;
+        this.edgeAttributes = [];
+        this.edgeAttributes.toXML = serializeAttributes;
+        var retval = oldInit.call(this, globals);
 
-        return oldInit.call(this, globals);
+        this.hide();
+
+        return retval;
     };
 }(SpriteMorph.prototype.init));
 
@@ -324,6 +350,10 @@ SpriteMorph.prototype.isWeaklyConnected = function() {
     return visited.count() == this.G.number_of_nodes();
 };
 
+SpriteMorph.prototype.isEmpty = function() {
+    return this.G.number_of_nodes() == 0;
+};
+
 function areDisjoint(a, b) {
     var nodeName, nodes = b.nodes();
     for (var i = 0; i < nodes.length; i++) {
@@ -394,181 +424,291 @@ SpriteMorph.prototype.topologicalSort = function() {
 };
 
 (function() {
-    SpriteMorph.prototype.categories.push('graph');
-    SpriteMorph.prototype.blockColor.graph = new Color(74, 108, 212);
+    delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
+    SpriteMorph.prototype.categories.push('network');
+    SpriteMorph.prototype.categories.push('nodes+edges');
+    SpriteMorph.prototype.blockColor.network = new Color(74, 108, 212);
+    SpriteMorph.prototype.blockColor['nodes+edges'] = new Color(215, 0, 64);
 
-    var blockName, graphBlocks = {
-        // Graph
+    var blockName, networkBlocks = {
+        // Network
         newGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'new undirected graph',
         },
         newDiGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'new directed graph',
         },
         setActiveGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'display current graph'
         },
         clearGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'clear graph'
         },
         numberOfNodes: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'number of nodes'
         },
         addNode: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'add node %s'
         },
         removeNode: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'remove node %s'
         },
         addEdge: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'add edge between %s and %s'
         },
         removeEdge: {
             type: 'command',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'remove edge between %s and %s'
         },
         getNeighbors: {
             type: 'reporter',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'neighbors of %s'
         },
         setNodeAttrib: {
             type: 'command',
-            category: 'graph',
-            spec: 'set attribute %s of node %s to %s'
+            category: 'nodes+edges',
+            spec: 'set attribute %nodeAttr of node %s to %s'
         },
         getNodeAttrib: {
             type: 'reporter',
-            category: 'graph',
-            spec: 'attribute %s of node %s'
+            category: 'nodes+edges',
+            spec: 'attribute %nodeAttr of node %s'
         },
         setEdgeAttrib: {
             type: 'command',
-            category: 'graph',
-            spec: 'set attribute %s of edge %s , %s to %s'
+            category: 'nodes+edges',
+            spec: 'set attribute %edgeAttr of edge %s , %s to %s'
         },
         getEdgeAttrib: {
             type: 'reporter',
-            category: 'graph',
-            spec: 'attribute %s of edge %s , %s'
+            category: 'nodes+edges',
+            spec: 'attribute %edgeAttr of edge %s , %s'
         },
         getNodes: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'all the nodes'
         },
         getNodesWithAttr: {
             type: 'reporter',
-            category: 'graph',
-            spec: 'nodes with attribute %s equal to %s'
+            category: 'network',
+            spec: 'nodes with attribute %nodeAttr equal to %s'
         },
         getEdges: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'all the edges'
         },
         getEdgesWithAttr: {
             type: 'reporter',
-            category: 'graph',
-            spec: 'edge with attribute %s equal to %s'
+            category: 'network',
+            spec: 'edges with attribute %edgeAttr equal to %s'
         },
         hasNode: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'node %s exists'
         },
         hasEdge: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'edge from %s to %s exists'
         },
         getOutgoing: {
             type: 'reporter',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'outgoing nodes of %s'
         },
         getIncoming: {
             type: 'reporter',
-            category: 'graph',
+            category: 'nodes+edges',
             spec: 'incoming nodes of %s'
+        },
+        isEmpty: {
+            type: 'predicate',
+            category: 'network',
+            spec: 'is empty'
         },
         isConnected: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'is connected'
         },
         isStronglyConnected: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'is strongly connected'
         },
         isWeaklyConnected: {
             type: 'predicate',
-            category: 'graph',
+            category: 'network',
             spec: 'is weakly connected'
         },
         generateBalancedTree: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate balanced tree of degree %n and height %n numbered from %n'
         },
         generateCycleGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate cycle graph of length %n numbered from %n'
         },
         generateCompleteGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate complete graph on %n vertices numbered from %n'
         },
         generatePathGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate path graph of length %n numbered from %n'
         },
         generateGridGraph: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'generate a %n by %n 2D grid graph'
         },
         loadGraphFromURL: {
             type: 'command',
-            category: 'graph',
+            category: 'network',
             spec: 'load graph from URL: %s'
         },
         topologicalSort: {
             type: 'reporter',
-            category: 'graph',
+            category: 'network',
             spec: 'topological sort'
         }
     };
 
     // Add the new blocks.
-    for (blockName in graphBlocks) {
-        if(graphBlocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = graphBlocks[blockName];
+    for (blockName in networkBlocks) {
+        if(networkBlocks.hasOwnProperty(blockName)) {
+            SpriteMorph.prototype.blocks[blockName] = networkBlocks[blockName];
         }
     }
 }());
 
+function allNodeAttributes(morph) {
+    return morph.parentThatIsA(StageMorph).nodeAttributes.concat(morph.nodeAttributes);
+}
+
+function addNodeAttribute(morph, name, global) {
+    var attrs;
+    if(global) {
+        attrs = morph.parentThatIsA(StageMorph).nodeAttributes
+    } else {
+        attrs = morph.nodeAttributes;
+    }
+
+    if(allNodeAttributes(morph).indexOf(name) === -1) {
+        attrs.push(name);
+        return true;
+    }
+
+    return false;
+}
+
+function deleteNodeAttribute(morph, name) {
+    var idx = morph.parentThatIsA(StageMorph).nodeAttributes.indexOf(name);
+    if(idx > -1) {
+        morph.parentThatIsA(StageMorph).nodeAttributes.splice(idx, 1);
+        return true;
+    }
+    idx = morph.nodeAttributes.indexOf(name);
+    if(idx > -1) {
+        morph.nodeAttributes.splice(idx, 1)
+        return true;
+    }
+    return false;
+}
+
+InputSlotMorph.prototype.getNodeAttrsDict = function () {
+    var block = this.parentThatIsA(BlockMorph),
+        sprite,
+        dict = {'color': 'color', 'label': 'label'};
+
+    if (!block) {
+        return dict;
+    }
+    sprite = block.receiver();
+
+    allNodeAttributes(sprite).forEach(function (name) {
+        dict[name] = name;
+    });
+
+    return dict;
+};
+
+function allEdgeAttributes(morph) {
+    return morph.parentThatIsA(StageMorph).edgeAttributes.concat(morph.edgeAttributes);
+}
+
+function addEdgeAttribute(morph, name, global) {
+    var attrs;
+    if(global) {
+        attrs = morph.parentThatIsA(StageMorph).edgeAttributes
+    } else {
+        attrs = morph.edgeAttributes;
+    }
+
+    if(allEdgeAttributes(morph).indexOf(name) === -1) {
+        attrs.push(name);
+        return true;
+    }
+
+    return false;
+}
+
+function deleteEdgeAttribute(morph, name) {
+    var idx = morph.parentThatIsA(StageMorph).edgeAttributes.indexOf(name);
+    if(idx > -1) {
+        morph.parentThatIsA(StageMorph).edgeAttributes.splice(idx, 1);
+        return true;
+    }
+    idx = morph.edgeAttributes.indexOf(name);
+    if(idx > -1) {
+        morph.edgeAttributes.splice(idx, 1)
+        return true;
+    }
+    return false;
+}
+
+
+InputSlotMorph.prototype.getEdgeAttrsDict = function () {
+    var block = this.parentThatIsA(BlockMorph),
+        sprite,
+        dict = {'color': 'color', 'label': 'label'};
+
+    if (!block) {
+        return dict;
+    }
+    sprite = block.receiver();
+
+    allEdgeAttributes(sprite).forEach(function (name) {
+        dict[name] = name;
+    });
+
+    return dict;
+};
 
 SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplates) {
     return function (category)
@@ -583,41 +723,152 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             return newBlock;
         }
 
-        var blocks = [];
-        if(category === 'graph')
+        var blocks = [], button, myself = this;
+        if(category === 'network')
         {
             blocks.push(block('newGraph'));
             blocks.push(block('newDiGraph'));
             blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
+            blocks.push('-');
             blocks.push(block('numberOfNodes'));
-            blocks.push(block('addNode'));
-            blocks.push(block('removeNode'));
-            blocks.push(block('addEdge'));
-            blocks.push(block('removeEdge'));
-            blocks.push(block('getNeighbors'));
-            blocks.push(block('setNodeAttrib'));
-            blocks.push(block('getNodeAttrib'));
-            blocks.push(block('setEdgeAttrib'));
-            blocks.push(block('getEdgeAttrib'));
             blocks.push(block('getNodes'));
-            blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdges'));
+            blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
+            blocks.push('-');
+            blocks.push(block('isEmpty'));
             blocks.push(block('hasNode'));
             blocks.push(block('hasEdge'));
-            blocks.push(block('getOutgoing'));
-            blocks.push(block('getIncoming'));
             blocks.push(block('isConnected'));
             blocks.push(block('isStronglyConnected'));
             blocks.push(block('isWeaklyConnected'));
+            blocks.push('-');
+            blocks.push(block('topologicalSort'));
+            blocks.push('-');
+            blocks.push(block('loadGraphFromURL'));
+            blocks.push('-');
             blocks.push(block('generateBalancedTree'));
             blocks.push(block('generateCycleGraph'));
             blocks.push(block('generateCompleteGraph'));
             blocks.push(block('generatePathGraph'));
             blocks.push(block('generateGridGraph'));
-            blocks.push(block('loadGraphFromURL'));
-            blocks.push(block('topologicalSort'));
+        } else if(category === 'nodes+edges') {
+            // Node attributes.
+            button = new PushButtonMorph(
+                null,
+                function () {
+                    new VariableDialogMorph(
+                        null,
+                        function (pair) {
+                            if (addNodeAttribute(myself, pair[0], pair[1])) {
+                                myself.blocksCache[category] = null;
+                                myself.paletteCache[category] = null;
+                                myself.parentThatIsA(IDE_Morph).refreshPalette();
+                            }
+                        },
+                        myself
+                    ).prompt(
+                        'Attribute name',
+                        null,
+                        myself.world()
+                    );
+                },
+                'Make a node attribute'
+            );
+            blocks.push(button);
+
+            if (allNodeAttributes(this).length > 0) {
+                button = new PushButtonMorph(
+                    null,
+                    function () {
+                        var menu = new MenuMorph(
+                            function(attr) {
+                                if(deleteNodeAttribute(myself, attr)) {
+                                    myself.blocksCache[category] = null;
+                                    myself.paletteCache[category] = null;
+                                    myself.parentThatIsA(IDE_Morph).refreshPalette();
+                                }
+                            },
+                            null,
+                            myself
+                        );
+                        allNodeAttributes(myself).forEach(function (name) {
+                            menu.addItem(name, name);
+                        });
+                        menu.popUpAtHand(myself.world());
+                    },
+                    'Delete a node attribute'
+                );
+                blocks.push(button);
+            }
+
+            blocks.push('-');
+
+            // Edge attributes.
+            button = new PushButtonMorph(
+                null,
+                function () {
+                    new VariableDialogMorph(
+                        null,
+                        function (pair) {
+                            if (addEdgeAttribute(myself, pair[0], pair[1])) {
+                                myself.blocksCache[category] = null;
+                                myself.paletteCache[category] = null;
+                                myself.parentThatIsA(IDE_Morph).refreshPalette();
+                            }
+                        },
+                        myself
+                    ).prompt(
+                        'Attribute name',
+                        null,
+                        myself.world()
+                    );
+                },
+                'Make an edge attribute'
+            );
+            blocks.push(button);
+
+            if (allEdgeAttributes(this).length > 0) {
+                button = new PushButtonMorph(
+                    null,
+                    function () {
+                        var menu = new MenuMorph(
+                            function(attr) {
+                                if(deleteEdgeAttribute(myself, attr)) {
+                                    myself.blocksCache[category] = null;
+                                    myself.paletteCache[category] = null;
+                                    myself.parentThatIsA(IDE_Morph).refreshPalette();
+                                }
+                            },
+                            null,
+                            myself
+                        );
+                        allEdgeAttributes(myself).forEach(function (name) {
+                            menu.addItem(name, name);
+                        });
+                        menu.popUpAtHand(myself.world());
+                    },
+                    'Delete an edge attribute'
+                );
+                blocks.push(button);
+            }
+
+            blocks.push('-');
+
+            blocks.push(block('addNode'));
+            blocks.push(block('addEdge'));
+            blocks.push(block('removeNode'));
+            blocks.push(block('removeEdge'));
+            blocks.push('-');
+            blocks.push(block('setNodeAttrib'));
+            blocks.push(block('setEdgeAttrib'));
+            blocks.push(block('getNodeAttrib'));
+            blocks.push(block('getEdgeAttrib'));
+            blocks.push('-');
+            blocks.push(block('getNeighbors'));
+            blocks.push(block('getOutgoing'));
+            blocks.push(block('getIncoming'));
         }
         return blocks.concat(oldBlockTemplates.call(this, category));
     };
@@ -628,7 +879,24 @@ SpriteMorph.prototype.graphToJSON = function() {
 };
 
 SpriteMorph.prototype.graphFromJSON = function(json) {
+    var myself = this;
     this.G = objectToGraph(JSON.parse(json));
+    jsnx.forEach(this.G.nodes_iter(true), function (node) {
+        var data = node[1], k;
+        for (k in data) {
+            if (data.hasOwnProperty(k) && k !== 'color' && k !== 'label') {
+                addNodeAttribute(myself, k, false);
+            }
+        }
+    });
+    jsnx.forEach(this.G.edges_iter(true), function (edge) {
+        var data = edge[2], k;
+        for (k in data) {
+            if (data.hasOwnProperty(k) && k !== 'color' && k !== 'label') {
+                addEdgeAttribute(myself, k, false);
+            }
+        }
+    });
 };
 
 // Merge source into target, possibly applying fn to (key, value) first.

@@ -711,7 +711,7 @@ SnapSerializer.prototype.loadCustomBlocks = function (
     // private
     var myself = this;
     element.children.forEach(function (child) {
-        var definition, names, inputs, header, code, comment, i;
+        var definition, names, inputs, header, code, comment, password, salt, i;
         if (child.tag !== 'block-definition') {
             return;
         }
@@ -763,6 +763,13 @@ SnapSerializer.prototype.loadCustomBlocks = function (
         comment = child.childNamed('comment');
         if (comment) {
             definition.comment = myself.loadComment(comment);
+        }
+
+        password = child.childNamed('password');
+        salt = child.childNamed('salt');
+        if (password && salt && password.contents && salt.contents) {
+            definition.password = password.contents;
+            definition.salt = salt.contents;
         }
     });
 };
@@ -1341,6 +1348,8 @@ StageMorph.prototype.toXML = function (serializer) {
             '<variables>%</variables>' +
             '<blocks>%</blocks>' +
             '<scripts>%</scripts><sprites>%</sprites>' +
+            '<nodeattrs>%</nodeattrs>' +
+            '<edgeattrs>%</edgeattrs>' +
             '</stage>' +
             '<hidden>$</hidden>' +
             '<headers>%</headers>' +
@@ -1366,6 +1375,8 @@ StageMorph.prototype.toXML = function (serializer) {
         serializer.store(this.customBlocks),
         serializer.store(this.scripts),
         serializer.store(this.children),
+        serializer.store(this.nodeAttributes),
+        serializer.store(this.edgeAttributes),
         Object.keys(StageMorph.prototype.hiddenPrimitives).reduce(
                 function (a, b) {return a + ' ' + b; },
                 ''
@@ -1397,6 +1408,8 @@ SpriteMorph.prototype.toXML = function (serializer) {
             '<blocks>%</blocks>' +
             '<scripts>%</scripts>' +
             '<graph>%</graph>' +
+            '<nodeattrs>%</nodeattrs>' +
+            '<edgeattrs>%</edgeattrs>' +
             '</sprite>',
         this.name,
         idx,
@@ -1433,7 +1446,9 @@ SpriteMorph.prototype.toXML = function (serializer) {
         !this.customBlocks ?
                     '' : serializer.store(this.customBlocks),
         serializer.store(this.scripts),
-        serializer.escape(this.graphToJSON())
+        serializer.escape(this.graphToJSON()),
+        serializer.store(this.nodeAttributes),
+        serializer.store(this.edgeAttributes)
     );
 };
 
@@ -1654,6 +1669,8 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
             '<header>@</header>' +
             '<code>@</code>' +
             '<inputs>%</inputs>%%' +
+            '<password>@</password>' +
+            '<salt>@</salt>' +
             '</block-definition>',
         this.spec,
         this.type,
@@ -1671,7 +1688,9 @@ CustomBlockDefinition.prototype.toXML = function (serializer) {
         this.body ? serializer.store(this.body.expression) : '',
         this.scripts.length > 0 ?
                     '<scripts>' + encodeScripts(this.scripts) + '</scripts>'
-                        : ''
+                        : '',
+        this.password,
+        this.salt
     );
 };
 

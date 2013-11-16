@@ -557,6 +557,12 @@ CustomCommandBlockMorph.prototype.mouseClickLeft = function () {
     this.edit();
 };
 
+function hashPassword(password, salt) {
+    // SHA-512 is *not* a good way of hashing passwords, but key
+    // derivation functions are painfully slow in JavaScript.
+    return hex_sha512(salt + password);
+}
+
 CustomCommandBlockMorph.prototype.edit = function () {
     var myself = this, block, hat;
 
@@ -583,7 +589,26 @@ CustomCommandBlockMorph.prototype.edit = function () {
             myself.isInUse()
         );
     } else {
-        new BlockEditorMorph(this.definition, this.receiver()).popUp();
+        if (this.definition.password !== undefined) {
+            new DialogBoxMorph(null, function receivePassword(password) {
+                if(myself.definition.password === hashPassword(password,
+                    myself.definition.salt)) {
+                    new BlockEditorMorph(myself.definition, myself.receiver()).popUp();
+                } else {
+                    new DialogBoxMorph(null, receivePassword).prompt(
+                        'Invalid password', '',
+                        myself.world(),
+                        new TextMorph('Invalid password.\nEnter correct '
+                            + 'password to view how this block works.'));
+                }
+            }).prompt(
+                'Password protected block', '',
+                this.world(),
+                new TextMorph('Enter password to view how this block works.')
+            );
+        } else {
+            new BlockEditorMorph(this.definition, this.receiver()).popUp();
+        }
     }
 };
 
@@ -1552,6 +1577,7 @@ BlockEditorMorph.prototype.init = function (definition, target) {
     this.addButton('ok', 'OK');
     this.addButton('updateDefinition', 'Apply');
     this.addButton('cancel', 'Cancel');
+    this.addButton('protect', 'Protect');
 
     this.setExtent(new Point(375, 300));
     this.fixLayout();
@@ -1646,6 +1672,26 @@ BlockEditorMorph.prototype.close = function () {
     }
 
     this.destroy();
+};
+
+BlockEditorMorph.prototype.protect = function ()
+{
+    var myself = this;
+    console.log(this.definition);
+    new DialogBoxMorph(null, function (password) {
+        if(password) {
+            myself.definition.salt = (new Date()).toString();
+            myself.definition.password = hashPassword(password, myself.definition.salt);
+        } else {
+            delete myself.definition.salt;
+            delete myself.definition.password;
+        }
+    }).prompt(
+        'Password protect block', '',
+        this.world(),
+        new TextMorph('Enter a password to protect this block\'s contents ' +
+        'from being viewed/edited.\nLeave blank to remove any existing ' +
+        'password.'));
 };
 
 BlockEditorMorph.prototype.consolidateDoubles = function () {
