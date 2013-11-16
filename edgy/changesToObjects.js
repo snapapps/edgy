@@ -497,12 +497,12 @@ SpriteMorph.prototype.topologicalSort = function() {
         },
         hasNode: {
             type: 'predicate',
-            category: 'nodes+edges',
+            category: 'graph',
             spec: 'node %s exists'
         },
         hasEdge: {
             type: 'predicate',
-            category: 'nodes+edges',
+            category: 'graph',
             spec: 'edge from %s to %s exists'
         },
         getOutgoing: {
@@ -603,6 +603,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
             blocks.push('-');
+            blocks.push(block('hasNode'));
+            blocks.push(block('hasEdge'));
             blocks.push(block('isConnected'));
             blocks.push(block('isStronglyConnected'));
             blocks.push(block('isWeaklyConnected'));
@@ -626,9 +628,6 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getNodeAttrib'));
             blocks.push(block('getEdgeAttrib'));
-            blocks.push('-');
-            blocks.push(block('hasNode'));
-            blocks.push(block('hasEdge'));
             blocks.push('-');
             blocks.push(block('getNeighbors'));
             blocks.push(block('getOutgoing'));
