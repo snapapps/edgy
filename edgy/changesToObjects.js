@@ -181,17 +181,16 @@ SpriteMorph.prototype.numberOfEdges = function () {
     return this.G.number_of_edges();
 };
 
-SpriteMorph.prototype.addNode = function(node) {
-    this.G.add_node(node);
+SpriteMorph.prototype.addNode = function(nodes) {
+    this.G.add_nodes_from(nodes.asArray());
 };
 
 SpriteMorph.prototype.removeNode = function(node) {
     this.G.remove_node(node);
 };
 
-SpriteMorph.prototype.addEdge = function(edge) {
-    var a = edge.at(1), b = edge.at(2);
-    this.G.add_edge(a, b);
+SpriteMorph.prototype.addEdge = function(edges) {
+    this.G.add_edges_from(edges.asArray().map(function(x) { return x.asArray(); }));
 };
 
 SpriteMorph.prototype.removeEdge = function(edge) {
@@ -487,7 +486,7 @@ SpriteMorph.prototype.topologicalSort = function() {
         addNode: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'add node %s'
+            spec: 'add node %exp'
         },
         removeNode: {
             type: 'command',
@@ -497,7 +496,7 @@ SpriteMorph.prototype.topologicalSort = function() {
         addEdge: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'add edge %l'
+            spec: 'add edge %expL'
         },
         removeEdge: {
             type: 'command',
