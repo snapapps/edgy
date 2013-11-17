@@ -154,11 +154,6 @@ SpriteMorph.prototype.init = (function init (oldInit) {
     };
 }(SpriteMorph.prototype.init));
 
-// http://stackoverflow.com/a/1830844/126977
-function isNumeric(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
 function parseNode(node) {
     if(isNumeric(node)) {
         return parseFloat(node, 10);

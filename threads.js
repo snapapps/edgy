@@ -91,6 +91,11 @@ var Context;
 var VariableFrame;
 var UpvarReference;
 
+// http://stackoverflow.com/a/1830844/126977
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
 function snapEquals(a, b) {
     if (a instanceof List || (b instanceof List)) {
         if (a instanceof List && (b instanceof List)) {
@@ -98,12 +103,14 @@ function snapEquals(a, b) {
         }
         return false;
     }
-    var x = parseFloat(a),
-        y = parseFloat(b);
-    if (isNaN(x) || isNaN(y)) {
-        x = a;
+
+    var x = a,
         y = b;
+    if(isNumeric(a) && isNumeric(b)) {
+        a = parseFloat(a);
+        b = parseFloat(b);
     }
+
     if (isString(x) && isString(y)) {
         return x.toLowerCase() === y.toLowerCase();
     }
