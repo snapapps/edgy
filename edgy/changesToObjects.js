@@ -185,11 +185,13 @@ SpriteMorph.prototype.removeNode = function(node) {
     this.G.remove_node(node);
 };
 
-SpriteMorph.prototype.addEdge = function(a, b) {
+SpriteMorph.prototype.addEdge = function(edge) {
+    var a = edge.at(1), b = edge.at(2);
     this.G.add_edge(a, b);
 };
 
-SpriteMorph.prototype.removeEdge = function(a, b) {
+SpriteMorph.prototype.removeEdge = function(edge) {
+    var a = edge.at(1), b = edge.at(2);
     this.G.remove_edge(a, b);
 };
 
@@ -216,7 +218,8 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     }
 };
 
-SpriteMorph.prototype.setEdgeAttrib = function(attrib, a, b, val) {
+SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
+    var a = edge.at(1), b = edge.at(2);
     if(this.G.has_edge(a, b)) {
         var data = {};
         data[attrib] = val;
@@ -224,8 +227,10 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, a, b, val) {
     }
 };
 
-SpriteMorph.prototype.getEdgeAttrib = function(attrib, a, b) {
-    var val = his.G.adj.get(a).get(b)[attrib];
+SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
+    var a = edge.at(1),
+        b = edge.at(2),
+        val = this.G.adj.get(a).get(b)[attrib];
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
     if(val === undefined) {
@@ -272,7 +277,8 @@ SpriteMorph.prototype.hasNode = function(node) {
     return this.G.has_node(node);
 };
 
-SpriteMorph.prototype.hasEdge = function(from, to) {
+SpriteMorph.prototype.hasEdge = function(edge) {
+    var from = edge.at(1), to = edge.at(2);
     return this.G.has_edge(from, to);
 };
 
@@ -282,6 +288,18 @@ SpriteMorph.prototype.getOutgoing = function(node) {
 
 SpriteMorph.prototype.getIncoming = function(node) {
     return new List(this.G.predecessors(node));
+};
+
+SpriteMorph.prototype.getNeighborEdges = function(node) {
+    return new List(this.G.edges([node]).map(function(x) { return new List(x); }));
+};
+
+SpriteMorph.prototype.getOutgoingEdges = function(node) {
+    return new List(this.G.out_edges([node]).map(function(x) { return new List(x); }));
+};
+
+SpriteMorph.prototype.getIncomingEdges = function(node) {
+    return new List(this.G.in_edges([node]).map(function(x) { return new List(x); }));
 };
 
 SpriteMorph.prototype.isConnected = function() {
@@ -470,12 +488,12 @@ SpriteMorph.prototype.topologicalSort = function() {
         addEdge: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'add edge between %s and %s'
+            spec: 'add edge %l'
         },
         removeEdge: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'remove edge between %s and %s'
+            spec: 'remove edge %l'
         },
         getNeighbors: {
             type: 'reporter',
@@ -495,12 +513,12 @@ SpriteMorph.prototype.topologicalSort = function() {
         setEdgeAttrib: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'set %edgeAttr of edge %s , %s to %s'
+            spec: 'set %edgeAttr of edge %l to %s'
         },
         getEdgeAttrib: {
             type: 'reporter',
             category: 'nodes+edges',
-            spec: '%edgeAttr of edge %s , %s'
+            spec: '%edgeAttr of edge %l'
         },
         getNodes: {
             type: 'reporter',
@@ -530,7 +548,7 @@ SpriteMorph.prototype.topologicalSort = function() {
         hasEdge: {
             type: 'predicate',
             category: 'network',
-            spec: 'edge from %s to %s exists'
+            spec: 'edge %l exists'
         },
         getOutgoing: {
             type: 'reporter',
@@ -541,6 +559,21 @@ SpriteMorph.prototype.topologicalSort = function() {
             type: 'reporter',
             category: 'nodes+edges',
             spec: 'incoming nodes of %s'
+        },
+        getNeighborEdges: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'edges of %s'
+        },
+        getOutgoingEdges: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'outgoing edges of %s'
+        },
+        getIncomingEdges: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'incoming edges of %s'
         },
         isEmpty: {
             type: 'predicate',
@@ -869,6 +902,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNeighbors'));
             blocks.push(block('getOutgoing'));
             blocks.push(block('getIncoming'));
+            blocks.push('-');
+            blocks.push(block('getNeighborEdges'));
+            blocks.push(block('getOutgoingEdges'));
+            blocks.push(block('getIncomingEdges'));
         }
         return blocks.concat(oldBlockTemplates.call(this, category));
     };
