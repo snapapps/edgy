@@ -485,22 +485,22 @@ SpriteMorph.prototype.topologicalSort = function() {
         setNodeAttrib: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'set attribute %nodeAttr of node %s to %s'
+            spec: 'set %nodeAttr of node %s to %s'
         },
         getNodeAttrib: {
             type: 'reporter',
             category: 'nodes+edges',
-            spec: 'attribute %nodeAttr of node %s'
+            spec: '%nodeAttr of node %s'
         },
         setEdgeAttrib: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'set attribute %edgeAttr of edge %s , %s to %s'
+            spec: 'set %edgeAttr of edge %s , %s to %s'
         },
         getEdgeAttrib: {
             type: 'reporter',
             category: 'nodes+edges',
-            spec: 'attribute %edgeAttr of edge %s , %s'
+            spec: '%edgeAttr of edge %s , %s'
         },
         getNodes: {
             type: 'reporter',
@@ -510,7 +510,7 @@ SpriteMorph.prototype.topologicalSort = function() {
         getNodesWithAttr: {
             type: 'reporter',
             category: 'network',
-            spec: 'nodes with attribute %nodeAttr equal to %s'
+            spec: 'nodes with %nodeAttr equal to %s'
         },
         getEdges: {
             type: 'reporter',
@@ -520,7 +520,7 @@ SpriteMorph.prototype.topologicalSort = function() {
         getEdgesWithAttr: {
             type: 'reporter',
             category: 'network',
-            spec: 'edges with attribute %edgeAttr equal to %s'
+            spec: 'edges with %edgeAttr equal to %s'
         },
         hasNode: {
             type: 'predicate',
