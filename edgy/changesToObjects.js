@@ -177,6 +177,10 @@ SpriteMorph.prototype.numberOfNodes = function () {
     return this.G.number_of_nodes();
 };
 
+SpriteMorph.prototype.numberOfEdges = function () {
+    return this.G.number_of_edges();
+};
+
 SpriteMorph.prototype.addNode = function(node) {
     this.G.add_node(node);
 };
@@ -475,6 +479,11 @@ SpriteMorph.prototype.topologicalSort = function() {
             category: 'network',
             spec: 'number of nodes'
         },
+        numberOfEdges: {
+            type: 'reporter',
+            category: 'network',
+            spec: 'number of edges'
+        },
         addNode: {
             type: 'command',
             category: 'nodes+edges',
@@ -765,8 +774,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setActiveGraph'));
             blocks.push('-');
             blocks.push(block('numberOfNodes'));
+            blocks.push(block('numberOfEdges'));
             blocks.push(block('getNodes'));
             blocks.push(block('getEdges'));
+            blocks.push('-');
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
             blocks.push('-');
