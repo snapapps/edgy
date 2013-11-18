@@ -102,6 +102,7 @@ function redrawGraph() {
     layout = jsnx.draw(currentGraph, {
         element: graphEl.node(),
         with_labels: true,
+        with_edge_labels: true,
         layout_attr: {
             linkDistance: 70
         },
@@ -122,6 +123,14 @@ function redrawGraph() {
                 return d.data.label.toString();
             } else {
                 return d.node.toString();
+            }
+        },
+        edge_label_style: {fill: 'black' },
+        edge_labels: function(d) {
+            if(d.data.label !== undefined) {
+                return d.data.label.toString();
+            } else {
+                return '';
             }
         },
         pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
@@ -317,6 +326,17 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
         var data = {};
         data[attrib] = val;
         this.G.add_edge(a, b, data);
+
+        // HACK: work around JSNetworkX bug with not updating labels.
+        if(attrib === "label" && currentGraph === this.G) {
+            var edges = graphEl.selectAll(".edge");
+            edges.each(function(d, i) {
+                if(d.edge[0] === a && d.edge[1] === b) {
+                    var textEl = d3.select(edges[0][i]).select("text");
+                    textEl.node().textContent = val.toString();
+                }
+            });
+        }
     }
 };
 
