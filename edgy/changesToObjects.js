@@ -6,6 +6,7 @@
 
 var graphEl = d3.select(document.body)
         .append('div')
+        .attr('id', 'graph-display')
         .style('position', 'absolute'),
     currentGraph = null, // The current JSNetworkX graph to display.
     layout = null; // The d3.layout instance controlling the graph display.
@@ -39,8 +40,75 @@ graphEl.on("mousedown", mouseEventForwarder);
 graphEl.on("mouseup", mouseEventForwarder);
 graphEl.on("mousemove", mouseEventForwarder);
 // Prevent the browser's context menu from coming up.
-graphEl.on("contextmenu", function() { d3.event.preventDefault(); })
+graphEl.on("contextmenu", function() { d3.event.preventDefault(); });
 
+// Monitor for new nodes and edges, and attach event handlers appropriately.
+graphEl.on("DOMNodeInserted", function() {
+    var node = d3.select(d3.event.relatedNode);
+    if(node.classed("node")) {
+        node.on("mouseup", function() {
+            if(d3.event.button === 2)
+            {
+                var menu = new MenuMorph(this);
+
+                d3.event.preventDefault();
+                d3.event.stopPropagation();
+
+                menu.addItem('delete', function () {
+                    var d = node.datum();
+                    d.G.remove_node(d.node);
+                });
+                menu.addItem('set label', function () {
+                    new DialogBoxMorph(null, function (label) {
+                        var d = node.datum();
+                        d.G.node.get(d.node).label = label;
+                        node.select("text").node().textContent = label;
+                    }).prompt('Node label', '', world);
+                    world.worldCanvas.focus();
+                });
+                menu.addItem('set color', function () {
+                    new DialogBoxMorph(null, function (color) {
+                        var d = node.datum();
+                        d.G.add_node(d.node, {color: color});
+                    }).prompt('Node color', '', world);
+                    world.worldCanvas.focus();
+                });
+                menu.popUpAtHand(world);
+            }
+        });
+    } else if(node.classed("edge")) {
+        node.on("mouseup", function() {
+            if(d3.event.button === 2)
+            {
+                var menu = new MenuMorph(this);
+
+                d3.event.preventDefault();
+                d3.event.stopPropagation();
+
+                menu.addItem('delete', function () {
+                    var d = node.datum();
+                    d.G.remove_edges_from([d.edge]);
+                });
+                menu.addItem('set label', function () {
+                    new DialogBoxMorph(null, function (label) {
+                        var d = node.datum();
+                        d.G.adj.get(d.edge[0]).get(d.edge[1]).label = label;
+                        node.select("text").node().textContent = label;
+                    }).prompt('Edge label', '', world);
+                    world.worldCanvas.focus();
+                });
+                menu.addItem('set color', function () {
+                    new DialogBoxMorph(null, function (color) {
+                        var d = node.datum();
+                        d.G.add_edge(d.edge[0], d.edge[1], {color: color});
+                    }).prompt('Edge color', '', world);
+                    world.worldCanvas.focus();
+                });
+                menu.popUpAtHand(world);
+            }
+        });
+    }
+});
 
 function updateGraphDimensions(stage) {
     // console.log("resizing graph element to %dx%d", stage.width(), stage.height());
@@ -65,6 +133,10 @@ function redrawGraph() {
     layout = jsnx.draw(currentGraph, {
         element: graphEl.node(),
         with_labels: true,
+        with_edge_labels: true,
+        layout_attr: {
+            linkDistance: 70
+        },
         node_style: {
             fill: function(d) {
                 return d.data.color || "white";
@@ -73,14 +145,23 @@ function redrawGraph() {
         edge_style: {
             fill: function(d) {
                 return d.data.color || "black";
-            }
+            },
+            'stroke-width': 8
         },
         label_style: {fill: 'black' },
         labels: function(d) {
             if(d.data.label !== undefined) {
-                return d.data.label;
+                return d.data.label.toString();
             } else {
                 return d.node.toString();
+            }
+        },
+        edge_label_style: {fill: 'black' },
+        edge_labels: function(d) {
+            if(d.data.label !== undefined) {
+                return d.data.label.toString();
+            } else {
+                return '';
             }
         },
         pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
@@ -107,6 +188,35 @@ StageMorph.prototype.changed = (function changed (oldChanged) {
         return result;
     };
 }(StageMorph.prototype.changed));
+
+StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
+    return function ()
+    {
+        var ide = this.parentThatIsA(IDE_Morph),
+            menu = new MenuMorph(this),
+            myself = this,
+            world = this.world();
+
+        menu.addItem("add node", function () {
+            new DialogBoxMorph(null, function (name) {
+                currentGraph.add_node(parseNode(name));
+            }).prompt('Node name', '', world);
+            world.worldCanvas.focus();
+        });
+
+        menu.addItem("add edge", function () {
+            new DialogBoxMorph(null, function (start) {
+                new DialogBoxMorph(null, function (end) {
+                    currentGraph.add_edge(parseNode(start), parseNode(end));
+                }).prompt('End node', '', world);
+                world.worldCanvas.focus();
+            }).prompt('Start node', '', world);
+            world.worldCanvas.focus();
+        });
+
+        return menu;
+    };
+}(StageMorph.prototype.userMenu));
 
 function placeholderGraph () {
     var G = jsnx.DiGraph();
@@ -215,6 +325,17 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         var data = {};
         data[attrib] = val;
         this.G.add_node(node, data);
+
+        // HACK: work around JSNetworkX bug with not updating labels.
+        if(attrib === "label" && currentGraph === this.G) {
+            var nodes = graphEl.selectAll(".node");
+            nodes.each(function(d, i) {
+                if(d.node === node) {
+                    var textEl = d3.select(nodes[0][i]).select("text");
+                    textEl.node().textContent = val.toString();
+                }
+            });
+        }
     }
 };
 
@@ -236,6 +357,17 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
         var data = {};
         data[attrib] = val;
         this.G.add_edge(a, b, data);
+
+        // HACK: work around JSNetworkX bug with not updating labels.
+        if(attrib === "label" && currentGraph === this.G) {
+            var edges = graphEl.selectAll(".edge");
+            edges.each(function(d, i) {
+                if(d.edge[0] === a && d.edge[1] === b) {
+                    var textEl = d3.select(edges[0][i]).select("text");
+                    textEl.node().textContent = val.toString();
+                }
+            });
+        }
     }
 };
 
@@ -453,6 +585,10 @@ SpriteMorph.prototype.topologicalSort = function() {
     return new List(jsnx.algorithms.dag.topological_sort(this.G));
 };
 
+SpriteMorph.prototype.reportEdge = function(a, b) {
+    return new List([a, b]);
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('network');
@@ -646,6 +782,11 @@ SpriteMorph.prototype.topologicalSort = function() {
             type: 'reporter',
             category: 'network',
             spec: 'topological sort'
+        },
+        reportEdge: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'edge %s %s'
         }
     };
 
@@ -908,6 +1049,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
 
             blocks.push('-');
 
+            blocks.push(block('reportEdge'));
+            blocks.push('-');
             blocks.push(block('addNode'));
             blocks.push(block('addEdge'));
             blocks.push(block('removeNode'));

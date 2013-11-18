@@ -2262,6 +2262,12 @@ IDE_Morph.prototype.projectMenu = function () {
             'experimental - store this project\nin your downloads folder',
             new Color(100, 0, 0)
         );
+        menu.addItem(
+            'Export to HTML',
+            'exportToHTML',
+            'experimental - save as self-contained HTML',
+            new Color(100, 0, 0)
+        )
     }
     menu.addItem('Save As...', 'saveProjectsBrowser');
     menu.addLine();
@@ -2632,14 +2638,15 @@ IDE_Morph.prototype.rawSaveProject = function (name) {
     }
 };
 
-IDE_Morph.prototype.saveProjectToDisk = function () {
+IDE_Morph.prototype.saveProjectToDisk = function (plain) {
     var data,
-        link = document.createElement('a');
+        link = document.createElement('a'),
+        href = 'data:text/' + (plain ? 'plain' : 'xml') + ',';
 
     if (Process.prototype.isCatchingErrors) {
         try {
-            data = this.serializer.serialize(this.stage);
-            link.setAttribute('href', 'data:text/xml,' + data);
+            data = encodeURIComponent(this.serializer.serialize(this.stage));
+            link.setAttribute('href', href + data);
             link.setAttribute('download', this.projectName + '.xml');
             document.body.appendChild(link);
             link.click();
@@ -2648,8 +2655,8 @@ IDE_Morph.prototype.saveProjectToDisk = function () {
             this.showMessage('Saving failed: ' + err);
         }
     } else {
-        data = this.serializer.serialize(this.stage);
-        link.setAttribute('href', 'data:text/xml,' + data);
+        data = encodeURIComponent(this.serializer.serialize(this.stage));
+        link.setAttribute('href', href + data);
         link.setAttribute('download', this.projectName + '.xml');
         document.body.appendChild(link);
         link.click();
@@ -2657,35 +2664,30 @@ IDE_Morph.prototype.saveProjectToDisk = function () {
     }
 };
 
+IDE_Morph.prototype.exportToHTML = function () {
+    // It is not possible to have a closing <script> tag in inline JS.
+    // Escape all forward slashes.
+    var data = JSON.stringify(this.serializer.serialize(this.stage)).replace(/\//g, "\\/"),
+        link = document.createElement('a'),
+        docClone = d3.select(document.documentElement.cloneNode(true)),
+        htmlData;
+
+    docClone.select("#graph-display").remove();
+    docClone.select("#replace-me").text("world.children[0].openProjectString(" + data + ");");
+
+    htmlData = encodeURIComponent(('<html>' + docClone.html() + '</html>'));
+    link.setAttribute('href', 'data:text/html,' + htmlData);
+    link.setAttribute('download', (this.projectName || 'project') + '.html');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 IDE_Morph.prototype.exportProject = function (name, plain) {
     var menu, str;
     if (name) {
         this.setProjectName(name);
-        if (Process.prototype.isCatchingErrors) {
-            try {
-                menu = this.showMessage('Exporting');
-                str = encodeURIComponent(
-                    this.serializer.serialize(this.stage)
-                );
-                location.hash = '#open:' + str;
-                window.open('data:text/'
-                    + (plain ? 'plain,' + str : 'xml,' + str));
-                menu.destroy();
-                this.showMessage('Exported!', 1);
-            } catch (err) {
-                this.showMessage('Export failed: ' + err);
-            }
-        } else {
-            menu = this.showMessage('Exporting');
-            str = encodeURIComponent(
-                this.serializer.serialize(this.stage)
-            );
-            location.hash = '#open:' + str;
-            window.open('data:text/'
-                + (plain ? 'plain,' + str : 'xml,' + str));
-            menu.destroy();
-            this.showMessage('Exported!', 1);
-        }
+        this.saveProjectToDisk(plain);
     }
 };
 
