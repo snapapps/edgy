@@ -154,6 +154,13 @@ SpriteMorph.prototype.init = (function init (oldInit) {
     };
 }(SpriteMorph.prototype.init));
 
+function parseNode(node) {
+    if(isNumeric(node)) {
+        return parseFloat(node, 10);
+    }
+
+    return node;
+}
 
 // Graph block bindings
 
@@ -181,21 +188,20 @@ SpriteMorph.prototype.numberOfEdges = function () {
     return this.G.number_of_edges();
 };
 
-SpriteMorph.prototype.addNode = function(node) {
-    this.G.add_node(node);
+SpriteMorph.prototype.addNode = function(nodes) {
+    this.G.add_nodes_from(nodes.asArray().map(parseNode));
 };
 
 SpriteMorph.prototype.removeNode = function(node) {
     this.G.remove_node(node);
 };
 
-SpriteMorph.prototype.addEdge = function(edge) {
-    var a = edge.at(1), b = edge.at(2);
-    this.G.add_edge(a, b);
+SpriteMorph.prototype.addEdge = function(edges) {
+    this.G.add_edges_from(edges.asArray().map(function(x) { return x.asArray().map(parseNode); }));
 };
 
 SpriteMorph.prototype.removeEdge = function(edge) {
-    var a = edge.at(1), b = edge.at(2);
+    var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     this.G.remove_edge(a, b);
 };
 
@@ -204,6 +210,7 @@ SpriteMorph.prototype.getNeighbors = function(node) {
 };
 
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
+    node = parseNode(node);
     if(this.G.has_node(node)) {
         var data = {};
         data[attrib] = val;
@@ -212,6 +219,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
 };
 
 SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
+    node = parseNode(node);
     var val = this.G.node.get(node)[attrib];
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
@@ -223,7 +231,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
 };
 
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
-    var a = edge.at(1), b = edge.at(2);
+    var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(this.G.has_edge(a, b)) {
         var data = {};
         data[attrib] = val;
@@ -232,8 +240,8 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
 };
 
 SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
-    var a = edge.at(1),
-        b = edge.at(2),
+    var a = parseNode(edge.at(1)),
+        b = parseNode(edge.at(2)),
         val = this.G.adj.get(a).get(b)[attrib];
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
@@ -278,32 +286,32 @@ SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
 };
 
 SpriteMorph.prototype.hasNode = function(node) {
-    return this.G.has_node(node);
+    return this.G.has_node(parseNode(node));
 };
 
 SpriteMorph.prototype.hasEdge = function(edge) {
-    var from = edge.at(1), to = edge.at(2);
+    var from = parseNode(edge.at(1)), to = parseNode(edge.at(2));
     return this.G.has_edge(from, to);
 };
 
 SpriteMorph.prototype.getOutgoing = function(node) {
-    return new List(this.G.successors(node));
+    return new List(this.G.successors(parseNode(node)));
 };
 
 SpriteMorph.prototype.getIncoming = function(node) {
-    return new List(this.G.predecessors(node));
+    return new List(this.G.predecessors(parseNode(node)));
 };
 
 SpriteMorph.prototype.getNeighborEdges = function(node) {
-    return new List(this.G.edges([node]).map(function(x) { return new List(x); }));
+    return new List(this.G.edges([parseNode(node)]).map(function(x) { return new List(x); }));
 };
 
 SpriteMorph.prototype.getOutgoingEdges = function(node) {
-    return new List(this.G.out_edges([node]).map(function(x) { return new List(x); }));
+    return new List(this.G.out_edges([parseNode(node)]).map(function(x) { return new List(x); }));
 };
 
 SpriteMorph.prototype.getIncomingEdges = function(node) {
-    return new List(this.G.in_edges([node]).map(function(x) { return new List(x); }));
+    return new List(this.G.in_edges([parseNode(node)]).map(function(x) { return new List(x); }));
 };
 
 SpriteMorph.prototype.isConnected = function() {
@@ -487,7 +495,7 @@ SpriteMorph.prototype.topologicalSort = function() {
         addNode: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'add node %s'
+            spec: 'add node %exp'
         },
         removeNode: {
             type: 'command',
@@ -497,7 +505,7 @@ SpriteMorph.prototype.topologicalSort = function() {
         addEdge: {
             type: 'command',
             category: 'nodes+edges',
-            spec: 'add edge %l'
+            spec: 'add edge %expL'
         },
         removeEdge: {
             type: 'command',

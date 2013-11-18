@@ -711,6 +711,12 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
             part.isStatic = true;
             part.canBeEmpty = false;
             break;
+        case '%expL':
+            part = new MultiArgMorph('%l', null, 0);
+            part.addInput();
+            part.isStatic = true;
+            part.canBeEmpty = false;
+            break;
         case '%br':
             part = new Morph();
             part.setExtent(new Point(0, 0));
