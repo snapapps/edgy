@@ -285,6 +285,17 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         var data = {};
         data[attrib] = val;
         this.G.add_node(node, data);
+
+        // HACK: work around JSNetworkX bug with not updating labels.
+        if(attrib === "label" && currentGraph === this.G) {
+            var nodes = graphEl.selectAll(".node");
+            nodes.each(function(d, i) {
+                if(d.node === node) {
+                    var textEl = d3.select(nodes[0][i]).select("text");
+                    textEl.node().textContent = val.toString();
+                }
+            });
+        }
     }
 };
 
