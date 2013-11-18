@@ -119,7 +119,7 @@ function redrawGraph() {
         label_style: {fill: 'black' },
         labels: function(d) {
             if(d.data.label !== undefined) {
-                return d.data.label;
+                return d.data.label.toString();
             } else {
                 return d.node.toString();
             }
