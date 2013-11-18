@@ -2632,14 +2632,16 @@ IDE_Morph.prototype.rawSaveProject = function (name) {
     }
 };
 
-IDE_Morph.prototype.saveProjectToDisk = function () {
+IDE_Morph.prototype.saveProjectToDisk = function (plain) {
     var data,
-        link = document.createElement('a');
+        link = document.createElement('a'),
+        href = 'data:text/' + (plain ? 'plain' : 'xml') + ',';
 
     if (Process.prototype.isCatchingErrors) {
         try {
-            data = this.serializer.serialize(this.stage);
-            link.setAttribute('href', 'data:text/xml,' + data);
+            data = encodeURIComponent(this.serializer.serialize(this.stage));
+            link.setAttribute('href', href + data);
+            console.log(href+data);
             link.setAttribute('download', this.projectName + '.xml');
             document.body.appendChild(link);
             link.click();
@@ -2648,8 +2650,8 @@ IDE_Morph.prototype.saveProjectToDisk = function () {
             this.showMessage('Saving failed: ' + err);
         }
     } else {
-        data = this.serializer.serialize(this.stage);
-        link.setAttribute('href', 'data:text/xml,' + data);
+        data = encodeURIComponent(this.serializer.serialize(this.stage));
+        link.setAttribute('href', href + data);
         link.setAttribute('download', this.projectName + '.xml');
         document.body.appendChild(link);
         link.click();
@@ -2661,31 +2663,7 @@ IDE_Morph.prototype.exportProject = function (name, plain) {
     var menu, str;
     if (name) {
         this.setProjectName(name);
-        if (Process.prototype.isCatchingErrors) {
-            try {
-                menu = this.showMessage('Exporting');
-                str = encodeURIComponent(
-                    this.serializer.serialize(this.stage)
-                );
-                location.hash = '#open:' + str;
-                window.open('data:text/'
-                    + (plain ? 'plain,' + str : 'xml,' + str));
-                menu.destroy();
-                this.showMessage('Exported!', 1);
-            } catch (err) {
-                this.showMessage('Export failed: ' + err);
-            }
-        } else {
-            menu = this.showMessage('Exporting');
-            str = encodeURIComponent(
-                this.serializer.serialize(this.stage)
-            );
-            location.hash = '#open:' + str;
-            window.open('data:text/'
-                + (plain ? 'plain,' + str : 'xml,' + str));
-            menu.destroy();
-            this.showMessage('Exported!', 1);
-        }
+        this.saveProjectToDisk(plain);
     }
 };
 
