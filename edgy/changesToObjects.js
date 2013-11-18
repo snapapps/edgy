@@ -620,12 +620,12 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
         },
         numberOfNodes: {
             type: 'reporter',
-            category: 'network',
+            category: 'nodes+edges',
             spec: 'number of nodes'
         },
         numberOfEdges: {
             type: 'reporter',
-            category: 'network',
+            category: 'nodes+edges',
             spec: 'number of edges'
         },
         addNode: {
@@ -675,32 +675,32 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
         },
         getNodes: {
             type: 'reporter',
-            category: 'network',
+            category: 'nodes+edges',
             spec: 'all the nodes'
         },
         getNodesWithAttr: {
             type: 'reporter',
-            category: 'network',
+            category: 'nodes+edges',
             spec: 'nodes with %nodeAttr equal to %s'
         },
         getEdges: {
             type: 'reporter',
-            category: 'network',
+            category: 'nodes+edges',
             spec: 'all the edges'
         },
         getEdgesWithAttr: {
             type: 'reporter',
-            category: 'network',
+            category: 'nodes+edges',
             spec: 'edges with %edgeAttr equal to %s'
         },
         hasNode: {
             type: 'predicate',
-            category: 'network',
+            category: 'nodes+edges',
             spec: 'node %s exists'
         },
         hasEdge: {
             type: 'predicate',
-            category: 'network',
+            category: 'nodes+edges',
             spec: 'edge %l exists'
         },
         getOutgoing: {
@@ -922,17 +922,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
             blocks.push('-');
-            blocks.push(block('numberOfNodes'));
-            blocks.push(block('numberOfEdges'));
-            blocks.push(block('getNodes'));
-            blocks.push(block('getEdges'));
-            blocks.push('-');
-            blocks.push(block('getNodesWithAttr'));
-            blocks.push(block('getEdgesWithAttr'));
-            blocks.push('-');
             blocks.push(block('isEmpty'));
-            blocks.push(block('hasNode'));
-            blocks.push(block('hasEdge'));
             blocks.push(block('isConnected'));
             blocks.push(block('isStronglyConnected'));
             blocks.push(block('isWeaklyConnected'));
@@ -1055,11 +1045,20 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('addEdge'));
             blocks.push(block('removeNode'));
             blocks.push(block('removeEdge'));
+            blocks.push(block('hasNode'));
+            blocks.push(block('hasEdge'));
+            blocks.push('-');
+            blocks.push(block('numberOfNodes'));
+            blocks.push(block('numberOfEdges'));
+            blocks.push(block('getNodes'));
+            blocks.push(block('getEdges'));
             blocks.push('-');
             blocks.push(block('setNodeAttrib'));
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getNodeAttrib'));
             blocks.push(block('getEdgeAttrib'));
+            blocks.push(block('getNodesWithAttr'));
+            blocks.push(block('getEdgesWithAttr'));
             blocks.push('-');
             blocks.push(block('getNeighbors'));
             blocks.push(block('getOutgoing'));
