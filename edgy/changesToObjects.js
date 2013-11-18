@@ -39,8 +39,45 @@ graphEl.on("mousedown", mouseEventForwarder);
 graphEl.on("mouseup", mouseEventForwarder);
 graphEl.on("mousemove", mouseEventForwarder);
 // Prevent the browser's context menu from coming up.
-graphEl.on("contextmenu", function() { d3.event.preventDefault(); })
+graphEl.on("contextmenu", function() { d3.event.preventDefault(); });
 
+// Monitor for new nodes and edges, and attach event handlers appropriately.
+graphEl.on("DOMNodeInserted", function() {
+    var node = d3.select(d3.event.relatedNode);
+    if(node.classed("node")) {
+        node.on("mouseup", function() {
+            if(d3.event.button === 2)
+            {
+                var menu = new MenuMorph(this);
+
+                d3.event.preventDefault();
+                d3.event.stopPropagation();
+
+                menu.addItem('delete', function () {
+                    var d = node.datum();
+                    d.G.remove_node(d.node);
+                });
+                menu.popUpAtHand(world);
+            }
+        });
+    } else if(node.classed("edge")) {
+        node.on("mouseup", function() {
+            if(d3.event.button === 2)
+            {
+                var menu = new MenuMorph(this);
+
+                d3.event.preventDefault();
+                d3.event.stopPropagation();
+
+                menu.addItem('delete', function () {
+                    var d = node.datum();
+                    d.G.remove_edges_from([d.edge]);
+                });
+                menu.popUpAtHand(world);
+            }
+        });
+    }
+});
 
 function updateGraphDimensions(stage) {
     // console.log("resizing graph element to %dx%d", stage.width(), stage.height());
@@ -65,6 +102,9 @@ function redrawGraph() {
     layout = jsnx.draw(currentGraph, {
         element: graphEl.node(),
         with_labels: true,
+        layout_attr: {
+            linkDistance: 70
+        },
         node_style: {
             fill: function(d) {
                 return d.data.color || "white";
@@ -73,7 +113,8 @@ function redrawGraph() {
         edge_style: {
             fill: function(d) {
                 return d.data.color || "black";
-            }
+            },
+            'stroke-width': 8
         },
         label_style: {fill: 'black' },
         labels: function(d) {
