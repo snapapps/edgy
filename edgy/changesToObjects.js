@@ -108,6 +108,35 @@ StageMorph.prototype.changed = (function changed (oldChanged) {
     };
 }(StageMorph.prototype.changed));
 
+StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
+    return function ()
+    {
+        var ide = this.parentThatIsA(IDE_Morph),
+            menu = new MenuMorph(this),
+            myself = this,
+            world = this.world();
+
+        menu.addItem("add node", function () {
+            new DialogBoxMorph(null, function (name) {
+                currentGraph.add_node(parseNode(name));
+            }).prompt('Node name', '', world);
+            world.worldCanvas.focus();
+        });
+
+        menu.addItem("add edge", function () {
+            new DialogBoxMorph(null, function (start) {
+                new DialogBoxMorph(null, function (end) {
+                    currentGraph.add_edge(parseNode(start), parseNode(end));
+                }).prompt('End node', '', world);
+                world.worldCanvas.focus();
+            }).prompt('Start node', '', world);
+            world.worldCanvas.focus();
+        });
+
+        return menu;
+    };
+}(StageMorph.prototype.userMenu));
+
 function placeholderGraph () {
     var G = jsnx.DiGraph();
     G.add_nodes_from([1,2,3,4,5,[9,{color: '#008A00'}]], {color: '#0064C7'});
