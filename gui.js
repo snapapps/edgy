@@ -2262,6 +2262,12 @@ IDE_Morph.prototype.projectMenu = function () {
             'experimental - store this project\nin your downloads folder',
             new Color(100, 0, 0)
         );
+        menu.addItem(
+            'Export to HTML',
+            'exportToHTML',
+            'experimental - save as self-contained HTML',
+            new Color(100, 0, 0)
+        )
     }
     menu.addItem('Save As...', 'saveProjectsBrowser');
     menu.addLine();
@@ -2641,7 +2647,6 @@ IDE_Morph.prototype.saveProjectToDisk = function (plain) {
         try {
             data = encodeURIComponent(this.serializer.serialize(this.stage));
             link.setAttribute('href', href + data);
-            console.log(href+data);
             link.setAttribute('download', this.projectName + '.xml');
             document.body.appendChild(link);
             link.click();
@@ -2658,6 +2663,25 @@ IDE_Morph.prototype.saveProjectToDisk = function (plain) {
         document.body.removeChild(link);
     }
 };
+
+IDE_Morph.prototype.exportToHTML = function () {
+    // It is not possible to have a closing <script> tag in inline JS.
+    // Escape all forward slashes.
+    var data = JSON.stringify(this.serializer.serialize(this.stage)).replace(/\//g, "\\/"),
+        link = document.createElement('a'),
+        docClone = d3.select(document.documentElement.cloneNode(true)),
+        htmlData;
+
+    docClone.select("#graph-display").remove();
+    docClone.select("#replace-me").text("world.children[0].openProjectString(" + data + ");");
+
+    htmlData = encodeURIComponent(('<html>' + docClone.html() + '</html>'));
+    link.setAttribute('href', 'data:text/html,' + htmlData);
+    link.setAttribute('download', (this.projectName || 'project') + '.html');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
 IDE_Morph.prototype.exportProject = function (name, plain) {
     var menu, str;

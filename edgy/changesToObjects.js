@@ -6,6 +6,7 @@
 
 var graphEl = d3.select(document.body)
         .append('div')
+        .attr('id', 'graph-display')
         .style('position', 'absolute'),
     currentGraph = null, // The current JSNetworkX graph to display.
     layout = null; // The d3.layout instance controlling the graph display.
