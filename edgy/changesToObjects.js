@@ -57,6 +57,14 @@ graphEl.on("DOMNodeInserted", function() {
                     var d = node.datum();
                     d.G.remove_node(d.node);
                 });
+                menu.addItem('set label', function () {
+                    new DialogBoxMorph(null, function (label) {
+                        var d = node.datum();
+                        d.G.node.get(d.node).label = label;
+                        node.select("text").node().textContent = label;
+                    }).prompt('Node label', '', world);
+                    world.worldCanvas.focus();
+                });
                 menu.popUpAtHand(world);
             }
         });
@@ -72,6 +80,14 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('delete', function () {
                     var d = node.datum();
                     d.G.remove_edges_from([d.edge]);
+                });
+                menu.addItem('set label', function () {
+                    new DialogBoxMorph(null, function (label) {
+                        var d = node.datum();
+                        d.G.adj.get(d.edge[0]).get(d.edge[1]).label = label;
+                        node.select("text").node().textContent = label;
+                    }).prompt('Edge label', '', world);
+                    world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
             }
