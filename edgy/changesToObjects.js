@@ -65,6 +65,13 @@ graphEl.on("DOMNodeInserted", function() {
                     }).prompt('Node label', '', world);
                     world.worldCanvas.focus();
                 });
+                menu.addItem('set color', function () {
+                    new DialogBoxMorph(null, function (color) {
+                        var d = node.datum();
+                        d.G.add_node(d.node, {color: color});
+                    }).prompt('Node color', '', world);
+                    world.worldCanvas.focus();
+                });
                 menu.popUpAtHand(world);
             }
         });
@@ -87,6 +94,13 @@ graphEl.on("DOMNodeInserted", function() {
                         d.G.adj.get(d.edge[0]).get(d.edge[1]).label = label;
                         node.select("text").node().textContent = label;
                     }).prompt('Edge label', '', world);
+                    world.worldCanvas.focus();
+                });
+                menu.addItem('set color', function () {
+                    new DialogBoxMorph(null, function (color) {
+                        var d = node.datum();
+                        d.G.add_edge(d.edge[0], d.edge[1], {color: color});
+                    }).prompt('Edge color', '', world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
