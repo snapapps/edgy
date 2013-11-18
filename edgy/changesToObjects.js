@@ -584,6 +584,10 @@ SpriteMorph.prototype.topologicalSort = function() {
     return new List(jsnx.algorithms.dag.topological_sort(this.G));
 };
 
+SpriteMorph.prototype.reportEdge = function(a, b) {
+    return new List([a, b]);
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('network');
@@ -777,6 +781,11 @@ SpriteMorph.prototype.topologicalSort = function() {
             type: 'reporter',
             category: 'network',
             spec: 'topological sort'
+        },
+        reportEdge: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'edge %s %s'
         }
     };
 
@@ -1039,6 +1048,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
 
             blocks.push('-');
 
+            blocks.push(block('reportEdge'));
+            blocks.push('-');
             blocks.push(block('addNode'));
             blocks.push(block('addEdge'));
             blocks.push(block('removeNode'));
