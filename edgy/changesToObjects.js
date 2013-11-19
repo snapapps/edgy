@@ -61,7 +61,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
                         var d = node.datum();
-                        d.G.node.get(d.node).label = label;
+                        d.G.node.get(d.node).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                     }).prompt('Node label', '', world);
                     world.worldCanvas.focus();
@@ -92,7 +92,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
                         var d = node.datum();
-                        d.G.adj.get(d.edge[0]).get(d.edge[1]).label = label;
+                        d.G.adj.get(d.edge[0]).get(d.edge[1]).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                     }).prompt('Edge label', '', world);
                     world.worldCanvas.focus();
@@ -264,12 +264,16 @@ SpriteMorph.prototype.init = (function init (oldInit) {
     };
 }(SpriteMorph.prototype.init));
 
-function parseNode(node) {
-    if(isNumeric(node)) {
-        return parseFloat(node, 10);
+function autoNumericize(x) {
+    if(isNumeric(x)) {
+        return parseFloat(x);
     }
 
-    return node;
+    return x;
+}
+
+function parseNode(node) {
+    return autoNumericize(node);
 }
 
 // Graph block bindings
@@ -589,6 +593,42 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
     return new List([a, b]);
 };
 
+SpriteMorph.prototype.sortNodes = function(nodes, attr, ascdesc) {
+    var nodesArr = nodes.asArray().slice(0),
+        myself = this,
+        ascending = (ascdesc == "ascending");
+
+    nodesArr.sort(function(a, b) {
+        var na = myself.G.node.get(parseNode(a))[attr],
+            nb = myself.G.node.get(parseNode(b))[attr];
+        if(na < nb)
+            return ascending ? -1 : 1;
+        if(na > nb)
+            return ascending ? 1 : -1;
+        return 0;
+    });
+
+    return new List(nodesArr);
+};
+
+SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
+    var edgesArr = edges.asArray().map(function(x) { return x.asArray(); }),
+        myself = this,
+        ascending = (ascdesc == "ascending");
+
+    edgesArr.sort(function(a, b) {
+        var ea = myself.G.adj.get(parseNode(a[0])).get(parseNode(a[1]))[attr],
+            eb = myself.G.adj.get(parseNode(b[0])).get(parseNode(b[1]))[attr];
+        if(ea < eb)
+            return ascending ? -1 : 1;
+        if(ea > eb)
+            return ascending ? 1 : -1;
+        return 0;
+    });
+
+    return new List(edgesArr.map(function(x) { return new List(x); }));
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('network');
@@ -787,7 +827,17 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
             type: 'reporter',
             category: 'nodes+edges',
             spec: 'edge %s %s'
-        }
+        },
+        sortNodes: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'nodes %l sorted by %nodeAttr %ascdesc'
+        },
+        sortEdges: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'edges %l sorted by %nodeAttr %ascdesc'
+        },
     };
 
     // Add the new blocks.
@@ -1059,6 +1109,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getEdgeAttrib'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
+            blocks.push(block('sortNodes'));
+            blocks.push(block('sortEdges'));
             blocks.push('-');
             blocks.push(block('getNeighbors'));
             blocks.push(block('getOutgoing'));
