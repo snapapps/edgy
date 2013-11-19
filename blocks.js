@@ -1081,6 +1081,15 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
             );
             part.isStatic = true;
             break;
+        case '%ascdesc':
+            part = new InputSlotMorph(
+                null,
+                false,
+                {ascending: 'ascending', descending: 'descending'},
+                true
+            );
+            part.isStatic = true;
+            break;
         case '%lst':
             part = new InputSlotMorph(
                 null,

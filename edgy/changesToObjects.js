@@ -61,7 +61,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
                         var d = node.datum();
-                        d.G.node.get(d.node).label = label;
+                        d.G.node.get(d.node).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                     }).prompt('Node label', '', world);
                     world.worldCanvas.focus();
@@ -92,7 +92,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
                         var d = node.datum();
-                        d.G.adj.get(d.edge[0]).get(d.edge[1]).label = label;
+                        d.G.adj.get(d.edge[0]).get(d.edge[1]).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                     }).prompt('Edge label', '', world);
                     world.worldCanvas.focus();
@@ -128,6 +128,10 @@ function updateGraphDimensions(stage) {
     }
 }
 
+var DEFAULT_NODE_COLOR = "white",
+    DEFAULT_EDGE_COLOR = "black",
+    DEFAULT_LABEL_COLOR = "black";
+
 function redrawGraph() {
     // console.log("redrawing graph")
     layout = jsnx.draw(currentGraph, {
@@ -139,16 +143,16 @@ function redrawGraph() {
         },
         node_style: {
             fill: function(d) {
-                return d.data.color || "white";
+                return d.data.color || DEFAULT_NODE_COLOR;
             }
         },
         edge_style: {
             fill: function(d) {
-                return d.data.color || "black";
+                return d.data.color || DEFAULT_EDGE_COLOR;
             },
             'stroke-width': 8
         },
-        label_style: {fill: 'black' },
+        label_style: {fill: DEFAULT_LABEL_COLOR},
         labels: function(d) {
             if(d.data.label !== undefined) {
                 return d.data.label.toString();
@@ -156,7 +160,7 @@ function redrawGraph() {
                 return d.node.toString();
             }
         },
-        edge_label_style: {fill: 'black' },
+        edge_label_style: {fill: DEFAULT_LABEL_COLOR},
         edge_labels: function(d) {
             if(d.data.label !== undefined) {
                 return d.data.label.toString();
@@ -218,14 +222,6 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
     };
 }(StageMorph.prototype.userMenu));
 
-function placeholderGraph () {
-    var G = jsnx.DiGraph();
-    G.add_nodes_from([1,2,3,4,5,[9,{color: '#008A00'}]], {color: '#0064C7'});
-    G.add_cycle([1,2,3,4,5]);
-    G.add_edges_from([[1,9], [9,1]]);
-    return G;
-}
-
 function serializeAttributes(serializer) {
     return this.reduce(function (result, name) {
         var val = serializer.format('<attribute name="@"/>', name);
@@ -248,7 +244,7 @@ StageMorph.prototype.init = (function init (oldInit) {
 SpriteMorph.prototype.init = (function init (oldInit) {
     return function (globals)
     {
-        this.G = placeholderGraph();
+        this.G = new jsnx.DiGraph();
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
         }
@@ -264,12 +260,16 @@ SpriteMorph.prototype.init = (function init (oldInit) {
     };
 }(SpriteMorph.prototype.init));
 
-function parseNode(node) {
-    if(isNumeric(node)) {
-        return parseFloat(node, 10);
+function autoNumericize(x) {
+    if(isNumeric(x)) {
+        return parseFloat(x);
     }
 
-    return node;
+    return x;
+}
+
+function parseNode(node) {
+    return autoNumericize(node);
 }
 
 // Graph block bindings
@@ -345,7 +345,12 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
     if(val === undefined) {
-        throw new Error("Undefined attribute " + attrib.toString());
+        if(attrib === "color")
+            return DEFAULT_NODE_COLOR;
+        if(attrib === "label")
+            return node.toString();
+
+        throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
     } else {
         return val;
     }
@@ -378,7 +383,12 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
     if(val === undefined) {
-        throw new Error("Undefined attribute " + attrib.toString());
+        if(attrib === "color")
+            return DEFAULT_EDGE_COLOR;
+        if(attrib === "label")
+            return "";
+
+        throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
     } else {
         return val;
     }
@@ -390,10 +400,11 @@ SpriteMorph.prototype.getNodes = function() {
 
 
 SpriteMorph.prototype.getNodesWithAttr = function(attr, val) {
-    var nodes = [];
-    jsnx.forEach(this.G.nodes_iter(true), function (node) {
-        if (node[1][attr] === val) {
-            nodes.push(node[0]);
+    var nodes = [],
+        myself = this;
+    jsnx.forEach(this.G.nodes_iter(), function (node) {
+        if (snapEquals(myself.getNodeAttrib(attr, node), val)) {
+            nodes.push(node);
         }
     });
     return new List(nodes);
@@ -408,10 +419,12 @@ SpriteMorph.prototype.getEdges = function() {
 };
 
 SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
-    var edges = [];
+    var edges = [],
+        myself = this;
     jsnx.forEach(this.G.edges_iter(), function (edge) {
-        if (edge[2][attr] === val) {
-            edges.push(new List(edge.slice(0, 3)));
+        var s_edge = new List(edge);
+        if (snapEquals(myself.getEdgeAttrib(attr, s_edge), val)) {
+            edges.push(s_edge);
         }
     });
     return new List(edges);
@@ -451,14 +464,14 @@ SpriteMorph.prototype.isConnected = function() {
         throw new Error("Not allowed for directed graphs. Use 'is strongly/weakly connected.'");
     }
 
-    if (this.G.number_of_nodes() == 0) {
+    if (this.G.number_of_nodes() === 0) {
         return false;
     }
 
     var l = jsnx.single_source_shortest_path_length(this.G,
         this.G.nodes_iter().next()).count();
 
-    return l == this.G.number_of_nodes();
+    return l === this.G.number_of_nodes();
 };
 
 SpriteMorph.prototype.isStronglyConnected = function() {
@@ -466,7 +479,7 @@ SpriteMorph.prototype.isStronglyConnected = function() {
         throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
     }
 
-    if (this.G.number_of_nodes() == 0) {
+    if (this.G.number_of_nodes() === 0) {
         return false;
     }
 
@@ -481,7 +494,7 @@ SpriteMorph.prototype.isStronglyConnected = function() {
             }
         });
     }
-    return visited.count() == this.G.number_of_nodes();
+    return visited.count() === this.G.number_of_nodes();
 };
 
 SpriteMorph.prototype.isWeaklyConnected = function() {
@@ -489,7 +502,7 @@ SpriteMorph.prototype.isWeaklyConnected = function() {
         throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
     }
 
-    if (this.G.number_of_nodes() == 0) {
+    if (this.G.number_of_nodes() === 0) {
         return false;
     }
 
@@ -509,11 +522,11 @@ SpriteMorph.prototype.isWeaklyConnected = function() {
             }
         });
     }
-    return visited.count() == this.G.number_of_nodes();
+    return visited.count() === this.G.number_of_nodes();
 };
 
 SpriteMorph.prototype.isEmpty = function() {
-    return this.G.number_of_nodes() == 0;
+    return this.G.number_of_nodes() === 0;
 };
 
 function areDisjoint(a, b) {
@@ -587,6 +600,42 @@ SpriteMorph.prototype.topologicalSort = function() {
 
 SpriteMorph.prototype.reportEdge = function(a, b) {
     return new List([a, b]);
+};
+
+SpriteMorph.prototype.sortNodes = function(nodes, attr, ascdesc) {
+    var nodesArr = nodes.asArray().slice(0),
+        myself = this,
+        ascending = (ascdesc === "ascending");
+
+    nodesArr.sort(function(a, b) {
+        var na = myself.G.node.get(parseNode(a))[attr],
+            nb = myself.G.node.get(parseNode(b))[attr];
+        if(na < nb)
+            return ascending ? -1 : 1;
+        if(na > nb)
+            return ascending ? 1 : -1;
+        return 0;
+    });
+
+    return new List(nodesArr);
+};
+
+SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
+    var edgesArr = edges.asArray().map(function(x) { return x.asArray(); }),
+        myself = this,
+        ascending = (ascdesc === "ascending");
+
+    edgesArr.sort(function(a, b) {
+        var ea = myself.G.adj.get(parseNode(a[0])).get(parseNode(a[1]))[attr],
+            eb = myself.G.adj.get(parseNode(b[0])).get(parseNode(b[1]))[attr];
+        if(ea < eb)
+            return ascending ? -1 : 1;
+        if(ea > eb)
+            return ascending ? 1 : -1;
+        return 0;
+    });
+
+    return new List(edgesArr.map(function(x) { return new List(x); }));
 };
 
 (function() {
@@ -787,7 +836,17 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
             type: 'reporter',
             category: 'nodes+edges',
             spec: 'edge %s %s'
-        }
+        },
+        sortNodes: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'nodes %l sorted by %nodeAttr %ascdesc'
+        },
+        sortEdges: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'edges %l sorted by %nodeAttr %ascdesc'
+        },
     };
 
     // Add the new blocks.
@@ -1059,6 +1118,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getEdgeAttrib'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
+            blocks.push(block('sortNodes'));
+            blocks.push(block('sortEdges'));
             blocks.push('-');
             blocks.push(block('getNeighbors'));
             blocks.push(block('getOutgoing'));
