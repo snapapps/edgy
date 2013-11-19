@@ -472,14 +472,14 @@ SpriteMorph.prototype.isConnected = function() {
         throw new Error("Not allowed for directed graphs. Use 'is strongly/weakly connected.'");
     }
 
-    if (this.G.number_of_nodes() == 0) {
+    if (this.G.number_of_nodes() === 0) {
         return false;
     }
 
     var l = jsnx.single_source_shortest_path_length(this.G,
         this.G.nodes_iter().next()).count();
 
-    return l == this.G.number_of_nodes();
+    return l === this.G.number_of_nodes();
 };
 
 SpriteMorph.prototype.isStronglyConnected = function() {
@@ -487,7 +487,7 @@ SpriteMorph.prototype.isStronglyConnected = function() {
         throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
     }
 
-    if (this.G.number_of_nodes() == 0) {
+    if (this.G.number_of_nodes() === 0) {
         return false;
     }
 
@@ -502,7 +502,7 @@ SpriteMorph.prototype.isStronglyConnected = function() {
             }
         });
     }
-    return visited.count() == this.G.number_of_nodes();
+    return visited.count() === this.G.number_of_nodes();
 };
 
 SpriteMorph.prototype.isWeaklyConnected = function() {
@@ -510,7 +510,7 @@ SpriteMorph.prototype.isWeaklyConnected = function() {
         throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
     }
 
-    if (this.G.number_of_nodes() == 0) {
+    if (this.G.number_of_nodes() === 0) {
         return false;
     }
 
@@ -530,11 +530,11 @@ SpriteMorph.prototype.isWeaklyConnected = function() {
             }
         });
     }
-    return visited.count() == this.G.number_of_nodes();
+    return visited.count() === this.G.number_of_nodes();
 };
 
 SpriteMorph.prototype.isEmpty = function() {
-    return this.G.number_of_nodes() == 0;
+    return this.G.number_of_nodes() === 0;
 };
 
 function areDisjoint(a, b) {
@@ -613,7 +613,7 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
 SpriteMorph.prototype.sortNodes = function(nodes, attr, ascdesc) {
     var nodesArr = nodes.asArray().slice(0),
         myself = this,
-        ascending = (ascdesc == "ascending");
+        ascending = (ascdesc === "ascending");
 
     nodesArr.sort(function(a, b) {
         var na = myself.G.node.get(parseNode(a))[attr],
@@ -631,7 +631,7 @@ SpriteMorph.prototype.sortNodes = function(nodes, attr, ascdesc) {
 SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
     var edgesArr = edges.asArray().map(function(x) { return x.asArray(); }),
         myself = this,
-        ascending = (ascdesc == "ascending");
+        ascending = (ascdesc === "ascending");
 
     edgesArr.sort(function(a, b) {
         var ea = myself.G.adj.get(parseNode(a[0])).get(parseNode(a[1]))[attr],
