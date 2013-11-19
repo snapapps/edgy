@@ -107,8 +107,8 @@ function snapEquals(a, b) {
     var x = a,
         y = b;
     if(isNumeric(a) && isNumeric(b)) {
-        a = parseFloat(a);
-        b = parseFloat(b);
+        x = parseFloat(a);
+        y = parseFloat(b);
     }
 
     if (isString(x) && isString(y)) {
