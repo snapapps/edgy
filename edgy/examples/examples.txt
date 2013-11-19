@@ -1,0 +1,6 @@
+Breadth-first search
+Critical path algorithm
+K7
+MCST
+Shortening
+Topological sort
