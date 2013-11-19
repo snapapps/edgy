@@ -408,10 +408,11 @@ SpriteMorph.prototype.getNodes = function() {
 
 
 SpriteMorph.prototype.getNodesWithAttr = function(attr, val) {
-    var nodes = [];
-    jsnx.forEach(this.G.nodes_iter(true), function (node) {
-        if (node[1][attr] === val) {
-            nodes.push(node[0]);
+    var nodes = [],
+        myself = this;
+    jsnx.forEach(this.G.nodes_iter(), function (node) {
+        if (snapEquals(myself.getNodeAttrib(attr, node), val)) {
+            nodes.push(node);
         }
     });
     return new List(nodes);
@@ -426,10 +427,12 @@ SpriteMorph.prototype.getEdges = function() {
 };
 
 SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
-    var edges = [];
+    var edges = [],
+        myself = this;
     jsnx.forEach(this.G.edges_iter(), function (edge) {
-        if (edge[2][attr] === val) {
-            edges.push(new List(edge.slice(0, 3)));
+        var s_edge = new List(edge);
+        if (snapEquals(myself.getEdgeAttrib(attr, s_edge), val)) {
+            edges.push(s_edge);
         }
     });
     return new List(edges);
