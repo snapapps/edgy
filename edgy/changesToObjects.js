@@ -222,14 +222,6 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
     };
 }(StageMorph.prototype.userMenu));
 
-function placeholderGraph () {
-    var G = jsnx.DiGraph();
-    G.add_nodes_from([1,2,3,4,5,[9,{color: '#008A00'}]], {color: '#0064C7'});
-    G.add_cycle([1,2,3,4,5]);
-    G.add_edges_from([[1,9], [9,1]]);
-    return G;
-}
-
 function serializeAttributes(serializer) {
     return this.reduce(function (result, name) {
         var val = serializer.format('<attribute name="@"/>', name);
@@ -252,7 +244,7 @@ StageMorph.prototype.init = (function init (oldInit) {
 SpriteMorph.prototype.init = (function init (oldInit) {
     return function (globals)
     {
-        this.G = placeholderGraph();
+        this.G = new jsnx.DiGraph();
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
         }
