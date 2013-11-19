@@ -639,6 +639,8 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
 };
 
 (function() {
+    delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
+    delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('network');
     SpriteMorph.prototype.categories.push('nodes+edges');
