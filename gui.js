@@ -2333,7 +2333,7 @@ IDE_Morph.prototype.projectMenu = function () {
         function () {
             myself.droppedText(
                 myself.getURL(
-                    'http://snap.berkeley.edu/snapsource/tools.xml'
+                    'tools.xml'
                 ),
                 'tools'
             );
@@ -4212,7 +4212,7 @@ ProjectDialogMorph.prototype.setSource = function (source) {
                 myself.nameField.setContents(item.name || '');
             }
             src = myself.ide.getURL(
-                'http://snap.berkeley.edu/snapsource/Examples/' +
+                'edgy/examples/' +
                     item.name + '.xml'
             );
 
@@ -4268,7 +4268,7 @@ ProjectDialogMorph.prototype.getExamplesProjectList = function () {
     var dir,
         projects = [];
 
-    dir = this.ide.getURL('http://snap.berkeley.edu/snapsource/Examples/');
+    dir = this.ide.getURL('edgy/examples/');
     dir.split('\n').forEach(
         function (line) {
             var startIdx = line.search(new RegExp('href=".*xml"')),
@@ -4279,7 +4279,7 @@ ProjectDialogMorph.prototype.getExamplesProjectList = function () {
                 endIdx = line.search(new RegExp('.xml'));
                 name = line.substring(startIdx + 6, endIdx);
                 dta = {
-                    name: name,
+                    name: decodeURIComponent(name),
                     thumb: null,
                     notes: null
                 };
@@ -4377,7 +4377,7 @@ ProjectDialogMorph.prototype.openProject = function () {
         this.openCloudProject(proj);
     } else if (this.source === 'examples') {
         src = this.ide.getURL(
-            'http://snap.berkeley.edu/snapsource/Examples/' +
+            'edgy/examples/' +
                 proj.name + '.xml'
         );
         this.ide.openProjectString(src);
