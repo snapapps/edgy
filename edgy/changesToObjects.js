@@ -183,11 +183,16 @@ StageMorph.prototype.changed = (function changed (oldChanged) {
     {
         // console.log("stage changed");
         var result = oldChanged.call(this);
-        updateGraphDimensions(this);
-        if(graphNeedsRedraw)
+        // HACK: work around spontaneous resizing due to transient StageMorphs
+        // being created for e.g. loading blocks and calling changed()
+        if(this.parent !== null)
         {
-            redrawGraph();
-            graphNeedsRedraw = false;
+            updateGraphDimensions(this);
+            if(graphNeedsRedraw)
+            {
+                redrawGraph();
+                graphNeedsRedraw = false;
+            }
         }
         return result;
     };
