@@ -128,6 +128,10 @@ function updateGraphDimensions(stage) {
     }
 }
 
+var DEFAULT_NODE_COLOR = "white",
+    DEFAULT_EDGE_COLOR = "black",
+    DEFAULT_LABEL_COLOR = "black";
+
 function redrawGraph() {
     // console.log("redrawing graph")
     layout = jsnx.draw(currentGraph, {
@@ -139,16 +143,16 @@ function redrawGraph() {
         },
         node_style: {
             fill: function(d) {
-                return d.data.color || "white";
+                return d.data.color || DEFAULT_NODE_COLOR;
             }
         },
         edge_style: {
             fill: function(d) {
-                return d.data.color || "black";
+                return d.data.color || DEFAULT_EDGE_COLOR;
             },
             'stroke-width': 8
         },
-        label_style: {fill: 'black' },
+        label_style: {fill: DEFAULT_LABEL_COLOR},
         labels: function(d) {
             if(d.data.label !== undefined) {
                 return d.data.label.toString();
@@ -156,7 +160,7 @@ function redrawGraph() {
                 return d.node.toString();
             }
         },
-        edge_label_style: {fill: 'black' },
+        edge_label_style: {fill: DEFAULT_LABEL_COLOR},
         edge_labels: function(d) {
             if(d.data.label !== undefined) {
                 return d.data.label.toString();
@@ -349,6 +353,11 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
     if(val === undefined) {
+        if(attrib === "color")
+            return DEFAULT_NODE_COLOR;
+        if(attrib === "label")
+            return node.toString();
+
         throw new Error("Undefined attribute " + attrib.toString());
     } else {
         return val;
@@ -382,6 +391,11 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
     if(val === undefined) {
+        if(attrib === "color")
+            return DEFAULT_EDGE_COLOR;
+        if(attrib === "label")
+            return "";
+
         throw new Error("Undefined attribute " + attrib.toString());
     } else {
         return val;
