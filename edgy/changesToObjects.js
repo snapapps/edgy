@@ -291,17 +291,17 @@ function parseNode(node) {
 // Graph block bindings
 
 SpriteMorph.prototype.newGraph = function() {
-    var newGraph = jsnx.Graph();
-    if(currentGraph === this.G) {
-        this.G = newGraph;
+    var oldGraph = this.G;
+    this.G = jsnx.Graph();
+    if(currentGraph === oldGraph) {
         this.setActiveGraph();
     }
 };
 
 SpriteMorph.prototype.newDiGraph = function() {
-    var newGraph = jsnx.DiGraph();
-    if(currentGraph === this.G) {
-        this.G = newGraph;
+    var oldGraph = this.G;
+    this.G = jsnx.DiGraph();
+    if(currentGraph === oldGraph) {
         this.setActiveGraph();
     }
 };
