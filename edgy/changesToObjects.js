@@ -350,7 +350,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
         if(attrib === "label")
             return node.toString();
 
-        throw new Error("Undefined attribute " + attrib.toString());
+        throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
     } else {
         return val;
     }
@@ -388,7 +388,7 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
         if(attrib === "label")
             return "";
 
-        throw new Error("Undefined attribute " + attrib.toString());
+        throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
     } else {
         return val;
     }
