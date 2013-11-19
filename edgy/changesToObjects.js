@@ -223,6 +223,17 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             world.worldCanvas.focus();
         });
 
+        menu.addItem("export to file", function () {
+            var data = JSON.stringify(graphToObject(currentGraph)),
+                link = document.createElement('a');
+
+            link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
+            link.setAttribute('download', (this.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
         return menu;
     };
 }(StageMorph.prototype.userMenu));
