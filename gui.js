@@ -4268,18 +4268,14 @@ ProjectDialogMorph.prototype.getExamplesProjectList = function () {
     var dir,
         projects = [];
 
-    dir = this.ide.getURL('edgy/examples/');
+    dir = this.ide.getURL('edgy/examples/examples.txt');
     dir.split('\n').forEach(
         function (line) {
-            var startIdx = line.search(new RegExp('href=".*xml"')),
-                endIdx,
-                name,
-                dta;
-            if (startIdx > 0) {
-                endIdx = line.search(new RegExp('.xml'));
-                name = line.substring(startIdx + 6, endIdx);
-                dta = {
-                    name: decodeURIComponent(name),
+            line = line.trim();
+            if(line.length > 0)
+            {
+                var dta = {
+                    name: line,
                     thumb: null,
                     notes: null
                 };

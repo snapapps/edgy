@@ -223,6 +223,17 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             world.worldCanvas.focus();
         });
 
+        menu.addItem("export to file", function () {
+            var data = JSON.stringify(graphToObject(currentGraph)),
+                link = document.createElement('a');
+
+            link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
+            link.setAttribute('download', (this.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
         return menu;
     };
 }(StageMorph.prototype.userMenu));
@@ -280,11 +291,19 @@ function parseNode(node) {
 // Graph block bindings
 
 SpriteMorph.prototype.newGraph = function() {
+    var oldGraph = this.G;
     this.G = jsnx.Graph();
+    if(currentGraph === oldGraph) {
+        this.setActiveGraph();
+    }
 };
 
 SpriteMorph.prototype.newDiGraph = function() {
+    var oldGraph = this.G;
     this.G = jsnx.DiGraph();
+    if(currentGraph === oldGraph) {
+        this.setActiveGraph();
+    }
 };
 
 SpriteMorph.prototype.setActiveGraph = function() {
