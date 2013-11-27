@@ -260,7 +260,7 @@ StageMorph.prototype.init = (function init (oldInit) {
 SpriteMorph.prototype.init = (function init (oldInit) {
     return function (globals)
     {
-        this.G = new jsnx.DiGraph();
+        this.G = new jsnx.Graph();
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
         }
