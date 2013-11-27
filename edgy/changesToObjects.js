@@ -676,12 +676,12 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
         newGraph: {
             type: 'command',
             category: 'network',
-            spec: 'new undirected graph',
+            spec: 'new graph',
         },
         newDiGraph: {
             type: 'command',
             category: 'network',
-            spec: 'new directed graph',
+            spec: 'new digraph',
         },
         setActiveGraph: {
             type: 'command',
