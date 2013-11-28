@@ -856,7 +856,7 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
         isCyclic: {
             type: 'predicate',
             category: 'network',
-            spec: 'has cycles'
+            spec: 'is cyclic'
         },
         isConnected: {
             type: 'predicate',
