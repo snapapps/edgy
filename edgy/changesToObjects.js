@@ -270,6 +270,7 @@ SpriteMorph.prototype.init = (function init (oldInit) {
         this.edgeAttributes.toXML = serializeAttributes;
         var retval = oldInit.call(this, globals);
 
+        this.name = localize('Graph');
         this.hide();
 
         return retval;
