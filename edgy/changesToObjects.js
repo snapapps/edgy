@@ -47,7 +47,7 @@ graphEl.on("DOMNodeInserted", function() {
     var node = d3.select(d3.event.relatedNode);
     if(node.classed("node")) {
         node.on("mouseup", function() {
-            if(d3.event.button === 2)
+            if(d3.event.ctrlKey || d3.event.button === 2)
             {
                 var menu = new MenuMorph(this);
 
@@ -78,7 +78,7 @@ graphEl.on("DOMNodeInserted", function() {
         });
     } else if(node.classed("edge")) {
         node.on("mouseup", function() {
-            if(d3.event.button === 2)
+            if(d3.event.ctrlKey || d3.event.button === 2)
             {
                 var menu = new MenuMorph(this);
 
