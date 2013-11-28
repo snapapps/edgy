@@ -260,7 +260,7 @@ StageMorph.prototype.init = (function init (oldInit) {
 SpriteMorph.prototype.init = (function init (oldInit) {
     return function (globals)
     {
-        this.G = new jsnx.DiGraph();
+        this.G = new jsnx.Graph();
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
         }
@@ -270,6 +270,7 @@ SpriteMorph.prototype.init = (function init (oldInit) {
         this.edgeAttributes.toXML = serializeAttributes;
         var retval = oldInit.call(this, globals);
 
+        this.name = localize('Graph');
         this.hide();
 
         return retval;
@@ -549,6 +550,50 @@ SpriteMorph.prototype.isWeaklyConnected = function() {
     return visited.count() === this.G.number_of_nodes();
 };
 
+SpriteMorph.prototype.isCyclic = function() {
+    if(this.G.is_directed()) {
+        try {
+            jsnx.topological_sort(this.G);
+            return false;
+        } catch (e) {
+            return e instanceof jsnx.JSNetworkXUnfeasible;
+        }
+    } else {
+        var iter = jsnx.sentinelIterator(this.G.nodes_iter(), null),
+            visited = new jsnx.contrib.Set(),
+            hasCycle = false,
+            stack, node, pred;
+
+        while((node = iter.next()) !== null) {
+            if(visited.has(node))
+                continue;
+
+            stack = [node];
+            pred = {};
+            while(stack.length > 0 && !hasCycle) {
+                var node = stack.pop();
+                visited.add(node);
+                jsnx.forEach(this.G.neighbors_iter(node), function(neighbor) {
+                    if(visited.has(neighbor)) {
+                        // Make sure we haven't seen this edge before.
+                        if(neighbor !== pred[node]) {
+                            hasCycle = true;
+                        }
+                    } else {
+                        pred[neighbor] = node;
+                        stack.push(neighbor);
+                    }
+                });
+            }
+
+            if(hasCycle)
+                return true;
+        }
+
+        return false;
+    }
+};
+
 SpriteMorph.prototype.isEmpty = function() {
     return this.G.number_of_nodes() === 0;
 };
@@ -676,12 +721,12 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
         newGraph: {
             type: 'command',
             category: 'network',
-            spec: 'new undirected graph',
+            spec: 'new graph',
         },
         newDiGraph: {
             type: 'command',
             category: 'network',
-            spec: 'new directed graph',
+            spec: 'new digraph',
         },
         setActiveGraph: {
             type: 'command',
@@ -807,6 +852,11 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
             type: 'predicate',
             category: 'network',
             spec: 'is empty'
+        },
+        isCyclic: {
+            type: 'predicate',
+            category: 'network',
+            spec: 'has cycles'
         },
         isConnected: {
             type: 'predicate',
@@ -1008,6 +1058,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setActiveGraph'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
+            blocks.push(block('isCyclic'));
             blocks.push(block('isConnected'));
             blocks.push(block('isStronglyConnected'));
             blocks.push(block('isWeaklyConnected'));
