@@ -23,10 +23,12 @@
 	</head>
 	<body style="margin: 0;">
 		<canvas id="world" tabindex="1" style="position: absolute;" />
+		<script type="text/javascript" src="edgy/changesToBlocks.js"></script>
 		<script type="text/javascript" src="edgy/changesToObjects.js"></script>
 		<script type="text/javascript" src="edgy/changesToStore.js"></script>
 		<script type="text/javascript" src="edgy/changesToGui.js"></script>
 		<script type="text/javascript" src="jsonp.js"></script>
+		<script type="text/javascript" src="edgy/changesToMorphic.js"></script>
 		<script type="text/javascript">
 			var world = new WorldMorph(document.getElementById('world'));
 			new IDE_Morph().openIn(world);

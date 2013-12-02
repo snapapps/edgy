@@ -12,4 +12,12 @@ IDE_Morph.prototype.init = (function init (oldInit) {
 	}
 }(IDE_Morph.prototype.init));
 
+IDE_Morph.prototype.createCorralBar = (function createCorralBar (oldCreateCorralBar) {
+	return function () {
+		var retval = oldCreateCorralBar.call(this);
+		this.corralBar.children[0].hint = "add a new graph"
+		return retval;
+	}
+}(IDE_Morph.prototype.createCorralBar));
+
 }());
