@@ -4,7 +4,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>Snap! Build Your Own Blocks. Beta</title>
         <link rel="shortcut icon" href="http://snap.berkeley.edu/fav3.gif" type="image/gif">
-		<script type="text/javascript" src="d3.v2.min.js"></script>
+		<script type="text/javascript" src="d3.v3.js"></script>
 		<script type="text/javascript" src="jsnetworkx.js"></script>
 		<script type="text/javascript" src="morphic.js"></script>
 		<script type="text/javascript" src="widgets.js"></script>
@@ -26,6 +26,7 @@
 		<script type="text/javascript" src="edgy/changesToObjects.js"></script>
 		<script type="text/javascript" src="edgy/changesToStore.js"></script>
 		<script type="text/javascript" src="edgy/changesToGui.js"></script>
+		<script type="text/javascript" src="jsonp.js"></script>
 		<script type="text/javascript">
 			var world = new WorldMorph(document.getElementById('world'));
 			new IDE_Morph().openIn(world);
@@ -34,7 +35,6 @@
 				world.doOneCycle();
 			}
 		</script>
-		<script type="text/javascript" src="tools.xml.js"></script>
 		<script type="text/javascript" id="replace-me">
 		</script>
     </body>
