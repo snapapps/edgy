@@ -707,14 +707,48 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
     return new List(edgesArr.map(function(x) { return new List(x); }));
 };
 
+Process.prototype.getLastfmFriends = function(username) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettinglastfmfriends)
+    {
+        this.context.gettinglastfmfriends = true;
+        this.context.lastfmfriends = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).lastfmAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a last.fm API key.");
+        }
+        url = 'http://ws.audioscrobbler.com/2.0/?method=user.getfriends' +
+                  '&user=' + encodeURIComponent(username) +
+                  '&api_key=94a9d34efc73dc347b144a2f4dd94471&format=json' +
+                  '&limit=5&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.lastfmfriends = data;
+        });
+    }
+
+    if(this.context.lastfmfriends)
+    {
+        var data = this.context.lastfmfriends;
+        this.popContext();
+        this.pushContext('doYield');
+        return new List(data.friends.user.map(function(x) { return x.name; }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('network');
     SpriteMorph.prototype.categories.push('nodes+edges');
+    SpriteMorph.prototype.categories.push('external');
     SpriteMorph.prototype.blockColor.network = new Color(74, 108, 212);
     SpriteMorph.prototype.blockColor['nodes+edges'] = new Color(215, 0, 64);
+    SpriteMorph.prototype.blockColor.external = new Color(74, 108, 212);
 
     var blockName, networkBlocks = {
         // Network
@@ -923,6 +957,11 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
             category: 'nodes+edges',
             spec: 'edges %l sorted by %nodeAttr %ascdesc'
         },
+        getLastfmFriends: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'friends of %s'
+        }
     };
 
     // Add the new blocks.
@@ -1205,6 +1244,31 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNeighborEdges'));
             blocks.push(block('getOutgoingEdges'));
             blocks.push(block('getIncomingEdges'));
+        } else if (category === 'external') {
+            button = new PushButtonMorph(
+                null,
+                function () {
+                    new DialogBoxMorph(
+                        null,
+                        function receiveKey(key) {
+                            if(key) {
+                                myself.parentThatIsA(StageMorph).lastfmAPIkey = key;
+                            } else {
+                                new DialogBoxMorph(null, receiveKey)
+                                .prompt(
+                                    'API key',
+                                    myself.parentThatIsA(StageMorph).lastfmAPIkey || '',
+                                    myself.world());
+                            }
+                        }
+                    ).prompt('API key',
+                        myself.parentThatIsA(StageMorph).lastfmAPIkey || '',
+                        myself.world());
+                },
+                'Authenticate with last.fm'
+            );
+            blocks.push(button);
+            blocks.push(block('getLastfmFriends'));
         }
         return blocks.concat(oldBlockTemplates.call(this, category));
     };
