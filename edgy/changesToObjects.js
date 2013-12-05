@@ -130,7 +130,8 @@ function updateGraphDimensions(stage) {
 
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
-    DEFAULT_LABEL_COLOR = "black";
+    DEFAULT_LABEL_COLOR = "black",
+    DEFAULT_NODE_RADIUS = 10;
 
 function redrawGraph() {
     // console.log("redrawing graph")
@@ -144,6 +145,11 @@ function redrawGraph() {
         node_style: {
             fill: function(d) {
                 return d.data.color || DEFAULT_NODE_COLOR;
+            }
+        },
+        node_attr: {
+            r: function(d) {
+                return d.data.radius * DEFAULT_NODE_RADIUS || DEFAULT_NODE_RADIUS;
             }
         },
         edge_style: {
@@ -376,6 +382,8 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
             return DEFAULT_NODE_COLOR;
         if(attrib === "label")
             return node.toString();
+        if(attrib === "radius")
+            return 1; // Radius is normalized to 1; multiplied with DEFAULT_NODE_RADIUS.
 
         throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
     } else {
@@ -1029,7 +1037,7 @@ function deleteNodeAttribute(morph, name) {
 InputSlotMorph.prototype.getNodeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
-        dict = {'color': 'color', 'label': 'label'};
+        dict = {'color': 'color', 'label': 'label', 'radius': 'radius'};
 
     if (!block) {
         return dict;
