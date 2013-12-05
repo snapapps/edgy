@@ -671,6 +671,14 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
     return new List([a, b]);
 };
 
+SpriteMorph.prototype.startNode = function(edge) {
+    return edge.at(1);
+};
+
+SpriteMorph.prototype.endNode = function(edge) {
+    return edge.at(2);
+};
+
 SpriteMorph.prototype.sortNodes = function(nodes, attr, ascdesc) {
     var nodesArr = nodes.asArray().slice(0),
         myself = this,
@@ -947,6 +955,16 @@ Process.prototype.getLastfmFriends = function(username) {
             category: 'nodes+edges',
             spec: 'edge %s %s'
         },
+        startNode: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'start node of %l'
+        },
+        endNode: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'end node of %l'
+        },
         sortNodes: {
             type: 'reporter',
             category: 'nodes+edges',
@@ -1215,6 +1233,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push('-');
 
             blocks.push(block('reportEdge'));
+            blocks.push(block('startNode'));
+            blocks.push(block('endNode'));
             blocks.push('-');
             blocks.push(block('addNode'));
             blocks.push(block('addEdge'));
