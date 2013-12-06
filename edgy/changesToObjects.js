@@ -73,6 +73,13 @@ graphEl.on("DOMNodeInserted", function() {
                     }).prompt('Node color', '', world);
                     world.worldCanvas.focus();
                 });
+                menu.addItem('set radius', function () {
+                    new DialogBoxMorph(null, function (radius) {
+                        var d = node.datum();
+                        d.G.add_node(d.node, {radius: radius});
+                    }).prompt('Node radius', '', world);
+                    world.worldCanvas.focus();
+                });
                 menu.popUpAtHand(world);
             }
         });
