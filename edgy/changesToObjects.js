@@ -130,7 +130,8 @@ function updateGraphDimensions(stage) {
 
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
-    DEFAULT_LABEL_COLOR = "black";
+    DEFAULT_LABEL_COLOR = "black",
+    DEFAULT_NODE_RADIUS = 10;
 
 function redrawGraph() {
     // console.log("redrawing graph")
@@ -144,6 +145,11 @@ function redrawGraph() {
         node_style: {
             fill: function(d) {
                 return d.data.color || DEFAULT_NODE_COLOR;
+            }
+        },
+        node_attr: {
+            r: function(d) {
+                return d.data.radius * DEFAULT_NODE_RADIUS || DEFAULT_NODE_RADIUS;
             }
         },
         edge_style: {
@@ -271,11 +277,13 @@ SpriteMorph.prototype.init = (function init (oldInit) {
         var retval = oldInit.call(this, globals);
 
         this.name = localize('Graph');
-        this.hide();
 
         return retval;
     };
 }(SpriteMorph.prototype.init));
+
+// Stub this out to hide the actual sprite on the stage.
+SpriteMorph.prototype.drawOn = function() {}
 
 function autoNumericize(x) {
     if(isNumeric(x)) {
@@ -374,6 +382,8 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
             return DEFAULT_NODE_COLOR;
         if(attrib === "label")
             return node.toString();
+        if(attrib === "radius")
+            return 1; // Radius is normalized to 1; multiplied with DEFAULT_NODE_RADIUS.
 
         throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
     } else {
@@ -671,6 +681,14 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
     return new List([a, b]);
 };
 
+SpriteMorph.prototype.startNode = function(edge) {
+    return edge.at(1);
+};
+
+SpriteMorph.prototype.endNode = function(edge) {
+    return edge.at(2);
+};
+
 SpriteMorph.prototype.sortNodes = function(nodes, attr, ascdesc) {
     var nodesArr = nodes.asArray().slice(0),
         myself = this,
@@ -947,6 +965,16 @@ Process.prototype.getLastfmFriends = function(username) {
             category: 'nodes+edges',
             spec: 'edge %s %s'
         },
+        startNode: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'start node of %l'
+        },
+        endNode: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'end node of %l'
+        },
         sortNodes: {
             type: 'reporter',
             category: 'nodes+edges',
@@ -1009,7 +1037,7 @@ function deleteNodeAttribute(morph, name) {
 InputSlotMorph.prototype.getNodeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
-        dict = {'color': 'color', 'label': 'label'};
+        dict = {'color': 'color', 'label': 'label', 'radius': 'radius'};
 
     if (!block) {
         return dict;
@@ -1215,6 +1243,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push('-');
 
             blocks.push(block('reportEdge'));
+            blocks.push(block('startNode'));
+            blocks.push(block('endNode'));
             blocks.push('-');
             blocks.push(block('addNode'));
             blocks.push(block('addEdge'));
@@ -1269,8 +1299,27 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             );
             blocks.push(button);
             blocks.push(block('getLastfmFriends'));
+        } else if (category === 'looks') {
+            blocks.push(block('doSayFor'));
+            blocks.push(block('bubble'));
+            blocks.push(block('doThinkFor'));
+            blocks.push(block('doThink'));
+            if (this.world().isDevMode) {
+                blocks.push('-');
+                txt = new TextMorph(localize(
+                    'development mode \ndebugging primitives:'
+                ));
+                txt.fontSize = 9;
+                txt.setColor(this.paletteTextColor);
+                blocks.push(txt);
+                blocks.push('-');
+                blocks.push(block('log'));
+                blocks.push(block('alert'));
+            }
+        } else {
+            return blocks.concat(oldBlockTemplates.call(this, category));
         }
-        return blocks.concat(oldBlockTemplates.call(this, category));
+        return blocks;
     };
 }(SpriteMorph.prototype.blockTemplates));
 
