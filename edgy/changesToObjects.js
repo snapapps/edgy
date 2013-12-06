@@ -152,7 +152,8 @@ function redrawGraph() {
         node_style: {
             fill: function(d) {
                 return d.data.color || DEFAULT_NODE_COLOR;
-            }
+            },
+            'stroke-width': 1
         },
         node_attr: {
             r: function(d) {
