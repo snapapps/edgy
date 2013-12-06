@@ -111,6 +111,13 @@ graphEl.on("DOMNodeInserted", function() {
                     }).prompt('Edge color', '', world);
                     world.worldCanvas.focus();
                 });
+                menu.addItem('set width', function () {
+                    new DialogBoxMorph(null, function (width) {
+                        var d = node.datum();
+                        d.G.add_edge(d.edge[0], d.edge[1], {width: width});
+                    }).prompt('Edge width', '', world);
+                    world.worldCanvas.focus();
+                });
                 menu.popUpAtHand(world);
             }
         });
@@ -138,7 +145,8 @@ function updateGraphDimensions(stage) {
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
-    DEFAULT_NODE_RADIUS = 10;
+    DEFAULT_NODE_RADIUS = 10,
+    DEFAULT_EDGE_WIDTH = 8;
 
 function redrawGraph() {
     // console.log("redrawing graph")
@@ -164,7 +172,9 @@ function redrawGraph() {
             fill: function(d) {
                 return d.data.color || DEFAULT_EDGE_COLOR;
             },
-            'stroke-width': 8
+            'stroke-width': function(d) {
+                return d.data.width * DEFAULT_EDGE_WIDTH || DEFAULT_EDGE_WIDTH;
+            }
         },
         label_style: {fill: DEFAULT_LABEL_COLOR},
         labels: function(d) {
@@ -430,6 +440,8 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
             return DEFAULT_EDGE_COLOR;
         if(attrib === "label")
             return "";
+        if(attrib === "width")
+            return 1; // Width is normalized to 1; multiplied with DEFAULT_EDGE_WIDTH.
 
         throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
     } else {
@@ -1097,7 +1109,7 @@ function deleteEdgeAttribute(morph, name) {
 InputSlotMorph.prototype.getEdgeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
-        dict = {'color': 'color', 'label': 'label'};
+        dict = {'color': 'color', 'label': 'label', 'width': 'width'};
 
     if (!block) {
         return dict;
