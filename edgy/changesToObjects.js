@@ -777,6 +777,14 @@ Process.prototype.getLastfmFriends = function(username) {
     this.pushContext();
 };
 
+SpriteMorph.prototype.getWordNetNounNeighbors = function(noun) {
+    if(!this.wordnet_nouns) {
+        throw new Error("WordNet is not loaded. Please load WordNet.")
+    }
+
+    return new List(this.wordnet_nouns.neighbors(noun));
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
@@ -1009,6 +1017,11 @@ Process.prototype.getLastfmFriends = function(username) {
             type: 'reporter',
             category: 'external',
             spec: 'friends of %s'
+        },
+        getWordNetNounNeighbors: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'neighbors of noun %s'
         }
     };
 
@@ -1319,6 +1332,30 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             );
             blocks.push(button);
             blocks.push(block('getLastfmFriends'));
+            blocks.push('-');
+            button = new PushButtonMorph(
+                null,
+                function () {
+                    new DialogBoxMorph(
+                        null,
+                        function() {
+                            var request = new XMLHttpRequest();
+                            request.open('GET', 'wordnet_nouns.json', false);
+                            request.send(null);
+                            if (request.status === 200) {
+                                myself.wordnet_nouns = objectToGraph(JSON.parse(request.responseText));
+                            } else {
+                                throw new Error("Could not load: " + request.statusText);
+                            }
+                        }
+                    ).askYesNo('Are you sure?',
+                               'This could take a while to download (12MB). Are you sure you want to continue?',
+                                myself.world());
+                },
+                'Load Princeton WordNet nouns'
+            );
+            blocks.push(button);
+            blocks.push(block('getWordNetNounNeighbors'));
         } else if (category === 'looks') {
             blocks.push(block('doSayFor'));
             blocks.push(block('bubble'));
