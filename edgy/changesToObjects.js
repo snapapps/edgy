@@ -803,6 +803,19 @@ SpriteMorph.prototype.getWordNetSynsets = function(lemma) {
     })));
 };
 
+
+SpriteMorph.prototype.getWordNetDefinition = function(noun) {
+    if(!this.wordnet_nouns) {
+        throw new Error("WordNet is not loaded. Please load WordNet.")
+    }
+
+    if(this.wordnet_nouns.has_node(noun)) {
+        return this.wordnet_nouns.node.get(noun).definition;
+    } else {
+        throw new Error(noun.toString() + " could not be found.")
+    }
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
@@ -1050,6 +1063,11 @@ SpriteMorph.prototype.getWordNetSynsets = function(lemma) {
             type: 'reporter',
             category: 'external',
             spec: 'synsets of %s'
+        },
+        getWordNetDefinition: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'definition of %s'
         }
     };
 
@@ -1386,6 +1404,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getWordNetNounHypernyms'));
             blocks.push(block('getWordNetNounHyponyms'));
             blocks.push(block('getWordNetSynsets'));
+            blocks.push(block('getWordNetDefinition'));
         } else if (category === 'looks') {
             blocks.push(block('doSayFor'));
             blocks.push(block('bubble'));
