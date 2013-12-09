@@ -777,12 +777,43 @@ Process.prototype.getLastfmFriends = function(username) {
     this.pushContext();
 };
 
-SpriteMorph.prototype.getWordNetNounNeighbors = function(noun) {
+SpriteMorph.prototype.getWordNetNounHypernyms = function(noun) {
     if(!this.wordnet_nouns) {
         throw new Error("WordNet is not loaded. Please load WordNet.")
     }
 
-    return new List(this.wordnet_nouns.neighbors(noun));
+    return new List(this.wordnet_nouns.predecessors(noun));
+};
+
+SpriteMorph.prototype.getWordNetNounHyponyms = function(noun) {
+    if(!this.wordnet_nouns) {
+        throw new Error("WordNet is not loaded. Please load WordNet.")
+    }
+
+    return new List(this.wordnet_nouns.successors(noun));
+};
+
+SpriteMorph.prototype.getWordNetSynsets = function(lemma) {
+    if(!this.wordnet_nouns) {
+        throw new Error("WordNet is not loaded. Please load WordNet.")
+    }
+
+    return new List(jsnx.toArray(jsnx.filter(this.wordnet_nouns.nodes_iter(), function(synset) {
+        return synset.substr(0, lemma.length + 1) === lemma.toString() + '.';
+    })));
+};
+
+
+SpriteMorph.prototype.getWordNetDefinition = function(noun) {
+    if(!this.wordnet_nouns) {
+        throw new Error("WordNet is not loaded. Please load WordNet.")
+    }
+
+    if(this.wordnet_nouns.has_node(noun)) {
+        return this.wordnet_nouns.node.get(noun).definition;
+    } else {
+        throw new Error(noun.toString() + " could not be found.")
+    }
 };
 
 (function() {
@@ -1018,10 +1049,25 @@ SpriteMorph.prototype.getWordNetNounNeighbors = function(noun) {
             category: 'external',
             spec: 'friends of %s'
         },
-        getWordNetNounNeighbors: {
+        getWordNetNounHypernyms: {
             type: 'reporter',
             category: 'external',
-            spec: 'neighbors of noun %s'
+            spec: 'hypernyms of %s'
+        },
+        getWordNetNounHyponyms: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'hyponyms of %s'
+        },
+        getWordNetSynsets: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'synsets of %s'
+        },
+        getWordNetDefinition: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'definition of %s'
         }
     };
 
@@ -1355,7 +1401,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                 'Load Princeton WordNet nouns'
             );
             blocks.push(button);
-            blocks.push(block('getWordNetNounNeighbors'));
+            blocks.push(block('getWordNetNounHypernyms'));
+            blocks.push(block('getWordNetNounHyponyms'));
+            blocks.push(block('getWordNetSynsets'));
+            blocks.push(block('getWordNetDefinition'));
         } else if (category === 'looks') {
             blocks.push(block('doSayFor'));
             blocks.push(block('bubble'));
