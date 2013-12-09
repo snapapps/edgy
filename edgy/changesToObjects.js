@@ -972,7 +972,7 @@ Process.prototype.getLastfmFriends = function(username) {
         },
         loadGraphFromURL: {
             type: 'command',
-            category: 'network',
+            category: 'external',
             spec: 'load graph from URL: %s'
         },
         topologicalSort: {
@@ -1152,8 +1152,6 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push('-');
             blocks.push(block('topologicalSort'));
             blocks.push('-');
-            blocks.push(block('loadGraphFromURL'));
-            blocks.push('-');
             blocks.push(block('generateBalancedTree'));
             blocks.push(block('generateCycleGraph'));
             blocks.push(block('generateCompleteGraph'));
@@ -1295,6 +1293,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getOutgoingEdges'));
             blocks.push(block('getIncomingEdges'));
         } else if (category === 'external') {
+            blocks.push(block('loadGraphFromURL'));
+            blocks.push('-');
             button = new PushButtonMorph(
                 null,
                 function () {
