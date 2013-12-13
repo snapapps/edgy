@@ -3311,27 +3311,39 @@ SpriteMorph.prototype.replaceDoubleDefinitionsFor = function (definition) {
     var doubles = this.doubleDefinitionsFor(definition),
         myself = this,
         stage,
-        ide;
+        ide,
+        doneAnything = false;
     doubles.forEach(function (double) {
         myself.allBlockInstances(double).forEach(function (block) {
             block.definition = definition;
             block.refresh();
+            doneAnything = true;
         });
     });
     if (definition.isGlobal) {
         stage = this.parentThatIsA(StageMorph);
         stage.globalBlocks = stage.globalBlocks.filter(function (def) {
-            return !contains(doubles, def);
+            var result = !contains(doubles, def);
+            if(!result) {
+                doneAnything = true;
+            }
+            return result;
         });
     } else {
         this.customBlocks = this.customBlocks.filter(function (def) {
-            return !contains(doubles, def);
+            var result = !contains(doubles, def);
+            if(!result) {
+                doneAnything = true;
+            }
+            return result;
         });
     }
-    ide = this.parentThatIsA(IDE_Morph);
-    if (ide) {
-        ide.flushPaletteCache();
-        ide.refreshPalette();
+    if (doneAnything) {
+        ide = this.parentThatIsA(IDE_Morph);
+        if (ide) {
+            ide.flushPaletteCache();
+            ide.refreshPalette();
+        }
     }
 };
 
