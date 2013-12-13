@@ -473,6 +473,18 @@ SpriteMorph.prototype.getEdges = function() {
     return new List(edges);
 };
 
+SpriteMorph.prototype.getDegree = function(node) {
+    return this.G.degree(node);
+};
+
+SpriteMorph.prototype.getInDegree = function(node) {
+    return this.G.in_degree(node);
+};
+
+SpriteMorph.prototype.getOutDegree = function(node) {
+    return this.G.out_degree(node);
+};
+
 SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
     var edges = [],
         myself = this;
@@ -954,6 +966,21 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             category: 'nodes+edges',
             spec: 'all the edges'
         },
+        getDegree: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'degree of %s'
+        },
+        getInDegree: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'in-degree of %s'
+        },
+        getOutDegree: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'out-degree of %s'
+        },
         getEdgesWithAttr: {
             type: 'reporter',
             category: 'nodes+edges',
@@ -1374,6 +1401,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('numberOfEdges'));
             blocks.push(block('getNodes'));
             blocks.push(block('getEdges'));
+            blocks.push('-');
+            blocks.push(block('getDegree'));
+            blocks.push(block('getInDegree'));
+            blocks.push(block('getOutDegree'));
             blocks.push('-');
             blocks.push(block('setNodeAttrib'));
             blocks.push(block('setEdgeAttrib'));
