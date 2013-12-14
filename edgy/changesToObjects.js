@@ -473,6 +473,18 @@ SpriteMorph.prototype.getEdges = function() {
     return new List(edges);
 };
 
+SpriteMorph.prototype.getDegree = function(node) {
+    return this.G.degree(node);
+};
+
+SpriteMorph.prototype.getInDegree = function(node) {
+    return this.G.in_degree(node);
+};
+
+SpriteMorph.prototype.getOutDegree = function(node) {
+    return this.G.out_degree(node);
+};
+
 SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
     var edges = [],
         myself = this;
@@ -777,6 +789,41 @@ Process.prototype.getLastfmFriends = function(username) {
     this.pushContext();
 };
 
+Process.prototype.getLastfmUserLovedTracks = function(username) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettinglastfmfriends)
+    {
+        this.context.gettinglastfmfriends = true;
+        this.context.lastfmfriends = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).lastfmAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a last.fm API key.");
+        }
+        url = 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks' +
+                  '&user=' + encodeURIComponent(username) +
+                  '&api_key=' + api_key + '&format=json' +
+                  '&limit=5&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.lastfmfriends = data;
+        });
+    }
+
+    if(this.context.lastfmfriends)
+    {
+        var data = this.context.lastfmfriends;
+        this.popContext();
+        this.pushContext('doYield');
+        console.log(data);
+        return new List(data.lovedtracks.track.map(function(track) {
+            return track.artist.name + " - " + track.name;
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
 SpriteMorph.prototype.getWordNetNounHypernyms = function(noun) {
     if(!this.wordnet_nouns) {
         throw new Error("WordNet is not loaded. Please load WordNet.")
@@ -919,6 +966,21 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             category: 'nodes+edges',
             spec: 'all the edges'
         },
+        getDegree: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'degree of %s'
+        },
+        getInDegree: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'in-degree of %s'
+        },
+        getOutDegree: {
+            type: 'reporter',
+            category: 'nodes+edges',
+            spec: 'out-degree of %s'
+        },
         getEdgesWithAttr: {
             type: 'reporter',
             category: 'nodes+edges',
@@ -1048,6 +1110,11 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             type: 'reporter',
             category: 'external',
             spec: 'friends of %s'
+        },
+        getLastfmUserLovedTracks: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'loved tracks of %s'
         },
         getWordNetNounHypernyms: {
             type: 'reporter',
@@ -1335,6 +1402,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNodes'));
             blocks.push(block('getEdges'));
             blocks.push('-');
+            blocks.push(block('getDegree'));
+            blocks.push(block('getInDegree'));
+            blocks.push(block('getOutDegree'));
+            blocks.push('-');
             blocks.push(block('setNodeAttrib'));
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getNodeAttrib'));
@@ -1378,6 +1449,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             );
             blocks.push(button);
             blocks.push(block('getLastfmFriends'));
+            blocks.push(block('getLastfmUserLovedTracks'));
             blocks.push('-');
             button = new PushButtonMorph(
                 null,
