@@ -1484,7 +1484,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('doThink'));
             if (this.world().isDevMode) {
                 blocks.push('-');
-                txt = new TextMorph(localize(
+                var txt = new TextMorph(localize(
                     'development mode \ndebugging primitives:'
                 ));
                 txt.fontSize = 9;
