@@ -11,7 +11,7 @@ var graphEl = d3.select(document.body)
     currentGraph = null, // The current JSNetworkX graph to display.
     layout = null; // The d3.layout instance controlling the graph display.
 
-// We want to forward mouse events to the Snap! canvas.
+// We want to forward mouse events to the Snap! canvas so context menus work.
 function forwardMouseEvent(e, target) {
     var evtCopy;
 
