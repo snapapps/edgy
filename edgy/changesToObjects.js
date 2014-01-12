@@ -367,7 +367,7 @@ SpriteMorph.prototype.removeEdge = function(edge) {
 };
 
 SpriteMorph.prototype.getNeighbors = function(node) {
-    return new List(this.G.neighbors(node));
+    return new List(this.G.neighbors(parseNode(node)));
 };
 
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
