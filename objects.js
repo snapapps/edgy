@@ -1031,6 +1031,11 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'lists',
             spec: 'concatenate %l to %l',
         },
+        doListJoin : {
+            type: 'reporter',
+            category: 'lists',
+            spec: '%l and %l joined',
+        },
         doDeleteFromList: {
             type: 'command',
             category: 'lists',
@@ -1852,6 +1857,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push('-');
         blocks.push(block('doAddToList'));
         blocks.push(block('doConcatToList'));
+        blocks.push(block('doListJoin'));
         blocks.push(block('doDeleteFromList'));
         blocks.push(block('doInsertInList'));
         blocks.push(block('doReplaceInList'));
@@ -1950,6 +1956,7 @@ SpriteMorph.prototype.freshPalette = function (category) {
                         'reportListContainsItem',
                         'doAddToList',
                         'doConcatToList',
+                        'doListJoin',
                         'doDeleteFromList',
                         'doInsertInList',
                         'doReplaceInList'
@@ -4497,6 +4504,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push('-');
         blocks.push(block('doAddToList'));
         blocks.push(block('doConcatToList'));
+        blocks.push(block('doListJoin'));
         blocks.push(block('doDeleteFromList'));
         blocks.push(block('doInsertInList'));
         blocks.push(block('doReplaceInList'));

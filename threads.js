@@ -1228,6 +1228,12 @@ Process.prototype.doConcatToList = function (l, list) {
     list.contents = list.contents.concat(l.contents);
 };
 
+Process.prototype.doListJoin = function (a, b) {
+    a.becomeArray();
+    b.becomeArray();
+    return new List(a.contents.concat(b.contents));
+};
+
 Process.prototype.doDeleteFromList = function (index, list) {
     var idx = index;
     if (this.inputOption(index) === 'all') {
