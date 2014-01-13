@@ -1104,7 +1104,7 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
         sortEdges: {
             type: 'reporter',
             category: 'nodes+edges',
-            spec: 'edges %l sorted by %nodeAttr %ascdesc'
+            spec: 'edges %l sorted by %edgeAttr %ascdesc'
         },
         getLastfmFriends: {
             type: 'reporter',
