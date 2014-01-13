@@ -209,30 +209,21 @@ List.prototype.at = function (index) {
 };
 
 List.prototype.contains = function (element) {
-    var num = parseFloat(element);
     if (this.isLinked) {
-        if (this.first === element) {
+        if (snapEquals(this.first, element)) {
             return true;
         }
-        if (!isNaN(num)) {
-            if (parseFloat(this.first) === num) {
-                return true;
-            }
-        }
+
         if (this.rest instanceof List) {
             return this.rest.contains(element);
         }
         return false;
     }
-    // in case I'm arrayed
-    if (contains(this.contents, element)) {
-        return true;
-    }
-    if (!isNaN(num)) {
-        return (contains(this.contents, num))
-            || contains(this.contents, num.toString());
-    }
-    return false;
+
+    // This is an arrayed list.
+    return this.contents.some(function (any) {
+        return snapEquals(any, element);
+    });
 };
 
 // List conversion:
