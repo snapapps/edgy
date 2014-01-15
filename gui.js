@@ -9,7 +9,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2013 by Jens Mönig
+    Copyright (C) 2014 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -64,11 +64,11 @@ standardSettings, Sound, BlockMorph, ToggleMorph, InputSlotDialogMorph,
 ScriptsMorph, isNil, SymbolMorph, BlockExportDialogMorph,
 BlockImportDialogMorph, SnapTranslator, localize, List, InputSlotMorph,
 SnapCloud, Uint8Array, HandleMorph, SVG_Costume, fontHeight, hex_sha512,
-sb, CommentMorph, CommandBlockMorph*/
+sb, CommentMorph, CommandBlockMorph, BlockLabelPlaceHolderMorph*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.gui = '2013-September-19';
+modules.gui = '2014-January-09';
 
 // Declarations
 
@@ -1439,7 +1439,7 @@ IDE_Morph.prototype.fixLayout = function (situation) {
 };
 
 IDE_Morph.prototype.setProjectName = function (string) {
-    this.projectName = string;
+    this.projectName = string.replace(/['"]/g, ''); // filter quotation marks
     this.hasChangedMedia = true;
     this.controlBar.updateLabel();
 };
@@ -1701,7 +1701,8 @@ IDE_Morph.prototype.applySavedSettings = function () {
         zoom = this.getSetting('zoom'),
         language = this.getSetting('language'),
         click = this.getSetting('click'),
-        longform = this.getSetting('longform');
+        longform = this.getSetting('longform'),
+        plainprototype = this.getSetting('plainprototype');
 
     // design
     if (design === 'flat') {
@@ -1732,6 +1733,11 @@ IDE_Morph.prototype.applySavedSettings = function () {
     // long form
     if (longform) {
         InputSlotDialogMorph.prototype.isLaunchingExpanded = true;
+    }
+
+    // plain prototype labels
+    if (plainprototype) {
+        BlockLabelPlaceHolderMorph.prototype.plainLabel = true;
     }
 };
 
@@ -2096,6 +2102,13 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check to always show slot\ntypes in the input dialog'
     );
     addPreference(
+        'Plain prototype labels',
+        'togglePlainPrototypeLabels',
+        BlockLabelPlaceHolderMorph.prototype.plainLabel,
+        'uncheck to always show (+) symbols\nin block prototype labels',
+        'check to hide (+) symbols\nin block prototype labels'
+    );
+    addPreference(
         'Virtual keyboard',
         'toggleVirtualKeyboard',
         MorphicPreferences.useVirtualKeyboard,
@@ -2384,7 +2397,7 @@ IDE_Morph.prototype.aboutSnap = function () {
         world = this.world();
 
     aboutTxt = 'Snap! 4.0\nBuild Your Own Blocks\n\n--- beta ---\n\n'
-        + 'Copyright \u24B8 2013 Jens M\u00F6nig and '
+        + 'Copyright \u24B8 2014 Jens M\u00F6nig and '
         + 'Brian Harvey\n'
         + 'jens@moenig.org, bh@cs.berkeley.edu\n\n'
 
@@ -3042,6 +3055,16 @@ IDE_Morph.prototype.toggleLongFormInputDialog = function () {
         this.saveSetting('longform', true);
     } else {
         this.removeSetting('longform');
+    }
+};
+
+IDE_Morph.prototype.togglePlainPrototypeLabels = function () {
+    BlockLabelPlaceHolderMorph.prototype.plainLabel =
+        !BlockLabelPlaceHolderMorph.prototype.plainLabel;
+    if (BlockLabelPlaceHolderMorph.prototype.plainLabel) {
+        this.saveSetting('plainprototype', true);
+    } else {
+        this.removeSetting('plainprototype');
     }
 };
 
@@ -3758,7 +3781,7 @@ IDE_Morph.prototype.setCloudURL = function () {
             'local network lab' :
                 '192.168.2.107:8087/miocon/app/login?_app=SnapCloud',
             'local network office' :
-                '192.168.186.167:8087/miocon/app/login?_app=SnapCloud',
+                '192.168.186.146:8087/miocon/app/login?_app=SnapCloud',
             'localhost dev' :
                 'localhost/miocon/app/login?_app=SnapCloud'
         }

@@ -1925,3 +1925,148 @@ ______
 130920
 ------
 * Morphic: fixed #172, Rectangle.amountToTranslateWithin() for IF ON EDGE, BOUNCE
+
+130930
+------
+* Blocks: fixed #186 (can't duplicate blocks with anchored comments)
+
+131001
+------
+* Objects: smooth numerical values displayed in watchers
+
+131004
+------
+* Threads: Type-check the SPLIT block's input before eval'ing it
+* Objects: Prevent watcher cells from growing wider as their contents becomes taller
+* Objects: Keep watchers onstage when hiding/showing them, fixes #195
+* BYOB, GUI, locale: New preference setting for plain block prototype labels
+
+131008
+------
+* Lists: fixed type-issue for linked list indices (thanks, Nate, for reporting it!)
+* Threads, Objects: experimental MAP primitive reporter in lists category, visible in dev mode
+* Blocks: fixed #199 (can't delete reporter with attached comment via context menu)
+
+131009
+------
+* Theads: added a variant for linked lists to the experimental MAP primitive reporter
+
+131010
+------
+* Cloud: added "sanity check" to cloud-saving mechanism that errors if the serialized project data is corrupt and cannot be parsed as XML, addresses #203, #200, #171
+
+131014
+------
+* Morphic: Condense damage list by merging overlapping dirty rectangles, thanks, Craxic!
+* Objects: Increase maximum clone count from 128 to 300
+* Portuguese translation update, thanks, Manuel!!
+
+131015
+------
+* Morphic: further condense damage list by merging nearby rectangles, thanks, Craxic!
+
+131017
+------
+* Threads: fixed #213 - Empty else block breaks return to caller
+
+131025
+------
+* Blocks: enable Costumes as Symbols and Symbols as custom block label parts
+* BYOB: Symbol selection menu for BlockLabelFragmentMorphs
+* Portuguese translation update
+* Widgets: enable Symbols in InputField drop down menus
+* BYOB: enable Symbols in InputSlotDialog Morph’s drop down menu
+
+131104
+------
+* GUI: filter quotation marks from project names (for backend index)
+* BYOB: only show symbol menu for label fragments
+* BYOB: customizable drop-down menus for input slots (experimental, commented out)
+
+131107
+------
+* GUI, Cloud: transmission integrity check
+
+131112
+------
+* Blocks, BYOB, Store: customizable drop-down menus for input slots
+* Objects: fixed wrong NaN display for variable watchers
+* Blocks: left-align multi-line text in value-bubbles
+* Portuguese translation update, thanks, Manuel!
+
+131115
+------
+* Blocks, BYOB, Store: „read-only“ option for editable custom block input slots
+* BYOB, Blocks: custom block input slots reverting to default now show their default value
+* Blocks: fixed read-only input slot coloring glitch, thanks Bernat, for reporting it!
+* Objects: fixed #231 (watcher-display of Booleans)
+
+131122
+------
+* Morphic: Don’t trigger events for eclipsed morphs (whose parent-chain contains a hidden morph)
+* Blocks: Prevent „hide“ menu option for non-palette template blocks
+* new Catalan translation! Yay, thanks, Bernat Romagosa Carrasquer!!
+
+131126
+------
+* Cloud: fixed #125 (encode email address when signing up), thanks, Nathan!
+* Threads: fixed #207 (stricter comparison of strings vs. numbers). Some edge cases remain, such as empty string equals zero and disregarding trailing / leading blanks. These are intentional. Please don’t nitpick and spare me the fundamentalism :-)
+* Threads: fixed #245 (consistently auto-convert empty strings to zeroes)
+* Localization and Portuguese translation updates, thanks, Manuel!
+* Catalan translation update, thanks, Bernat!!
+* Threads: Text comparisons are now case-sensitive („fixes“ #175)
+* Threads: fixed #179 - don’t identify primitive (static) C-Slots as implicit formal parameters
+* Threads: fixed #249 - preserve variable value types with edge cases (empty string, Boolean false)
+* Threads: fixed #133 - preserve edge-cased argument types (empty string, Boolean false)
+* Fixed issue #244 (relabelling now preserves empty input slots), thanks, Nathan!
+
+131204
+------
+* Threads: handle text comparisons case-insensitive (again)
+* Lists: harmonize equality testing and List CONTAINS testing
+* French translation update, thanks, Martin!
+* Threads: fixed #261 (less tolerant null-value-to-number-coercion)
+
+131205
+------
+* Threads: fixed literal-to-non-literal zero-value comparison bug
+* Objects: fixed #264 (mapped <ctrl-enter> to green-flag instead of <enter>)
+
+131211
+------
+* Threads: accept lists as inputs to the green (text) LENGTH OF reporter
+
+131212
+------
+* Objects, Morphic: fixed #277, #279 (blitting null-canvasses fails)
+
+131219
+------
+* Objects: stage watchers for „mouse x“ and „mouse y“ sensing reporters. Thanks, Michael!
+* Store: fixed saving/loading/localisation of new mouse coordinate stage watchers
+
+140108
+------
+* Threads, Blocks, Objects: The FOR reporter’s first input now also accepts blocks and scripts („rings“), and reports a copy that is bound to the sprite indicated by the second input. This lets you „zombify“ (or remote-control) sprites (and create custom TELL and ASK blocks)
+* Blocks: initial support for „sensing“ sprite-only custom block definitions, commented out for now
+* Paint: Add mouseLeaveDragging() event behavior, thanks, Kartik, for this fix!
+* Objects: Only shrink-wrap sprite costumes, thanks, Kartik, for this fix!
+* Threads: Added xhr-headers to HTTP block, thanks, Tim!
+* Threads, Blocks, Objects: Added StopOthers primitive, thanks, Kartik!
+* Added „all but this option“ to StopOthers primitive, fixed the implementation
+* Updated German translation with new strings
+
+140109
+------
+* Objects: Mechanism for migrating blocks in existing projects to newer versions
+* Blocks, Objects, Threads: Collapse old STOP primitives into a single one with a dropdown of options
+* German translation update for new (migrated) STOP block
+* Morphic: Fixed updateReferences() (how could nobody notice so long?!)
+* XML: resolved unexpected assignment expressions (conform to the latest JSLint quibbles)
+* validated all source files against the latest JSLint version
+
+140110
+------
+* Threads: Revert pull request #295 (xhr-headers), breaks existing installations
+* BYOB: Fixed #292 (pulldowns loose lines when exported as library)
+* BYOB: Fixed #291 (readonly custom menus become non-readonly when block is edited)
