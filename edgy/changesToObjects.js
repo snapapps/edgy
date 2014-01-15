@@ -703,7 +703,16 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
     request.open('GET', url, false);
     request.send(null);
     if (request.status === 200) {
-        addGraph(this.G, objectToGraph(JSON.parse(request.responseText)));
+        try {
+            addGraph(this.G, objectToGraph(JSON.parse(request.responseText)));
+        } catch(e) {
+            if(e instanceof SyntaxError) {
+                // Try parsing as adjacency list.
+                addGraph(this.G, parseAdjacencyList(request.responseText));
+            } else {
+                throw e;
+            }
+        }
     } else {
         throw new Error("Could not load URL: " + request.statusText);
     }
@@ -1615,6 +1624,24 @@ function graphToObject(G) {
     }
 
     return data;
+}
+
+function parseAdjacencyList (text) {
+    var lines = text.split("\n"),
+        G = jsnx.DiGraph(),
+        row;
+
+    for (var i = 0; i < lines.length; i++) {
+        row = lines[i].split(",");
+        if(row.length === 3) {
+            G.add_edge(parseNode(row[0]), parseNode(row[1]), {label: row[2]})
+        } else if(row.length === 2)  {
+            G.add_edge(parseNode(row[0]), parseNode(row[1]));
+        }
+        // Silently swallow non-conforming lines.
+    }
+
+    return G;
 }
 
 // Transform NetworkX-formatted object to JSNetworkX graph-like object.
