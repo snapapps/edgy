@@ -341,6 +341,10 @@ SpriteMorph.prototype.setActiveGraph = function() {
     setGraphToDisplay(this.G);
 };
 
+SpriteMorph.prototype.hideActiveGraph = function() {
+    setGraphToDisplay(jsnx.Graph());
+};
+
 SpriteMorph.prototype.clearGraph = function() {
     this.G.clear();
 };
@@ -910,6 +914,11 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             category: 'network',
             spec: 'display current graph'
         },
+        hideActiveGraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'hide current graph'
+        },
         clearGraph: {
             type: 'command',
             category: 'network',
@@ -1288,6 +1297,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('newDiGraph'));
             blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
+            blocks.push(block('hideActiveGraph'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
             blocks.push(block('isCyclic'));
