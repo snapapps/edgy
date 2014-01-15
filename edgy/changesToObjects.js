@@ -7,7 +7,11 @@
 var graphEl = d3.select(document.body)
         .append('div')
         .attr('id', 'graph-display')
-        .style('position', 'absolute'),
+        .style({'position': 'absolute',
+                '-moz-user-select': 'none',
+                '-khtml-user-select': 'none',
+                '-webkit-user-select': 'none',
+                'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
     layout = null; // The d3.layout instance controlling the graph display.
 
