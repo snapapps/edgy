@@ -714,10 +714,16 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
 };
 
 SpriteMorph.prototype.startNode = function(edge) {
+    if(!(edge instanceof List) || edge.length() !== 2) {
+        throw new Error(edge.toString() + " is not an edge.");
+    }
     return edge.at(1);
 };
 
 SpriteMorph.prototype.endNode = function(edge) {
+    if(!(edge instanceof List) || edge.length() !== 2) {
+        throw new Error(edge.toString() + " is not an edge.");
+    }
     return edge.at(2);
 };
 
