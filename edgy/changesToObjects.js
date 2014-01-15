@@ -912,17 +912,17 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
         setActiveGraph: {
             type: 'command',
             category: 'network',
-            spec: 'display current graph'
+            spec: 'show'
         },
         hideActiveGraph: {
             type: 'command',
             category: 'network',
-            spec: 'hide current graph'
+            spec: 'hide'
         },
         clearGraph: {
             type: 'command',
             category: 'network',
-            spec: 'clear graph'
+            spec: 'clear'
         },
         numberOfNodes: {
             type: 'reporter',
