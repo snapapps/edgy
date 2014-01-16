@@ -7,7 +7,7 @@
     written by Jens Mönig and Brian Harvey
     jens@moenig.org, bh@cs.berkeley.edu
 
-    Copyright (C) 2013 by Jens Mönig and Brian Harvey
+    Copyright (C) 2014 by Jens Mönig and Brian Harvey
 
     This file is part of Snap!.
 
@@ -61,7 +61,7 @@ PushButtonMorph, SyntaxElementMorph, Color, Point, WatcherMorph,
 StringMorph, SpriteMorph, ScrollFrameMorph, CellMorph, ArrowMorph,
 MenuMorph, snapEquals, Morph, isNil, localize, MorphicPreferences*/
 
-modules.lists = '2013-June-20';
+modules.lists = '2014-January-09';
 
 var List;
 var ListWatcherMorph;
@@ -112,7 +112,7 @@ function List(array) {
 }
 
 List.prototype.toString = function () {
-    return 'a List [' + this.asArray + ']';
+    return 'a List [' + this.asArray() + ']';
 };
 
 // List updating:
@@ -200,39 +200,29 @@ List.prototype.length = function () {
 };
 
 List.prototype.at = function (index) {
-    var value;
+    var value, idx = +index;
     if (this.isLinked) {
-        return index === 1 ? this.first : this.rest.at(index - 1);
+        return idx === 1 ? this.first : this.rest.at(idx - 1);
     }
-    value = this.contents[index - 1];
+    value = this.contents[idx - 1];
     return isNil(value) ? '' : value;
 };
 
 List.prototype.contains = function (element) {
-    var num = parseFloat(element);
     if (this.isLinked) {
-        if (this.first === element) {
+        if (snapEquals(this.first, element)) {
             return true;
         }
-        if (!isNaN(num)) {
-            if (parseFloat(this.first) === num) {
-                return true;
-            }
-        }
+
         if (this.rest instanceof List) {
             return this.rest.contains(element);
         }
-        return false;
     }
-    // in case I'm arrayed
-    if (contains(this.contents, element)) {
-        return true;
-    }
-    if (!isNaN(num)) {
-        return (contains(this.contents, num))
-            || contains(this.contents, num.toString());
-    }
-    return false;
+
+    // This is an arrayed list.
+    return this.contents.some(function (any) {
+        return snapEquals(any, element);
+    });
 };
 
 // List conversion:

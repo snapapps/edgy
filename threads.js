@@ -9,7 +9,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2013 by Jens Mönig
+    Copyright (C) 2014 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -83,7 +83,7 @@ ArgLabelMorph, localize, XML_Element, hex_sha512*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.threads = '2013-September-16';
+modules.threads = '2014-January-10';
 
 var ThreadManager;
 var Process;
@@ -111,9 +111,11 @@ function snapEquals(a, b) {
         y = parseFloat(b);
     }
 
+    // handle text comparision text-insensitive.
     if (isString(x) && isString(y)) {
         return x.toLowerCase() === y.toLowerCase();
     }
+
     return x === y;
 }
 
@@ -149,15 +151,19 @@ ThreadManager.prototype.startProcess = function (block, isThreadSafe) {
     return newProc;
 };
 
-ThreadManager.prototype.stopAll = function () {
+ThreadManager.prototype.stopAll = function (excpt) {
+    // excpt is optional
     this.processes.forEach(function (proc) {
-        proc.stop();
+        if (proc !== excpt) {
+            proc.stop();
+        }
     });
 };
 
-ThreadManager.prototype.stopAllForReceiver = function (rcvr) {
+ThreadManager.prototype.stopAllForReceiver = function (rcvr, excpt) {
+    // excpt is optional
     this.processes.forEach(function (proc) {
-        if (proc.homeContext.receiver === rcvr) {
+        if (proc.homeContext.receiver === rcvr && proc !== excpt) {
             proc.stop();
             if (rcvr.isClone) {
                 proc.isDead = true;
@@ -785,13 +791,13 @@ Process.prototype.evaluate = function (
     runnable.isImplicitLambda = context.isImplicitLambda;
     runnable.isCustomBlock = false;
 
-    // assing parameters if any were passed
+    // assign parameters if any were passed
     if (parms.length > 0) {
 
         // assign formal parameters
         for (i = 0; i < context.inputs.length; i += 1) {
             value = 0;
-            if (parms[i]) {
+            if (!isNil(parms[i])) {
                 value = parms[i];
             }
             outer.variables.addVar(context.inputs[i], value);
@@ -860,7 +866,7 @@ Process.prototype.fork = function (context, args) {
         // assign formal parameters
         for (i = 0; i < context.inputs.length; i += 1) {
             value = 0;
-            if (parms[i]) {
+            if (!isNil(parms[i])) {
                 value = parms[i];
             }
             outer.variables.addVar(context.inputs[i], value);
@@ -1020,7 +1026,7 @@ Process.prototype.evaluateCustomBlock = function () {
         // assign formal parameters
         for (i = 0; i < context.inputs.length; i += 1) {
             value = 0;
-            if (parms[i]) {
+            if (!isNil(parms[i])) {
                 value = parms[i];
             }
             outer.variables.addVar(context.inputs[i], value);
@@ -1228,6 +1234,12 @@ Process.prototype.doConcatToList = function (l, list) {
     list.contents = list.contents.concat(l.contents);
 };
 
+Process.prototype.doListJoin = function (a, b) {
+    a.becomeArray();
+    b.becomeArray();
+    return new List(a.contents.concat(b.contents));
+};
+
 Process.prototype.doDeleteFromList = function (index, list) {
     var idx = index;
     if (this.inputOption(index) === 'all') {
@@ -1331,6 +1343,8 @@ Process.prototype.doIfElse = function () {
     } else {
         if (args[2]) {
             this.pushContext(args[2].blockSequence(), outer);
+        } else {
+            this.pushContext('doYield');
         }
     }
     if (this.context) {
@@ -1367,6 +1381,44 @@ Process.prototype.doStopAll = function () {
         }
         ide = stage.parentThatIsA(IDE_Morph);
         if (ide) {ide.controlBar.pauseButton.refresh(); }
+    }
+};
+
+Process.prototype.doStopThis = function (choice) {
+    switch (this.inputOption(choice)) {
+    case 'all':
+        this.doStopAll();
+        break;
+    case 'this script':
+        this.doStop();
+        break;
+    case 'this block':
+        this.doStopBlock();
+        break;
+    default:
+        nop();
+    }
+};
+
+Process.prototype.doStopOthers = function (choice) {
+    var stage;
+    if (this.homeContext.receiver) {
+        stage = this.homeContext.receiver.parentThatIsA(StageMorph);
+        if (stage) {
+            switch (this.inputOption(choice)) {
+            case 'all but this script':
+                stage.threads.stopAll(this);
+                break;
+            case 'other scripts in sprite':
+                stage.threads.stopAllForReceiver(
+                    this.homeContext.receiver,
+                    this
+                );
+                break;
+            default:
+                nop();
+            }
+        }
     }
 };
 
@@ -1526,6 +1578,64 @@ Process.prototype.doWaitUntil = function (goalCondition) {
     this.context.inputs = [];
     this.pushContext('doYield');
     this.pushContext();
+};
+
+Process.prototype.reportMap = function (reporter, list) {
+    // answer a new list containing the results of the reporter applied
+    // to each value of the given list. Distinguish between linked and
+    // arrayed lists.
+    // Note: This method utilizes the current context's inputs array to
+    // manage temporary variables, whose allocation to which slot are
+    // documented in each of the variants' code (linked or arrayed) below
+
+    var next;
+    if (list.isLinked) {
+        // this.context.inputs:
+        // [0] - reporter
+        // [1] - list (original source)
+        // -----------------------------
+        // [2] - result list (target)
+        // [3] - currently last element of result list
+        // [4] - current source list (what's left to map)
+        // [5] - current value of last function call
+
+        if (this.context.inputs.length < 3) {
+            this.context.addInput(new List());
+            this.context.inputs[2].isLinked = true;
+            this.context.addInput(this.context.inputs[2]);
+            this.context.addInput(list);
+        }
+        if (this.context.inputs[4].length() === 0) {
+            this.context.inputs[3].rest = list.cons(this.context.inputs[5]);
+            this.returnValueToParentContext(this.context.inputs[2].cdr());
+            return;
+        }
+        if (this.context.inputs.length > 5) {
+            this.context.inputs[3].rest = list.cons(this.context.inputs[5]);
+            this.context.inputs[3] = this.context.inputs[3].rest;
+            this.context.inputs.splice(5);
+        }
+        next = this.context.inputs[4].at(1);
+        this.context.inputs[4] = this.context.inputs[4].cdr();
+        this.pushContext();
+        this.evaluate(reporter, new List([next]));
+    } else { // arrayed
+        // this.context.inputs:
+        // [0] - reporter
+        // [1] - list (original source)
+        // -----------------------------
+        // [2..n] - result values (target)
+
+        if (this.context.inputs.length - 2 === list.length()) {
+            this.returnValueToParentContext(
+                new List(this.context.inputs.slice(2))
+            );
+            return;
+        }
+        next = list.at(this.context.inputs.length - 1);
+        this.pushContext();
+        this.evaluate(reporter, new List([next]));
+    }
 };
 
 // Process interpolated primitives
@@ -1795,30 +1905,30 @@ Process.prototype.reportTypeOf = function (thing) {
 // Process math primtives
 
 Process.prototype.reportSum = function (a, b) {
-    return parseFloat(a) + parseFloat(b);
+    return +a + (+b);
 };
 
 Process.prototype.reportDifference = function (a, b) {
-    return parseFloat(a) - parseFloat(b);
+    return +a - +b;
 };
 
 Process.prototype.reportProduct = function (a, b) {
-    return parseFloat(a) * parseFloat(b);
+    return +a * +b;
 };
 
 Process.prototype.reportQuotient = function (a, b) {
-    return parseFloat(a) / parseFloat(b);
+    return +a / +b;
 };
 
 Process.prototype.reportModulus = function (a, b) {
-    var x = parseFloat(a),
-        y = parseFloat(b);
+    var x = +a,
+        y = +b;
     return ((x % y) + y) % y;
 };
 
 Process.prototype.reportRandom = function (min, max) {
-    var floor = parseFloat(min),
-        ceil = parseFloat(max);
+    var floor = +min,
+        ceil = +max;
     if ((floor % 1 !== 0) || (ceil % 1 !== 0)) {
         return Math.random() * (ceil - floor) + floor;
     }
@@ -1826,8 +1936,8 @@ Process.prototype.reportRandom = function (min, max) {
 };
 
 Process.prototype.reportLessThan = function (a, b) {
-    var x = parseFloat(a),
-        y = parseFloat(b);
+    var x = +a,
+        y = +b;
     if (isNaN(x) || isNaN(y)) {
         x = a;
         y = b;
@@ -1840,8 +1950,8 @@ Process.prototype.reportNot = function (bool) {
 };
 
 Process.prototype.reportGreaterThan = function (a, b) {
-    var x = parseFloat(a),
-        y = parseFloat(b);
+    var x = +a,
+        y = +b;
     if (isNaN(x) || isNaN(y)) {
         x = a;
         y = b;
@@ -1895,11 +2005,11 @@ Process.prototype.reportFalse = function () {
 };
 
 Process.prototype.reportRound = function (n) {
-    return Math.round(parseFloat(n));
+    return Math.round(+n);
 };
 
 Process.prototype.reportMonadic = function (fname, n) {
-    var x = parseFloat(n),
+    var x = +n,
         result = 0;
 
     switch (this.inputOption(fname)) {
@@ -1943,6 +2053,7 @@ Process.prototype.reportMonadic = function (fname, n) {
         result = 0;
         break;
     default:
+        nop();
     }
     return result;
 };
@@ -1974,6 +2085,7 @@ Process.prototype.reportTextFunction = function (fname, string) {
         result = hex_sha512(x);
         break;
     default:
+        nop();
     }
     return result;
 };
@@ -1994,12 +2106,15 @@ Process.prototype.reportJoinWords = function (aList) {
 // Process string ops
 
 Process.prototype.reportLetter = function (idx, string) {
-    var i = parseFloat(idx || 0),
+    var i = +(idx || 0),
         str = (string || '').toString();
     return str[i - 1] || '';
 };
 
 Process.prototype.reportStringSize = function (string) {
+    if (string instanceof List) { // catch a common user error
+        return string.length();
+    }
     var str = (string || '').toString();
     return str.length;
 };
@@ -2010,13 +2125,23 @@ Process.prototype.reportUnicode = function (string) {
 };
 
 Process.prototype.reportUnicodeAsLetter = function (num) {
-    var code = parseFloat(num || 0);
+    var code = +(num || 0);
     return String.fromCharCode(code);
 };
 
 Process.prototype.reportTextSplit = function (string, delimiter) {
-    var str = (string || '').toString(),
+    var types = ['text', 'number'],
+        strType = this.reportTypeOf(string),
+        delType = this.reportTypeOf(this.inputOption(delimiter)),
+        str,
         del;
+    if (!contains(types, strType)) {
+        throw new Error('expecting a text instad of a ' + strType);
+    }
+    if (!contains(types, delType)) {
+        throw new Error('expecting a text delimiter instad of a ' + delType);
+    }
+    str = (string || '').toString();
     switch (this.inputOption(delimiter)) {
     case 'line':
         del = '\n';
@@ -2306,6 +2431,9 @@ Process.prototype.reportAttributeOf = function (attribute, name) {
             thatObj = this.getOtherObject(name, thisObj, stage);
         }
         if (thatObj) {
+            if (attribute instanceof Context) {
+                return this.reportContextFor(attribute, thatObj);
+            }
             if (isString(attribute)) {
                 return thatObj.variables.getVar(attribute);
             }
@@ -2328,6 +2456,18 @@ Process.prototype.reportAttributeOf = function (attribute, name) {
         }
     }
     return '';
+};
+
+Process.prototype.reportContextFor = function (context, otherObj) {
+    // Private - return a copy of the context
+    // and bind it to another receiver
+    var result = copy(context);
+    result.receiver = otherObj;
+    if (result.outerContext) {
+        result.outerContext = copy(result.outerContext);
+        result.outerContext.receiver = otherObj;
+    }
+    return result;
 };
 
 Process.prototype.reportMouseX = function () {
@@ -2890,7 +3030,9 @@ VariableFrame.prototype.getVar = function (name, upvars) {
 };
 
 VariableFrame.prototype.addVar = function (name, value) {
-    this.vars[name] = (value === 0 ? 0 : value || null);
+    this.vars[name] = (value === 0 ? 0
+              : value === false ? false
+                       : value === '' ? '' : value || null);
 };
 
 VariableFrame.prototype.deleteVar = function (name) {

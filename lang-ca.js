@@ -1,12 +1,12 @@
 /*
 
-    lang-de.js
+    lang-ca.js
 
-    German translation for SNAP!
+    Catalan translation for SNAP!
 
     written by Jens Mönig
 
-    Copyright (C) 2014 by Jens Mönig
+    Copyright (C) 2013 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -166,7 +166,7 @@
 
 /*global SnapTranslator*/
 
-SnapTranslator.dict.de = {
+SnapTranslator.dict.ca = {
 
 /*
     Special characters: (see <http://0xcc.net/jsescape/>)
@@ -179,79 +179,79 @@ SnapTranslator.dict.de = {
 
     // translations meta information
     'language_name':
-        'Deutsch', // the name as it should appear in the language menu
+        'Català', // the name as it should appear in the language menu
     'language_translator':
-        'Jens M\u00F6nig', // your name for the Translators tab
+        'Bernat Romagosa Carrasquer', // your name for the Translators tab
     'translator_e-mail':
-        'jens@moenig.org', // optional
+        'tibabenfortlapalanca@gmail.com', // optional
     'last_changed':
-        '2014-01-09', // this, too, will appear in the Translators tab
+        '2013-11-26', // this, too, will appear in the Translators tab
 
     // GUI
     // control bar:
     'untitled':
-        'Unbenannt',
+        'Sense títol',
     'development mode':
-        'Hackermodus',
+        'mode de desenvolupament',
 
     // categories:
     'Motion':
-        'Bewegung',
+        'Moviment',
     'Looks':
-        'Aussehen',
+        'Aparença',
     'Sound':
-        'Klang',
+        'So',
     'Pen':
-        'Stift',
+        'Llapis',
     'Control':
-        'Steuerung',
+        'Control',
     'Sensing':
-        'F\u00fchlen',
+        'Sensors',
     'Operators':
-        'Operatoren',
+        'Operadors',
     'Variables':
-        'Variablen',
+        'Variables',
     'Lists':
-        'Listen',
+        'Llistes',
     'Other':
-        'Andere',
+        'Altres',
 
     // editor:
     'draggable':
-        'greifbar',
+        'arrossegable',
 
     // tabs:
     'Scripts':
-        'Skripte',
+        'Programes',
     'Costumes':
-        'Kost\u00fcme',
+        'Vestits',
     'Sounds':
-        'Kl\u00e4nge',
+        'Sons',
 
     // names:
     'Sprite':
-        'Objekt',
+        'Objecte',
     'Stage':
-        'B\u00fchne',
+        'Escenari',
 
     // rotation styles:
     'don\'t rotate':
-        'nicht drehbar',
+        'no girar',
     'can rotate':
-        'frei drehbar',
+        'pot girar',
     'only face left/right':
-        'kann sich nur nach\nlinks/rechts drehen',
+        'només mirar esquerra/dreta',
 
     // new sprite button:
     'add a new sprite':
-        'ein neues Objekt\nhinzuf\u00fcgen',
+        'afegir un nou objecte',
 
     // tab help
     'costumes tab help':
-        'Bilder durch hereinziehen von einer anderen\n'
-            + 'Webseite or vom Computer importieren',
+        'podeu importar una imatge des d\'un altre lloc Web o des del\n'
+            + 'vostre ordinador arrossegant-la fins aquí',
     'import a sound from your computer\nby dragging it into here':
-        'Kl\u00e4nge durch hereinziehen importieren',
+        'podeu importar un so des del vostre ordinador\narrossegant-lo fins aquí',
 
     // primitive blocks:
 
@@ -287,839 +287,827 @@ SnapTranslator.dict.de = {
 
     // motion:
     'Stage selected:\nno motion primitives':
-        'B\u00fchne ausgew\u00e4hlt:\nkeine Standardbewegungsbl\u00f6cke\n'
-            + 'vorhanden',
+        'Escenari seleccionat:\nno hi ha primitives de moviment\n'
+            + 'disponibles',
 
     'move %n steps':
-        'gehe %n Schritte',
+        'moure %n passos',
     'turn %clockwise %n degrees':
-        'drehe %clockwise %n Grad',
+        'gira %clockwise %n graus',
     'turn %counterclockwise %n degrees':
-        'drehe %counterclockwise %n Grad',
+        'gira %counterclockwise %n graus',
     'point in direction %dir':
-        'zeige Richtung %dir',
+        'apunta en direcció %dir',
     'point towards %dst':
-        'zeige auf %dst',
+        'apunta cap a %dst',
     'go to x: %n y: %n':
-        'gehe zu x: %n y: %n',
+        'vés a x: %n y: %n',
     'go to %dst':
-        'gehe zu %dst',
+        'vés a %dst',
     'glide %n secs to x: %n y: %n':
-        'gleite %n Sek. zu x: %n y: %n',
+        'llisca en %n segons fins a x: %n y: %n',
     'change x by %n':
-        '\u00e4ndere x um %n',
+        'suma %n a x',
     'set x to %n':
-        'setze x auf %n',
+        'assigna el valor %n a x',
     'change y by %n':
-        '\u00e4ndere y um %n',
+        'suma %n a y',
     'set y to %n':
-        'setze y auf %n',
+        'assigna el valor %n a y',
     'if on edge, bounce':
-        'pralle vom Rand ab',
+        'rebota en tocar una vora',
     'x position':
-        'x-Position',
+        'posició x',
     'y position':
-        'y-Position',
+        'posició y',
     'direction':
-        'Richtung',
+        'direcció',
 
     // looks:
     'switch to costume %cst':
-        'ziehe Kost\u00fcm %cst an',
+        'canvia el vestit a %cst',
     'next costume':
-        'n\u00e4chstes Kost\u00fcm',
+        'següent vestit',
     'costume #':
-        'Kost\u00fcm Nr.',
+        'número de vestit',
     'say %s for %n secs':
-        'sage %s f\u00fcr %n Sek.',
+        'digues %s durant %n segons',
     'say %s':
-        'sage %s',
+        'digues %s',
     'think %s for %n secs':
-        'denke %s f\u00fcr %n Sek.',
+        'pensa %s durant %n segons',
     'think %s':
-        'denke %s',
+        'pensa %s',
     'Hello!':
-        'Hallo!',
+        'Hola!',
     'Hmm...':
         'Hmm...',
     'change %eff effect by %n':
-        '\u00e4ndere %eff -Effekt um %n',
+        'augmenta l\'efecte %eff en %n',
     'set %eff effect to %n':
-        'setze %eff -Effekt auf %n',
+        'fixa l\'efecte %eff a %n',
     'clear graphic effects':
-        'schalte Grafikeffekte aus',
+        'treu els efectes gràfics',
     'change size by %n':
-        '\u00e4ndere Gr\u00f6\u00dfe um %n',
+        'augmenta %n la mida',
     'set size to %n %':
-        'setze Gr\u00f6\u00dfe auf %n %',
+        'fixa la mida a %n %',
     'size':
-        'Gr\u00f6\u00dfe',
+        'mida',
     'show':
-        'anzeigen',
+        'mostra',
     'hide':
-        'verstecken',
+        'amaga',
     'go to front':
-        'komme nach vorn',
+        'vés al front',
     'go back %n layers':
-        'gehe %n Ebenen zur\u00fcck',
+        'vés %n capes darrera',
 
     'development mode \ndebugging primitives:':
-        'Hackermodus \nDebugging-Bl\u00f6cke',
+        'mode de desenvolupament \nprimitives de depuració',
     'console log %mult%s':
-        'schreibe in die Konsole: %mult%s',
+        'log per consola: %mult%s',
     'alert %mult%s':
-        'Pop-up: %mult%s',
+        'alerta: %mult%s',
 
     // sound:
     'play sound %snd':
-        'spiele Klang %snd',
+        'toca el so %snd',
     'play sound %snd until done':
-        'spiele Klang %snd ganz',
+        'toca el so %snd fins que acabi',
     'stop all sounds':
-        'stoppe alle Kl\u00e4nge',
+        'atura tots els sons',
     'rest for %n beats':
-        'spiele Pause f\u00fcr %n Schl\u00e4ge',
+        'fes silenci durant %n temps',
     'play note %n for %n beats':
-        'spiele Note %n f\u00fcr %n Schl\u00e4ge',
+        'toca la nota %n durant %n temps',
     'change tempo by %n':
-        '\u00e4ndere Tempo um %n',
+        'augmenta el tempo en %n',
     'set tempo to %n bpm':
-        'setze Tempo auf %n Schl\u00e4ge/Min.',
+        'fixa el tempo a %n',
     'tempo':
-        'Tempo',
+        'tempo',
 
     // pen:
     'clear':
-        'wische',
+        'neteja',
     'pen down':
-        'Stift runter',
+        'baixa el llapis',
     'pen up':
-        'Stift hoch',
+        'puja el llapis',
     'set pen color to %clr':
-        'setze Stiftfarbe auf %clr',
+        'fixa el color del llapis a %clr',
     'change pen color by %n':
-        '\u00e4ndere Stiftfarbe um %n',
+        'augmenta en %n el color del llapis',
     'set pen color to %n':
-        'setze Stiftfarbe auf %n',
+        'fixa el color del llapis a %n',
     'change pen shade by %n':
-        '\u00e4ndere Farbst\u00e4rke um %n',
+        'augmenta en %n la intensitat del llapis',
     'set pen shade to %n':
-        'setze Farbst\u00e4rke auf %n',
+        'fixa la intensitat del llapis a %n',
     'change pen size by %n':
-        '\u00e4ndere Stiftdicke um %n',
+        'augmenta en %n la mida del llapis',
     'set pen size to %n':
-        'setze Stiftdicke auf %n',
+        'fixa la mida del llapis en %n',
     'stamp':
-        'stemple',
+        'estampa',
 
     // control:
     'when %greenflag clicked':
-        'Wenn %greenflag angeklickt',
+        'Quan la %greenflag es premi',
     'when %keyHat key pressed':
-        'Wenn Taste %keyHat gedr\u00fcckt',
+        'Quan la tecla %keyHat es premi',
     'when I am clicked':
-        'Wenn ich angeklickt werde',
+        'Quan es cliqui aquest personatge',
     'when I receive %msgHat':
-        'Wenn ich %msgHat empfange',
+        'Quan rebi %msgHat',
     'broadcast %msg':
-        'sende %msg an alle',
+        'Envia a tots %msg',
     'broadcast %msg and wait':
-        'sende %msg an alle und warte',
+        'Envia a tots %msg i espera',
     'Message name':
-        'Nachricht',
+        'Nom del missatge',
     'message':
-        'Nachricht',
+        'missatge',
     'any message':
-        'eine beliebige Nachricht',
+        'qualsevol missatge',
     'wait %n secs':
-        'warte %n Sek.',
+        'espera %n segons',
     'wait until %b':
-        'warte bis %b',
+        'espera fins %b',
     'forever %c':
-        'fortlaufend %c',
+        'per sempre %c',
     'repeat %n %c':
-        'wiederhole %n mal %c',
+        'repeteix %n vegades %c',
     'repeat until %b %c':
-        'wiederhole bis %b %c',
+        'repeteix fins %b %c',
     'if %b %c':
-        'falls %b %c',
+        'si %b llavors %c',
     'if %b %c else %c':
-        'falls %b %c sonst %c',
+        'si %b llavors %c si no %c',
     'report %s':
-        'berichte %s',
-    'stop %stopChoices':
-        'stoppe %stopChoices',
-    'all':
-        'alles',
-    'this script':
-        'dieses Skript',
-    'this block':
-        'diesen Block',
-    'stop %stopOthersChoices':
-        'stoppe %stopOthersChoices',
-    'all but this script':
-        'alles au\u00dfer diesem Skript',
-    'other scripts in sprite':
-        'andere Skripte in diesem Objekt',
+        'retorna %s',
+    'stop block':
+        'atura el bloc',
+    'stop script':
+        'atura aquest programa',
+    'stop all %stop':
+        'atura-ho tot %stop',
     'pause all %pause':
-        'pausiere alles %pause',
+        'pausa-ho tot %pause',
     'run %cmdRing %inputs':
-        'f\u00fchre %cmdRing aus %inputs',
+        'executa %cmdRing %inputs',
     'launch %cmdRing %inputs':
-        'starte %cmdRing %inputs',
+        'llança %cmdRing %inputs',
     'call %repRing %inputs':
-        'rufe %repRing auf %inputs',
+        'crida %repRing %inputs',
     'run %cmdRing w/continuation':
-        'f\u00fchre %cmdRing mit Continuation aus',
+        'executa %cmdRing amb continuació',
     'call %cmdRing w/continuation':
-        'rufe %cmdRing mit Continuation auf',
+        'crida %cmdRing amb continuació',
     'warp %c':
-        'Warp %c',
+        'executa de cop %c',
     'when I start as a clone':
-        'Wenn ich geklont werde',
+        'quan una còpia meva comenci',
     'create a clone of %cln':
-        'klone %cln',
+        'crea un clon de %cln',
     'myself':
-        'mich',
+        'mi mateix',
     'delete this clone':
-        'entferne diesen Klon',
+        'esborra aquest clon',
+
 
     // sensing:
     'touching %col ?':
-        'ber\u00fchre %col ?',
+        'tocant %col ?',
     'touching %clr ?':
-        'ber\u00fchre %clr ?',
+        'tocant el color %clr ?',
     'color %clr is touching %clr ?':
-        'Farbe %clr ber\u00fchrt %clr ?',
+        'color %clr sobre %clr ?',
     'ask %s and wait':
-        'frage %s und warte',
+        'pregunta %s i espera',
     'what\'s your name?':
-        'Wie hei\u00dft Du?',
+        'Com et dius?',
     'answer':
-        'Antwort',
+        'resposta',
     'mouse x':
-        'Maus x-Position',
+        'ratolí x',
     'mouse y':
-        'Maus y-Position',
+        'ratolí y',
     'mouse down?':
-        'Maustaste gedr\u00fcckt?',
+        'ratolí clicat?',
     'key %key pressed?':
-        'Taste %key gedr\u00fcckt?',
+        'tecla %key premuda?',
     'distance to %dst':
-        'Entfernung von %dst',
+        'distància a %dst',
     'reset timer':
-        'starte Stoppuhr neu',
+        'reinicia el cronòmetre',
     'timer':
-        'Stoppuhr',
+        'cronòmetre',
     '%att of %spr':
-        '%att von %spr',
+        '%att de %spr',
     'http:// %s':
         'http:// %s',
     'turbo mode?':
-        'Turbomodus?',
+        'mode turbo?',
     'set turbo mode to %b':
-        'setze Turbomodus auf %b',
+        'posa el mode turbo a %b',
 
     'filtered for %clr':
-        'nach %clr gefiltert',
+        'filtrat per a %clr',
     'stack size':
-        'Stapelgr\u00f6\u00dfe',
+        'mida de la pila',
     'frames':
-        'Rahmenz\u00e4hler',
+        'frames',
 
     // operators:
     '%n mod %n':
-        '%n modulo %n',
+        'residu de dividir %n entre %n',
     'round %n':
-        '%n gerundet',
+        'arrodoneix %n',
     '%fun of %n':
-        '%fun von %n',
+        '%fun de %n',
     'pick random %n to %n':
-        'Zufallszahl von %n bis %n',
+        'nombre a l\'atzar entre %n i %n',
     '%b and %b':
-        '%b und %b',
+        '%b i %b',
     '%b or %b':
-        '%b oder %b',
+        '%b o %b',
     'not %b':
-        'nicht %b',
+        'no %b',
     'true':
-        'wahr',
+        'cert',
     'false':
-        'falsch',
+        'fals',
     'join %words':
-        'verbinde %words',
+        'unir %words',
     'split %s by %delim':
-        'trenne %s nach %delim',
+        'divideix %s per %delim',
     'hello':
-        'Hallo',
+        'hola',
     'world':
-        'Welt',
+        'món',
     'letter %n of %s':
-        'Zeichen %n von %s',
+        'lletra %n de %s',
     'length of %s':
-        'L\u00e4nge von %s',
+        'longitud de %s',
     'unicode of %s':
-        'Unicode Wert von %s',
+        'Valor Unicode de %s',
     'unicode %n as letter':
-        'Unicode %n als Buchstabe',
+        'Lletra amb valor Unicode %n',
     'is %s a %typ ?':
-        'ist %s ein(e) %typ ?',
+        'És %s un %typ ?',
     'is %s identical to %s ?':
-        'ist %s identisch mit %s ?',
+        'És %s idèntic a %s ?',
 
     'type of %s':
-        'Typ von %s',
+        'tipus de %s',
 
     // variables:
     'Make a variable':
-        'Neue Variable',
+        'Crear una variable',
     'Variable name':
-        'Variablenname',
+        'Nom de variable',
     'Script variable name':
-        'Skriptvariablenname',
+        'Nom de la variable de programa',
     'Delete a variable':
-        'Variable l\u00f6schen',
+        'Esborrar una variable',
 
     'set %var to %s':
-        'setze %var auf %s',
+        'assigna a %var el valor %s',
     'change %var by %n':
-        '\u00e4ndere %var um %n',
+        'augmenta %var en %n',
     'show variable %var':
-        'zeige Variable %var',
+        'mostra la variable %var',
     'hide variable %var':
-        'verstecke Variable %var',
+        'amaga la variable %var',
     'script variables %scriptVars':
-        'Skriptvariablen %scriptVars',
+        'variables de programa %scriptVars',
 
     // lists:
     'list %exp':
-        'Liste %exp',
+        'llista %exp',
     '%s in front of %l':
-        '%s am Anfang von %l',
+        '%s afegir davant de %l',
     'item %idx of %l':
-        'Element %idx von %l',
+        'element %idx de %l',
     'all but first of %l':
-        'alles au\u00dfer dem ersten von %l',
+        '%l sense el primer element',
     'length of %l':
-        'L\u00e4nge von %l',
+        'longitud de %l',
     '%l contains %s':
-        '%l enth\u00e4lt %s',
+        '%l conté %s',
     'thing':
-        'etwas',
+        'cosa',
     'add %s to %l':
-        'f\u00fcge %s zu %l hinzu',
+        'afegeix %s a %l',
     'delete %ida of %l':
-        'entferne %ida aus %l',
+        'esborra %ida de %l',
     'insert %s at %idx of %l':
-        'f\u00fcge %s als %idx in %l ein',
+        'insereix %s a la posició %idx de %l',
     'replace item %idx of %l with %s':
-        'ersetze Element %idx in %l durch %s',
+        'substitueix l\'element %idx de %l per %s',
 
     // other
     'Make a block':
-        'Neuer Block',
+        'Crea un bloc',
 
     // menus
     // snap menu
     'About...':
-        '\u00dcber Snap!...',
+        'Sobre Snap!',
     'Reference manual':
-        'Handbuch lesen',
+        'Manual de referència',
     'Snap! website':
-        'Snap! Webseite',
+        'Web de Snap!',
     'Download source':
-        'Quellcode runterladen',
+        'Descarregar codi font',
     'Switch back to user mode':
-        'zur\u00fcck zum Benutzermodus',
+        'Tornar a mode d\'usuari',
     'disable deep-Morphic\ncontext menus\nand show user-friendly ones':
-        'verl\u00e4sst Morphic',
+        'canviar menús contextuals\nprimitius de Morphic\nper menús més amigables',
     'Switch to dev mode':
-        'zum Hackermodus wechseln',
+        'Canviar a mode desenvolupador',
     'enable Morphic\ncontext menus\nand inspectors,\nnot user-friendly!':
-        'erm\u00f6glicht Morphic Funktionen',
+        'habilitar menús\ncontextuals de\nMorphic i inspectors,\nmode expert!',
 
     // project menu
     'Project notes...':
-        'Projektanmerkungen...',
+        'Notes del projecte...',
     'New':
-        'Neu',
+        'Nou',
     'Open...':
-        '\u00d6ffnen...',
+        'Obrir...',
     'Save':
-        'Sichern',
+        'Desar',
     'Save As...':
-        'Sichern als...',
+        'Desar com...',
     'Import...':
-        'Importieren...',
+        'Importar...',
     'file menu import hint':
-        'l\u00e4dt ein exportiertes Projekt,\neine Bibliothek mit '
-            + 'Bl\u00f6cken\n'
-            + 'ein Kost\u00fcm oder einen Klang',
+        'pistes del menú d\'importació',
     'Export project as plain text...':
-        'Projekt als normalen Text exportieren...',
+        'Exportar projecte en text pla...',
     'Export project...':
-        'Projekt exportieren...',
+        'Exportar projecte...',
     'show project data as XML\nin a new browser window':
-        'zeigt das Projekt als XML\nin einem neuen Browserfenster an',
+        'mostrar tot el projecte en format XML\nen una altra finestra del navegador',
     'Export blocks...':
-        'Bl\u00f6cke exportieren...',
+        'Exportar blocs...',
     'show global custom block definitions as XML\nin a new browser window':
-        'zeigt globale Benutzerblockdefinitionen\nals XML im Browser an',
+        'mostrar definicions de blocs personalitzats\nen format XML en una altra finestra del\nnavegador',
     'Import tools':
-        'Tools laden',
+        'Importar eines',
     'load the official library of\npowerful blocks':
-        'das offizielle Modul mit\nm\u00e4chtigen Bl\u00f6cken laden',
+        'carregar la llibreria\noficial de blocs avançats',
     'Libraries...':
-        'Module...',
+        'Llibreries...',
     'Import library':
-        'Modul laden',
+        'Importar llibreria',
 
     // cloud menu
     'Login...':
-        'Anmelden...',
+        'Iniciar sessió...',
     'Signup...':
-        'Benutzerkonto einrichten...',
+        'Registrar-se...',
 
     // settings menu
     'Language...':
-        'Sprache...',
+        'Idioma...',
     'Zoom blocks...':
-        'Bl\u00f6cke vergr\u00f6\u00dfern...',
+        'Mida dels blocs...',
     'Blurred shadows':
-        'Weiche Schatten',
+        'Ombres suavitzades',
     'uncheck to use solid drop\nshadows and highlights':
-        'abschalten f\u00fcr harte Schatten\nund Beleuchtung',
+        'desmarca\'m per utilitzar\nombres i realçats sòlids',
     'check to use blurred drop\nshadows and highlights':
-        'einschalten f\u00fcr harte Schatten\nund Beleuchtung',
+        'marca\'m per utilitzar\nombres i realçats suavitzats',
     'Zebra coloring':
-        'Zebrafarben',
+        'Coloració en zebra',
     'check to enable alternating\ncolors for nested blocks':
-        'einschalten \u00fcr abwechselnde Farbnuancen\nin Bl\u00f6cken',
+        'marca\'m per habilitar la coloració\nalternada per a blocs imbricats',
     'uncheck to disable alternating\ncolors for nested block':
-        'ausschalten verhindert abwechselnde\nFarbnuancen in Bl\u00f6cken',
+        'desmarca\'m per deshabilitar la coloració\nalternada per a blocs imbricats',
     'Dynamic input labels':
-        'Eingabenbeschriftung',
+        'Etiquetes d\'entrada dinàmiques',
     'uncheck to disable dynamic\nlabels for variadic inputs':
-        'ausschalten verhindert Beschriftung\nvon Mehrfacheingaben',
+        'desmarca\'m per inhabilitar les\netiquetes dinàmiques d\'entrada de variables',
     'check to enable dynamic\nlabels for variadic inputs':
-        'einschalten um Mehrfacheingabefelder\nautomatisch zu beschriften',
+        'marca\'m per habilitar les\netiquetes dinàmiques d\'entrada de variables',
     'Prefer empty slot drops':
-        'Leere Platzhalter bevorzugen',
+        'Dóna preferència a les ranures buides',
     'settings menu prefer empty slots hint':
-        'einschalten um leere Platzhalter\nbeim Platzieren von Bl\u00f6cken'
-            + 'zu bevorzugen',
+        'marca\'m per a fer que les ranures\nbuides tinguin preferència sobre les plenes\na l\'hora de deixar-hi caure peces',
     'uncheck to allow dropped\nreporters to kick out others':
-        'ausschalten um das "Rauskicken"\nvon platzierten Bl\u00f6cken\n'
-            + 'zu erm\u00f6glichen',
+        'marca\'m per a fer que les ranures\nbuides tinguin la mateixa preferència que les\nplenes a l\'hora de deixar-hi caure peces',
     'Long form input dialog':
-        'Ausf\u00fchrlicher Input-Dialog',
-    'Plain prototype labels':
-        'Einfache Prototyp-Beschriftung',
+        'Forçar diàleg de selecció de tipus',
+	'Plain prototype labels':
+        'Etiquetes de prototip simples',
     'uncheck to always show (+) symbols\nin block prototype labels':
-        'ausschalten, um (+) Zeichen\nim Blockeditor zu verbergen',
+        'desmarca\'m per mostrar sempre el\nsímbol (+) en les etiquetes de prototip\nde bloc (a l\'editor de blocs)',
     'check to hide (+) symbols\nin block prototype labels':
-        'einschalten, um (+) Zeichen\nim Blockeditor immer anzuzeigen',
+        'desmarca\'m per amagar el símbol (+)\nen les etiquetes de prototip\nde bloc (a l\'editor de blocs)',
     'check to always show slot\ntypes in the input dialog':
-        'einschalten, um immer die Datentypen\nim Input-Dialog zu sehen',
+        'marca\'m per a mostrar sempre\nel diàleg de selecció de tipus\nen afegir paràmetres als blocs\npersonalitzats',
     'uncheck to use the input\ndialog in short form':
-        'ausschalten f\u00fcr kurzen\nInput-Dialog',
+        'desmarca\'m per a no mostrar\nautomàticament el diàleg de selecció\nde tipus en afegir paràmetres\nals blocs personalitzats',
     'Virtual keyboard':
-        'Virtuelle Tastatur',
+        'Teclat virtual',
     'uncheck to disable\nvirtual keyboard support\nfor mobile devices':
-        'ausschalten um die virtuelle\nTastatur auf mobilen Ger\u00e4ten\n'
-            + 'zu sperren',
+        'desmarca\'m per inhabilitar\nel suport per al teclat virtual\nen dispositius mòbils',
     'check to enable\nvirtual keyboard support\nfor mobile devices':
-        'einschalten um die virtuelle\nTastatur auf mobilen Ger\u00e4ten\n'
-            + 'zu erm\u00f6glichen',
+        'marca\'m per habilitar\nel suport per al teclat virtual\nen dispositius mòbils',
     'Input sliders':
-        'Eingabeschieber',
+        'Lliscadors d\'entrada',
     'uncheck to disable\ninput sliders for\nentry fields':
-        'ausschalten um Schieber\nin Eingabefeldern zu verhindern',
+        'desmarca\'m per deshabilitar\nels lliscadors per als camps\nd\'entrada',
     'check to enable\ninput sliders for\nentry fields':
-        'einschalten um Schieber\nin Eingabefeldern zu aktivieren',
+        'marca\'m per habilitar\nels lliscadors per als camps\nd\'entrada',
     'Clicking sound':
-        'Akustisches Klicken',
+        'So de clic',
     'uncheck to turn\nblock clicking\nsound off':
-        'ausschalten um akustisches\nKlicken zu deaktivieren',
+        'desmarca\'m per deshabilitar\nel so de clic en clicar sobre\nels blocs',
     'check to turn\nblock clicking\nsound on':
-        'einschalten um akustisches\nKlicken zu aktivieren',
+        'marca\'m per habilitar\nel so de clic en clicar sobre\nels blocs',
     'Animations':
-        'Animationen',
+        'Animacions',
     'uncheck to disable\nIDE animations':
-        'ausschalten um IDE-\nAnimationen zu verhindern',
+        'desmarca\'m per deshabilitar\nles animacions de la interfície',
     'Turbo mode':
-        'Turbomodus',
+        'Mode turbo',
     'check to prioritize\nscript execution':
-        'einschalten, um Skripte\nzu priorisieren',
+        'marca\'m per activar el mode de\nprioritat en l\'execució de programes',
     'uncheck to run scripts\nat normal speed':
-        'ausschalten, um Skripte\nnormal auszuf\u00fchren',
+        'desmarca\'m per executar\nels programes a la velocitat\nnormal',
     'check to enable\nIDE animations':
-        'einschalten um IDE-\nAnimationen zu erlauben',
+        'marca\'m per habilitar\nles animacions de la interfície',
     'Thread safe scripts':
-        'Threadsicherheit',
-    'uncheck to allow\nscript reentrance':
-        'verhindert, dass unvollendete\nSkripte erneut gestartet werden',
-    'check to disallow\nscript reentrance':
-        'verhindert, dass unvollendete\nSkripte erneut gestartet werden',
+        'Fil d\'execució segur',
+    'uncheck to allow\nscript reentrancy':
+        'desmarca\'m per permetre\nla re-entrada als programes',
+    'check to disallow\nscript reentrancy':
+        'marca\'m per no permetre\nla re-entrada als programes',
     'Prefer smooth animations':
-        'Fixe Framerate',
+        'Suavitza les animacions',
     'uncheck for greater speed\nat variable frame rates':
-        'ausschalten, um Animationen \ndynamischer auszuf\u00fchren',
+        'desmarca\'m per augmentar la velocitat de\nles animacions fins la màxima capacitat d\'aquesta màquina',
     'check for smooth, predictable\nanimations across computers':
-        'einschalten, damit Animationen\n\u00fcberall gleich laufen',
+        'marca\'m per aconseguir unes animacions\nmés suaus i a velocitat predible en màquines diferents',
 
     // inputs
     'with inputs':
-        'mit Eingaben',
+        'amb entrades',
     'input names:':
-        'Eingaben:',
+        'noms d\'entrades:',
     'Input Names:':
-        'Eingaben:',
+        'Noms d\'entrades:',
     'input list:':
-        'Eingabeliste:',
+        'llista d\'entrades:',
 
     // context menus:
     'help':
-        'Hilfe',
+        'ajuda',
 
     // palette:
     'hide primitives':
-        'Basisbl\u00f6cke ausblenden',
+        'amaga blocs primitius',
     'show primitives':
-        'Basisbl\u00f6cke anzeigen',
+        'mostra blocs primitius',
 
     // blocks:
     'help...':
-        'Hilfe...',
+        'ajuda...',
     'relabel...':
-        'Umbenennen...',
+        'canvia\'m el nom...',
     'duplicate':
-        'Duplizieren',
+        'duplica\'m',
     'make a copy\nand pick it up':
-        'eine Kopie aufnehmen',
+        'crea una còpia\ni agafa-la',
     'only duplicate this block':
-        'nur diesen Block duplizieren',
+        'duplica només aquest bloc',
     'delete':
-        'L\u00f6schen',
+        'esborra\'m',
     'script pic...':
-        'Skriptbild...',
+        'mostra la meva imatge...',
     'open a new window\nwith a picture of this script':
-        'ein neues Browserfenster mit einem\nBild dieses Skripts \u00f6ffnen',
+        'obre una nova finestra\namb una imatge d\'aquest programa',
     'ringify':
-        'Umringen',
+        'encapsula\'m',
     'unringify':
-        'Entringen',
+        'des-encapsula\'m',
 
     // custom blocks:
     'delete block definition...':
-        'Blockdefinition l\u00f6schen',
+        'esborra la definició d\'aquest bloc',
     'edit...':
-        'Bearbeiten...',
+        'edita...',
 
     // sprites:
     'edit':
-        'Bearbeiten',
+        'editar',
     'detach from':
-        'Abtrennen von',
+        'desenganxa de',
     'detach all parts':
-        'Alle Teile abtrennen',
+        'desenganxa totes les parts',
     'export...':
-        'Exportieren...',
+        'exportar...',
 
     // stage:
     'show all':
-        'Alles zeigen',
+        'mostrar-los tots',
     'pic...':
-        'Bild exportieren...',
+        'exportar com a imatge...',
     'open a new window\nwith a picture of the stage':
-        'ein neues Browserfenster mit einem\nBild der B\u00fchne \u00f6ffnen',
+        'obre una nova finestra\namb una foto de l\'escenari',
 
     // scripting area
     'clean up':
-        'Aufr\u00e4umen',
+        'neteja',
     'arrange scripts\nvertically':
-        'Skripte der Reihe nach\nanordnen',
+        'alinea els programes\nverticalment',
     'add comment':
-        'Anmerkung hinzuf\u00fcgen',
+        'afegeix un comentari',
     'undrop':
-        'R\u00fcckg\u00e4ngig',
+        'recupera bloc',
     'undo the last\nblock drop\nin this pane':
-        'Setzen des letzten Blocks\nwiderrufen',
+        'recupera l\'últim bloc\nque s\'hagi llençat',
     'scripts pic...':
-        'Bild aller Scripte...',
+        'exportar com a imatge...',
     'open a new window\nwith a picture of all scripts':
-        'ein neues Browserfenster mit einem\nBild aller Skripte \u00f6ffnen',
+        'obre una nova finestra\namb una foto d\'aquests programes',
     'make a block...':
-        'Neuen Block bauen...',
+        'crea un bloc...',
 
     // costumes
     'rename':
-        'Umbenennen',
+        'canvia de nom',
     'export':
-        'Exportieren',
+        'exporta',
     'rename costume':
-        'Kost\u00fcm umbenennen',
+        'canvia el nom del vestit',
 
     // sounds
     'Play sound':
-        'Klang\nabspielen',
+        'Toca el so',
     'Stop sound':
-        'Klang\nanhalten',
+        'Atura el so',
     'Stop':
-        'Halt',
+        'Atura',
     'Play':
-        'Los',
+        'Toca',
     'rename sound':
-        'Klang umbenennen',
+        'canvia el nom del so',
 
     // dialogs
     // buttons
     'OK':
-        'OK',
+        'D\'acord',
     'Ok':
-        'OK',
+        'D\'acord',
     'Cancel':
-        'Abbrechen',
+        'Cancel·la',
     'Yes':
-        'Ja',
+        'Sí',
     'No':
-        'Nein',
+        'No',
 
     // help
     'Help':
-        'Hilfe',
+        'Ajuda',
 
     // zoom blocks
     'Zoom blocks':
-        'Bl\u00f6cke vergr\u00f6\u00dfern',
+    	'Canvia la mida dels blocs',
     'build':
-        'baue',
+        'fes',
     'your own':
-        'eigene',
+        'els teus propis',
     'blocks':
-        'Bl\u00f6cke',
+        'blocs',
     'normal (1x)':
         'normal (1x)',
     'demo (1.2x)':
-        'Demo (1.2x)',
+        'demostració (1.2x)',
     'presentation (1.4x)':
-        'Pr\u00e4sentation (1.4x)',
+        'presentació (1.4x)',
     'big (2x)':
-        'gro\u00df (2x)',
+        'gran (2x)',
     'huge (4x)':
-        'riesig (4x)',
+        'immens (4x)',
     'giant (8x)':
-        'gigantisch (8x)',
+        'gegant (8x)',
     'monstrous (10x)':
-        'ungeheuerlich (10x)',
+        'monstruós (10x)',
 
     // Project Manager
     'Untitled':
-        'Unbenannt',
+        'Sense títol',
     'Open Project':
-        'Project \u00f6ffnen',
+        'Obre projecte',
     '(empty)':
-        '(leer)',
+        '(buit)',
     'Saved!':
-        'Gesichert!',
+        'Desat!',
     'Delete Project':
-        'Projekt l\u00f6schen',
+        'Esborra projecte',
     'Are you sure you want to delete':
-        'Wirklich l\u00f6schen?',
+        'Segur que vols esborrar',
     'rename...':
-        'Umbenennen...',
+        'canvia el nom...',
 
     // costume editor
     'Costume Editor':
-        'Kost\u00fcmeditor',
+        'Editor de vestits',
     'click or drag crosshairs to move the rotation center':
-        'Fadenkreuz anklicken oder bewegen um den Drehpunkt zu setzen',
+        'clica o arrossega la creueta per moure el centre de rotació',
 
     // project notes
     'Project Notes':
-        'Projektanmerkungen',
+        'Notes del projecte',
 
     // new project
     'New Project':
-        'Neues Projekt',
+        'Nou projecte',
     'Replace the current project with a new one?':
-        'Das aktuelle Projekt durch ein neues ersetzen?',
+        'Vols substituir el projecte actual per un de nou?',
 
     // save project
     'Save Project As...':
-        'Projekt Sichern Als...',
+			'Anomena i desa projecte...',
 
     // export blocks
     'Export blocks':
-        'Bl\u00f6cke exportieren',
+        'Exporta blocs',
     'Import blocks':
-        'Bl\u00f6cke importieren',
+        'Importa blocs',
     'this project doesn\'t have any\ncustom global blocks yet':
-        'in diesem Projekt gibt es noch keine\nglobalen Bl\u00f6cke',
+        'aquest projecte encara no\nté cap bloc personalitzat',
     'select':
-        'ausw\u00e4hlen',
+        'seleccionar',
+    'all':
+        'tots els blocs',
     'none':
-        'nichts',
+        'cap bloc',
 
     // variable dialog
     'for all sprites':
-        'f\u00fcr alle',
+        'per a tots els objectes',
     'for this sprite only':
-        'nur f\u00fcr dieses Objekt',
+        'només per a aquest objecte',
 
     // block dialog
     'Change block':
-        'Block ver\u00e4ndern',
+        'Canvia el bloc',
     'Command':
-        'Befehl',
+        'Comanda',
     'Reporter':
-        'Funktion',
+        'Reportador',
     'Predicate':
-        'Pr\u00e4dikat',
+        'Predicat',
 
     // block editor
     'Block Editor':
-        'Blockeditor',
+        'Editor de blocs',
     'Apply':
-        'Anwenden',
+        'Aplica',
 
     // block deletion dialog
     'Delete Custom Block':
-        'Block L\u00f6schen',
+        'Esborrar un bloc personalitzat',
     'block deletion dialog text':
-        'Soll dieser Block mit allen seinen Exemplare\n' +
-            'wirklich gel\u00f6scht werden?',
+        'Segur que vols esborrar la definició\nd\'aquest bloc?',
 
     // input dialog
     'Create input name':
-        'Eingabe erstellen',
+        'Crear ranura',
     'Edit input name':
-        'Eingabe bearbeiten',
+        'Editar ranura',
     'Edit label fragment':
-        'Beschriftung bearbeiten',
+        'Editar fragment d\'etiqueta',
     'Title text':
-        'Beschriftung',
+        'Text del títol',
     'Input name':
-        'Eingabe',
+        'Nom de la ranura',
     'Delete':
-        'L\u00f6schen',
+        'Esborra',
     'Object':
-        'Objekt',
+        'Objecte',
     'Number':
-        'Zahl',
+        'Nombre',
     'Text':
         'Text',
     'List':
-        'Liste',
+        'Llista',
     'Any type':
-        'Beliebig',
+        'Qualsevol tipus',
     'Boolean (T/F)':
-        'Boolsch (W/F)',
+        'Booleà (C/F)',
     'Command\n(inline)':
-        'Befehl',
+        'Comanda\n(inserida)',
     'Command\n(C-shape)':
-        'Befehl\n(C-Form)',
+        'Comanda\n(en forma de C)',
     'Any\n(unevaluated)':
-        'Beliebig\n(zitiert)',
+        'Qualsevol\n(sense evaluar)',
     'Boolean\n(unevaluated)':
-        'Boolsch\n(zitiert)',
+        'Booleà\n(sense evaluar)',
     'Single input.':
-        'Einzeleingabe.',
+        'Entrada única.',
     'Default Value:':
-        'Standardwert:',
+        'Valor predeterminat:',
     'Multiple inputs (value is list of inputs)':
-        'Mehrere Eingaben (als Liste)',
+        'Entrades múltiples (el valor és una llista d\'entrades)',
     'Upvar - make internal variable visible to caller':
-        'Interne Variable au\u00dfen sichtbar machen',
+        'Variable interna visible des de l\'exterior',
 
     // About Snap
     'About Snap':
-        '\u00dcber Snap',
+        'Sobre Snap',
     'Back...':
-        'Zur\u00fcck...',
+        'Enrera...',
     'License...':
-        'Lizenz...',
+        'Llicència...',
     'Modules...':
-        'Komponenten...',
+        'Mòduls...',
     'Credits...':
-        'Mitwirkende...',
+        'Crèdits...',
     'Translators...':
-        '\u00dcbersetzer',
+        'Traductors',
     'License':
-        'Lizenz',
+        'Llicència',
     'current module versions:':
-        'Komponenten-Versionen',
+        'versions del mòdul actual',
     'Contributors':
-        'Mitwirkende',
+        'Contribuïdors',
     'Translations':
-        '\u00dcbersetzungen',
+        'Traduccions',
 
     // variable watchers
     'normal':
         'normal',
     'large':
-        'gro\u00df',
+        'gran',
     'slider':
-        'Regler',
+        'lliscador',
     'slider min...':
-        'Minimalwert...',
+        'valor mínim del lliscador...',
     'slider max...':
-        'Maximalwert...',
+        'valor màxim del lliscador...',
     'import...':
-        'Importieren...',
+        'importa...',
     'Slider minimum value':
-        'Minimalwert des Reglers',
+        'Valor mínim del lliscador...',
     'Slider maximum value':
-        'Maximalwert des Reglers',
+        'Valor màxim del lliscador...',
 
     // list watchers
     'length: ':
-        'L\u00e4nge: ',
+        'longitud: ',
 
     // coments
     'add comment here...':
-        'Anmerkung hier hinzuf\u00fcgen',
+        'afegir un comentari aquí...',
 
     // drow downs
     // directions
     '(90) right':
-        '(90) rechts',
+        '(90) dreta',
     '(-90) left':
-        '(-90) links',
+        '(-90) esquerra',
     '(0) up':
-        '(0) oben',
+        '(0) amunt',
     '(180) down':
-        '(180) unten',
+        '(180) avall',
 
     // collision detection
     'mouse-pointer':
-        'Mauszeiger',
+        'punter del ratolí',
     'edge':
-        'Kante',
+        'vora',
     'pen trails':
-        'Malspuren',
+        'rastre del llapis',
 
     // costumes
     'Turtle':
-        'Richtungszeiger',
+        'Tortuga',
     'Empty':
-        'Leer',
+        'Buit',
 
     // graphical effects
     'ghost':
-        'Durchsichtigkeit',
+        'fantasma',
 
     // keys
     'space':
-        'Leertaste',
+        'espai',
     'up arrow':
-        'Pfeil nach oben',
+        'fletxa amunt',
     'down arrow':
-        'Pfeil nach unten',
+        'fletxa avall',
     'right arrow':
-        'Pfeil nach rechts',
+        'fletxa dreta',
     'left arrow':
-        'Pfeil nach links',
+        'fletxa esquerra',
     'a':
         'a',
     'b':
@@ -1195,15 +1183,15 @@ SnapTranslator.dict.de = {
 
     // messages
     'new...':
-        'Neu...',
+        'nou...',
 
     // math functions
     'abs':
-        'Betrag',
+        'abs',
     'floor':
-        'Abgerundet',
+        'part entera',
     'sqrt':
-        'Wurzel',
+        'arrel quadrada',
     'sin':
         'sin',
     'cos':
@@ -1223,33 +1211,33 @@ SnapTranslator.dict.de = {
 
     // delimiters
     'whitespace':
-        'Leerraum',
+        'espai en blanc',
     'line':
-        'Zeilenvorschub',
+        'línia',
     'tab':
-        'Tabulator',
+        'tabulador',
     'cr':
-        'Wagenr\u00fccklauf',
+        'retorn de carro',
 
     // data types
     'number':
-        'Zahl',
+        'nombre',
     'text':
-        'Text',
+        'text',
     'Boolean':
-        'Boole',
+        'Booleà',
     'list':
-        'Liste',
+        'llista',
     'command':
-        'Befehlsblock',
+        'comanda',
     'reporter':
-        'Funktionsblock',
+        'reporter',
     'predicate':
-        'Pr\u00e4dikat',
+        'predicat',
 
     // list indices
     'last':
-        'letztes',
+        'últim',
     'any':
-        'beliebiges'
+        'qualsevol'
 };

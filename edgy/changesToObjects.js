@@ -7,11 +7,15 @@
 var graphEl = d3.select(document.body)
         .append('div')
         .attr('id', 'graph-display')
-        .style('position', 'absolute'),
+        .style({'position': 'absolute',
+                '-moz-user-select': 'none',
+                '-khtml-user-select': 'none',
+                '-webkit-user-select': 'none',
+                'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
     layout = null; // The d3.layout instance controlling the graph display.
 
-// We want to forward mouse events to the Snap! canvas.
+// We want to forward mouse events to the Snap! canvas so context menus work.
 function forwardMouseEvent(e, target) {
     var evtCopy;
 
@@ -337,6 +341,10 @@ SpriteMorph.prototype.setActiveGraph = function() {
     setGraphToDisplay(this.G);
 };
 
+SpriteMorph.prototype.hideActiveGraph = function() {
+    setGraphToDisplay(jsnx.Graph());
+};
+
 SpriteMorph.prototype.clearGraph = function() {
     this.G.clear();
 };
@@ -367,7 +375,7 @@ SpriteMorph.prototype.removeEdge = function(edge) {
 };
 
 SpriteMorph.prototype.getNeighbors = function(node) {
-    return new List(this.G.neighbors(node));
+    return new List(this.G.neighbors(parseNode(node)));
 };
 
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
@@ -699,7 +707,16 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
     request.open('GET', url, false);
     request.send(null);
     if (request.status === 200) {
-        addGraph(this.G, objectToGraph(JSON.parse(request.responseText)));
+        try {
+            addGraph(this.G, objectToGraph(JSON.parse(request.responseText)));
+        } catch(e) {
+            if(e instanceof SyntaxError) {
+                // Try parsing as adjacency list.
+                addGraph(this.G, parseAdjacencyList(request.responseText));
+            } else {
+                throw e;
+            }
+        }
     } else {
         throw new Error("Could not load URL: " + request.statusText);
     }
@@ -714,10 +731,16 @@ SpriteMorph.prototype.reportEdge = function(a, b) {
 };
 
 SpriteMorph.prototype.startNode = function(edge) {
+    if(!(edge instanceof List) || edge.length() !== 2) {
+        throw new Error(edge.toString() + " is not an edge.");
+    }
     return edge.at(1);
 };
 
 SpriteMorph.prototype.endNode = function(edge) {
+    if(!(edge instanceof List) || edge.length() !== 2) {
+        throw new Error(edge.toString() + " is not an edge.");
+    }
     return edge.at(2);
 };
 
@@ -889,12 +912,17 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
         setActiveGraph: {
             type: 'command',
             category: 'network',
-            spec: 'display current graph'
+            spec: 'show'
+        },
+        hideActiveGraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'hide'
         },
         clearGraph: {
             type: 'command',
             category: 'network',
-            spec: 'clear graph'
+            spec: 'clear'
         },
         numberOfNodes: {
             type: 'reporter',
@@ -1104,7 +1132,7 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
         sortEdges: {
             type: 'reporter',
             category: 'nodes+edges',
-            spec: 'edges %l sorted by %nodeAttr %ascdesc'
+            spec: 'edges %l sorted by %edgeAttr %ascdesc'
         },
         getLastfmFriends: {
             type: 'reporter',
@@ -1269,6 +1297,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('newDiGraph'));
             blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
+            blocks.push(block('hideActiveGraph'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
             blocks.push(block('isCyclic'));
@@ -1484,7 +1513,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('doThink'));
             if (this.world().isDevMode) {
                 blocks.push('-');
-                txt = new TextMorph(localize(
+                var txt = new TextMorph(localize(
                     'development mode \ndebugging primitives:'
                 ));
                 txt.fontSize = 9;
@@ -1605,6 +1634,24 @@ function graphToObject(G) {
     }
 
     return data;
+}
+
+function parseAdjacencyList (text) {
+    var lines = text.split("\n"),
+        G = jsnx.DiGraph(),
+        row;
+
+    for (var i = 0; i < lines.length; i++) {
+        row = lines[i].split(",");
+        if(row.length === 3) {
+            G.add_edge(parseNode(row[0]), parseNode(row[1]), {label: row[2]})
+        } else if(row.length === 2)  {
+            G.add_edge(parseNode(row[0]), parseNode(row[1]));
+        }
+        // Silently swallow non-conforming lines.
+    }
+
+    return G;
 }
 
 // Transform NetworkX-formatted object to JSNetworkX graph-like object.

@@ -7,7 +7,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2013 by Jens Mönig
+    Copyright (C) 2014 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -74,7 +74,7 @@ HTMLCanvasElement, fontHeight, SymbolMorph, localize, SpeechBubbleMorph,
 ArrowMorph, MenuMorph, isString, isNil, SliderMorph, MorphicPreferences,
 ScrollFrameMorph*/
 
-modules.widgets = '2013-July-04';
+modules.widgets = '2014-January-09';
 
 var PushButtonMorph;
 var ToggleButtonMorph;
@@ -1694,7 +1694,7 @@ DialogBoxMorph.prototype.promptCode = function (
 
     function remarkText(string) {
         return new TextMorph(
-            string,
+            localize(string),
             10,
             null, // style
             false, // bold
@@ -1795,7 +1795,7 @@ DialogBoxMorph.prototype.promptCredentials = function (
 
     function labelText(string) {
         return new TextMorph(
-            string,
+            localize(string),
             10,
             null, // style
             false, // bold
@@ -1884,7 +1884,7 @@ DialogBoxMorph.prototype.promptCredentials = function (
     for (currentYear; currentYear > firstYear; currentYear -= 1) {
         years[currentYear.toString() + ' '] = currentYear;
     }
-    years[firstYear + ' or before'] = '< ' + currentYear;
+    years[firstYear + ' ' + localize('or before')] = '< ' + currentYear;
     byr = new InputFieldMorph(
         null, // text
         false, // numeric?
@@ -2023,7 +2023,7 @@ DialogBoxMorph.prototype.promptCredentials = function (
             em = eml.getValue();
 
         function indicate(morph, string) {
-            var bubble = new SpeechBubbleMorph(string);
+            var bubble = new SpeechBubbleMorph(localize(string));
             bubble.isPointingRight = false;
             bubble.drawNew();
             bubble.popUp(
@@ -2115,6 +2115,7 @@ DialogBoxMorph.prototype.promptCredentials = function (
             emlLabel.text = age() <= 13 ?
                     'E-mail address of parent or guardian:'
                         : 'E-mail address:';
+            emlLabel.text = localize(emlLabel.text);
             emlLabel.drawNew();
             emlLabel.changed();
         }
@@ -2485,6 +2486,7 @@ DialogBoxMorph.prototype.processKeyDown = function (event) {
         this.cancel();
         break;
     default:
+        nop();
         // this.inspectKeyEvent(event);
     }
 };
@@ -2965,12 +2967,18 @@ InputFieldMorph.prototype.dropDownMenu = function () {
         return null;
     }
     menu.addItem(' ', null);
-    for (key in choices) {
-        if (Object.prototype.hasOwnProperty.call(choices, key)) {
-            if (key[0] === '~') {
-                menu.addLine();
-            } else {
-                menu.addItem(key, choices[key]);
+    if (choices instanceof Array) {
+        choices.forEach(function (choice) {
+            menu.addItem(choice[0], choice[1]);
+        });
+    } else { // assuming a dictionary
+        for (key in choices) {
+            if (Object.prototype.hasOwnProperty.call(choices, key)) {
+                if (key[0] === '~') {
+                    menu.addLine();
+                } else {
+                    menu.addItem(key, choices[key]);
+                }
             }
         }
     }
