@@ -362,7 +362,7 @@ SpriteMorph.prototype.addNode = function(nodes) {
 };
 
 SpriteMorph.prototype.removeNode = function(node) {
-    this.G.remove_node(node);
+    this.G.remove_node(parseNode(node));
 };
 
 SpriteMorph.prototype.addEdge = function(edges) {
