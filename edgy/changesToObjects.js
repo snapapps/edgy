@@ -13,7 +13,9 @@ var graphEl = d3.select(document.body)
                 '-webkit-user-select': 'none',
                 'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
-    layout = null; // The d3.layout instance controlling the graph display.
+    layout = null, // The d3.layout instance controlling the graph display.
+    sliceStart,
+    sliceRadius;
 
 // We want to forward mouse events to the Snap! canvas so context menus work.
 function forwardMouseEvent(e, target) {
@@ -58,13 +60,15 @@ graphEl.on("DOMNodeInserted", function() {
                 d3.event.preventDefault();
                 d3.event.stopPropagation();
 
-                menu.addItem('delete', function () {
-                    var d = node.datum();
-                    d.G.remove_node(d.node);
-                });
+                var d = node.datum();
+
+                if(!d.G.parent_graph) {
+                    menu.addItem('delete', function () {
+                        d.G.remove_node(d.node);
+                    });
+                }
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
-                        var d = node.datum();
                         d.G.node.get(d.node).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                     }).prompt('Node label', '', world);
@@ -72,14 +76,12 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
-                        var d = node.datum();
                         d.G.add_node(d.node, {color: color});
                     }).prompt('Node color', '', world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set radius', function () {
                     new DialogBoxMorph(null, function (radius) {
-                        var d = node.datum();
                         d.G.add_node(d.node, {radius: radius});
                     }).prompt('Node radius', '', world);
                     world.worldCanvas.focus();
@@ -96,13 +98,15 @@ graphEl.on("DOMNodeInserted", function() {
                 d3.event.preventDefault();
                 d3.event.stopPropagation();
 
-                menu.addItem('delete', function () {
-                    var d = node.datum();
-                    d.G.remove_edges_from([d.edge]);
-                });
+                var d = node.datum();
+
+                if(!d.G.parent_graph) {
+                    menu.addItem('delete', function () {
+                        d.G.remove_edges_from([d.edge]);
+                    });
+                }
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
-                        var d = node.datum();
                         d.G.adj.get(d.edge[0]).get(d.edge[1]).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                     }).prompt('Edge label', '', world);
@@ -110,14 +114,12 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
-                        var d = node.datum();
                         d.G.add_edge(d.edge[0], d.edge[1], {color: color});
                     }).prompt('Edge color', '', world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
-                        var d = node.datum();
                         d.G.add_edge(d.edge[0], d.edge[1], {width: width});
                     }).prompt('Edge width', '', world);
                     world.worldCanvas.focus();
@@ -234,22 +236,24 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             myself = this,
             world = this.world();
 
-        menu.addItem("add node", function () {
-            new DialogBoxMorph(null, function (name) {
-                currentGraph.add_node(parseNode(name));
-            }).prompt('Node name', '', world);
-            world.worldCanvas.focus();
-        });
-
-        menu.addItem("add edge", function () {
-            new DialogBoxMorph(null, function (start) {
-                new DialogBoxMorph(null, function (end) {
-                    currentGraph.add_edge(parseNode(start), parseNode(end));
-                }).prompt('End node', '', world);
+        if(!currentGraph.parent_graph) {
+            menu.addItem("add node", function () {
+                new DialogBoxMorph(null, function (name) {
+                    currentGraph.add_node(parseNode(name));
+                }).prompt('Node name', '', world);
                 world.worldCanvas.focus();
-            }).prompt('Start node', '', world);
-            world.worldCanvas.focus();
-        });
+            });
+
+            menu.addItem("add edge", function () {
+                new DialogBoxMorph(null, function (start) {
+                    new DialogBoxMorph(null, function (end) {
+                        currentGraph.add_edge(parseNode(start), parseNode(end));
+                    }).prompt('End node', '', world);
+                    world.worldCanvas.focus();
+                }).prompt('Start node', '', world);
+                world.worldCanvas.focus();
+            });
+        }
 
         menu.addItem("export to file", function () {
             var data = JSON.stringify(graphToObject(currentGraph)),
@@ -341,12 +345,47 @@ SpriteMorph.prototype.setActiveGraph = function() {
     setGraphToDisplay(this.G);
 };
 
+SpriteMorph.prototype.showGraphSlice = function(start, radius) {
+    var start = parseNode(start),
+        distances,
+        G;
+
+    if(!this.G.has_node(start)) {
+        setGraphToDisplay(new this.G.constructor())
+        return;
+    }
+
+    distances = jsnx.single_source_shortest_path_length(this.G, start, radius);
+    G = this.G.subgraph(distances.keys());
+
+    if(currentGraph.parent_graph === this.G) {
+        currentGraph.add_nodes_from(G);
+        currentGraph.add_edges_from(G.edges(true, null));
+        // Delete nodes from currentGraph not in G.
+        currentGraph.remove_nodes_from(currentGraph.nodes().filter(function(n) {
+            return !G.has_node(n);
+        }));
+        // Delete edges from currentGraph not in G.
+        currentGraph.remove_edges_from(currentGraph.edges().filter(function(e) {
+            return !G.has_edge(e[0], e[1]);
+        }));
+    } else {
+        G.parent_graph = this.G;
+        setGraphToDisplay(G);
+    }
+    sliceStart = start;
+    sliceRadius = radius;
+};
+
 SpriteMorph.prototype.hideActiveGraph = function() {
     setGraphToDisplay(jsnx.Graph());
 };
 
 SpriteMorph.prototype.clearGraph = function() {
     this.G.clear();
+    if(currentGraph.parent_graph === this.G) {
+        this.setActiveGraph();
+    }
 };
 
 SpriteMorph.prototype.numberOfNodes = function () {
@@ -359,19 +398,35 @@ SpriteMorph.prototype.numberOfEdges = function () {
 
 SpriteMorph.prototype.addNode = function(nodes) {
     this.G.add_nodes_from(nodes.asArray().map(parseNode));
+    // No need to update the slice, as adding nodes can never update a slice
+    // due to not being connected.
 };
 
 SpriteMorph.prototype.removeNode = function(node) {
     this.G.remove_node(parseNode(node));
+    if(currentGraph.parent_graph === this.G) {
+        if(currentGraph.has_node(node)) {
+            this.showGraphSlice(sliceStart, sliceRadius);
+        }
+    }
 };
 
 SpriteMorph.prototype.addEdge = function(edges) {
-    this.G.add_edges_from(edges.asArray().map(function(x) { return x.asArray().map(parseNode); }));
+    edges = edges.asArray();
+    this.G.add_edges_from(edges.map(function(x) { return x.asArray().map(parseNode); }));
+    if(currentGraph.parent_graph === this.G) {
+        this.showGraphSlice(sliceStart, sliceRadius);
+    }
 };
 
 SpriteMorph.prototype.removeEdge = function(edge) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     this.G.remove_edge(a, b);
+    if(currentGraph.parent_graph === this.G) {
+        if(currentGraph.has_node(a) || currentGraph.has_node(b)) {
+            this.showGraphSlice(sliceStart, sliceRadius);
+        }
+    }
 };
 
 SpriteMorph.prototype.getNeighbors = function(node) {
@@ -384,9 +439,12 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         var data = {};
         data[attrib] = val;
         this.G.add_node(node, data);
+        if(this.G === currentGraph.parent_graph) {
+            currentGraph.add_node(node, data);
+        }
 
         // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && currentGraph === this.G) {
+        if(attrib === "label" && (currentGraph === this.G || this.G === currentGraph.parent_graph)) {
             var nodes = graphEl.selectAll(".node");
             nodes.each(function(d, i) {
                 if(d.node === node) {
@@ -423,9 +481,12 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
         var data = {};
         data[attrib] = val;
         this.G.add_edge(a, b, data);
+        if(this.G === currentGraph.parent_graph) {
+            currentGraph.add_edge(a, b, data);
+        }
 
         // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && currentGraph === this.G) {
+        if(attrib === "label" && (currentGraph === this.G || this.G === currentGraph.parent_graph)) {
             var edges = graphEl.selectAll(".edge");
             edges.each(function(d, i) {
                 if(d.edge[0] === a && d.edge[1] === b) {
@@ -914,6 +975,11 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             category: 'network',
             spec: 'show'
         },
+        showGraphSlice: {
+            type: 'command',
+            category: 'network',
+            spec: 'show subgraph from node %s of depth %n'
+        },
         hideActiveGraph: {
             type: 'command',
             category: 'network',
@@ -1297,6 +1363,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('newDiGraph'));
             blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
+            blocks.push(block('showGraphSlice'));
             blocks.push(block('hideActiveGraph'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
