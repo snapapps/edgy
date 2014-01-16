@@ -772,8 +772,14 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
             addGraph(this.G, objectToGraph(JSON.parse(request.responseText)));
         } catch(e) {
             if(e instanceof SyntaxError) {
-                // Try parsing as adjacency list.
-                addGraph(this.G, parseAdjacencyList(request.responseText));
+                var text = request.responseText.trim();
+                if(text[0] == ',') {
+                    // Try parsing as adjacency matrix.
+                    addGraph(this.G, parseAdjacencyMatrix(text));
+                } else {
+                    // Try parsing as adjacency list.
+                    addGraph(this.G, parseAdjacencyList(text));
+                }
             } else {
                 throw e;
             }
@@ -1716,6 +1722,32 @@ function parseAdjacencyList (text) {
             G.add_edge(parseNode(row[0]), parseNode(row[1]));
         }
         // Silently swallow non-conforming lines.
+    }
+
+    return G;
+}
+
+function parseAdjacencyMatrix (text) {
+    var lines = text.split("\n").map(function(L) { return L.split(","); }),
+        G = jsnx.DiGraph(),
+        row;
+
+    for (var i = 1; i < lines[0].length; i++) {
+        G.add_node(lines[0][i]);
+    }
+
+    for (var i = 1; i < lines.length; i++) {
+        row = lines[i];
+        for (var j = 1; j < row.length; j++) {
+            if(row[j].length > 0) {
+                // Let's hope no one ever uses '1' as an edge label.
+                if(row[j] === '1') {
+                    G.add_edge(row[0], lines[0][j]);
+                } else {
+                    G.add_edge(row[0], lines[0][j], {label: row[j]});
+                }
+            }
+        }
     }
 
     return G;
