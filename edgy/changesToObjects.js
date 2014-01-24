@@ -1678,7 +1678,11 @@ function graphToObject(G) {
     data.directed = G.is_directed();
     data.multigraph = multigraph;
     data.graph = [];
-    mergeObjectIn(data.graph, G.graph, function(k, v) { return [k, v]; });
+    for(var k in G.graph) {
+        if(G.graph.hasOwnProperty(k)) {
+            data.graph.push([k, G.graph[k]]);
+        }
+    }
 
     data.nodes = [];
     jsnx.forEach(G.nodes_iter(true), function(node) {
