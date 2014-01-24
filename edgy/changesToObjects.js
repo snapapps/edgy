@@ -176,10 +176,20 @@ function redrawGraph() {
         },
         edge_style: {
             fill: function(d) {
-                return d.data.color || DEFAULT_EDGE_COLOR;
+                if(d.G.graph.edgecostume) {
+                    // Display the edge pattern if there is one.
+                    return "url(#edgepattern)";
+                } else {
+                    return d.data.color || DEFAULT_EDGE_COLOR;
+                }
             },
             'stroke-width': function(d) {
-                return d.data.width * DEFAULT_EDGE_WIDTH || DEFAULT_EDGE_WIDTH;
+                if(d.G.graph.edgecostume) {
+                    // Needs to be doubled, for some reason.
+                    return d.G.graph.edgecostume.height * 2;
+                } else {
+                    return d.data.width * DEFAULT_EDGE_WIDTH || DEFAULT_EDGE_WIDTH;
+                }
             }
         },
         label_style: {fill: DEFAULT_LABEL_COLOR},
@@ -200,6 +210,12 @@ function redrawGraph() {
         },
         pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
     }, true);
+
+    // Calling jsnx.draw() will purge the graph container element, so we need
+    // to reset the edge pattern regardless of whether it has changed.
+    if(currentGraph.graph.edgecostume) {
+        setEdgePattern(currentGraph.graph.edgecostume);
+    }
 }
 
 function setGraphToDisplay (G) {
@@ -310,6 +326,55 @@ SpriteMorph.prototype.init = (function init (oldInit) {
 
 // Stub this out to hide the actual sprite on the stage.
 SpriteMorph.prototype.drawOn = function() {}
+
+function setEdgePattern(canvas) {
+    // Make the edge pattern element. We're using SVG's pattern support to
+    // make the fancy tiled edge patterns work.
+    var pattern = graphEl.select("#edgepattern");
+    if(pattern.empty()) {
+        pattern = graphEl.select("svg")
+            .insert("defs", ":first-child")
+                .append("pattern")
+                    .attr({
+                        id: "edgepattern",
+                        patternUnits: "userSpaceOnUse",
+                    })
+        pattern.append("image");
+    }
+
+    pattern.attr({
+        width: canvas.width,
+        height: canvas.height,
+        // Compensate for edge path x-axis going along middle of edge like |-
+        y: canvas.height/2
+    }).select("image")
+        .attr({
+            width: canvas.width,
+            height: canvas.height,
+            "xlink:href": canvas.toDataURL()
+        });
+}
+
+SpriteMorph.prototype.wearCostume = (function wearCostume(oldWearCostume) {
+    return function(costume) {
+        oldWearCostume.call(this, costume);
+        if(costume) {
+            setEdgePattern(costume.contents);
+            this.G.graph.edgecostume = costume.contents;
+            if(currentGraph === this.G) {
+                // Fix edge patterns.
+                graphEl.selectAll(".edge").selectAll(".line").style("fill", "url(#edgepattern)");
+                // Fix edge widths.
+                layout.resume();
+            }
+        } else {
+            delete this.G.graph.edgecostume;
+            if(currentGraph === this.G) {
+                redrawGraph();
+            }
+        }
+    }
+}(SpriteMorph.prototype.wearCostume));
 
 function autoNumericize(x) {
     if(isNumeric(x)) {
@@ -1680,7 +1745,13 @@ function graphToObject(G) {
     data.graph = [];
     for(var k in G.graph) {
         if(G.graph.hasOwnProperty(k)) {
-            data.graph.push([k, G.graph[k]]);
+            if(k === "edgecostume") {
+                // G.graph.edgecostume is a DOM <canvas> object, so need to
+                // handle specially.
+                data.graph.push([k, G.graph[k].toDataURL()]);
+            } else {
+                data.graph.push([k, G.graph[k]]);
+            }
         }
     }
 
