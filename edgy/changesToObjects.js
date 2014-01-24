@@ -406,8 +406,32 @@ SpriteMorph.prototype.newDiGraph = function() {
     }
 };
 
+SpriteMorph.prototype.setGraphToDisplay2 = function(G) {
+    var ide = this.parentThatIsA(IDE_Morph),
+        maxVisibleNodes = DEFAULT_MAX_VISIBLE_NODES;
+    if(ide) {
+        maxVisibleNodes = ide.maxVisibleNodes;
+    }
+
+    if(G.number_of_nodes() < maxVisibleNodes) {
+        setGraphToDisplay(G);
+    } else {
+        var msg = "Too many nodes to display (" + G.number_of_nodes() +
+                  ", maximum is " + maxVisibleNodes + ").\n" +
+                  "Consider increasing the limit under Settings > Maximum " +
+                  "visible nodes.";
+        if(ide) {
+            throw new Error(msg);
+        } else {
+            // Argh. We don't have a parent IDE_Morph, because we're doing
+            // loading or something.
+            ide_.showMessage(msg);
+        }
+    }
+};
+
 SpriteMorph.prototype.setActiveGraph = function() {
-    setGraphToDisplay(this.G);
+    this.setGraphToDisplay2(this.G);
 };
 
 SpriteMorph.prototype.showGraphSlice = function(start, radius) {
@@ -416,7 +440,7 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         G;
 
     if(!this.G.has_node(start)) {
-        setGraphToDisplay(new this.G.constructor())
+        this.setGraphToDisplay2(new this.G.constructor())
         return;
     }
 
@@ -436,7 +460,7 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         }));
     } else {
         G.parent_graph = this.G;
-        setGraphToDisplay(G);
+        this.setGraphToDisplay2(G);
     }
     sliceStart = start;
     sliceRadius = radius;
