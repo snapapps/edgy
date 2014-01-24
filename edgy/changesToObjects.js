@@ -684,7 +684,10 @@ SpriteMorph.prototype.isStronglyConnected = function() {
         return false;
     }
 
-    var stack = [this.G.nodes_iter().next()];
+    // Adapted version of Kosaraju's algorithm.
+    var start = this.G.nodes_iter().next();
+
+    var stack = [start];
     var visited = new jsnx.contrib.Set();
     while(stack.length > 0) {
         var node = stack.pop();
@@ -695,6 +698,22 @@ SpriteMorph.prototype.isStronglyConnected = function() {
             }
         });
     }
+
+    if(visited.count() !== this.G.number_of_nodes())
+        return false;
+
+    var stack = [start];
+    var visited = new jsnx.contrib.Set();
+    while(stack.length > 0) {
+        var node = stack.pop();
+        visited.add(node);
+        jsnx.forEach(this.G.predecessors_iter(node), function(predecessor) {
+            if(!visited.has(predecessor)) {
+                stack.push(predecessor);
+            }
+        });
+    }
+
     return visited.count() === this.G.number_of_nodes();
 };
 
