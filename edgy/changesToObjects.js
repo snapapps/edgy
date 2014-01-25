@@ -13,6 +13,7 @@ var graphEl = d3.select(document.body)
                 '-webkit-user-select': 'none',
                 'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
+    oldCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
     sliceStart,
     sliceRadius;
@@ -336,6 +337,21 @@ SpriteMorph.prototype.init = (function init (oldInit) {
 // Stub this out to hide the actual sprite on the stage.
 SpriteMorph.prototype.drawOn = function() {}
 
+StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNodesChanged = function(num) {
+    if(oldCurrentGraph &&
+       num >= oldCurrentGraph.number_of_nodes()) {
+        try {
+            this.setGraphToDisplay2(oldCurrentGraph);
+        } catch(e) {
+            this.parentThatIsA(IDE_Morph).showMessage(e.message);
+        }
+        oldCurrentGraph = null;
+    } else if (currentGraph.number_of_nodes() > num) {
+        oldCurrentGraph = currentGraph;
+        justHideGraph();
+    }
+}
+
 function setEdgePattern(canvas) {
     // Make the edge pattern element. We're using SVG's pattern support to
     // make the fancy tiled edge patterns work.
@@ -415,7 +431,8 @@ SpriteMorph.prototype.newDiGraph = function() {
     }
 };
 
-SpriteMorph.prototype.setGraphToDisplay2 = function(G) {
+
+StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDisplay2 = function(G) {
     var ide = this.parentThatIsA(IDE_Morph),
         maxVisibleNodes = DEFAULT_MAX_VISIBLE_NODES;
     if(ide) {
@@ -424,11 +441,13 @@ SpriteMorph.prototype.setGraphToDisplay2 = function(G) {
 
     if(G.number_of_nodes() < maxVisibleNodes) {
         setGraphToDisplay(G);
+        oldCurrentGraph = null;
     } else {
         var msg = "Too many nodes to display (" + G.number_of_nodes() +
                   ", maximum is " + maxVisibleNodes + ").\n" +
                   "Consider increasing the limit under Settings > Maximum " +
                   "visible nodes or displaying a subgraph.";
+        oldCurrentGraph = G;
         if(ide) {
             throw new Error(msg);
         } else {
@@ -475,8 +494,14 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
     sliceRadius = radius;
 };
 
-SpriteMorph.prototype.hideActiveGraph = function() {
+function justHideGraph() {
     setGraphToDisplay(jsnx.Graph());
+}
+
+SpriteMorph.prototype.hideActiveGraph = function() {
+    if(currentGraph === this.G || currentGraph.parent_graph === this.G) {
+        justHideGraph();
+    }
 };
 
 SpriteMorph.prototype.clearGraph = function() {

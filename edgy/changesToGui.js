@@ -30,6 +30,9 @@ IDE_Morph.prototype.setMaxVisibleNodes = function () {
         null,
         function (num) {
             myself.maxVisibleNodes = num;
+            // HACK: should refactor most of graph visualization code into
+            // IDE_Morph instead of calling sprite methods.
+            myself.currentSprite.maxVisibleNodesChanged(num);
         }
     ).prompt(
         'Set maximum visible nodes',
