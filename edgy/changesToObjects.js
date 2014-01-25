@@ -1698,7 +1698,17 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                             request.open('GET', 'wordnet_nouns.json', false);
                             request.send(null);
                             if (request.status === 200) {
-                                myself.wordnet_nouns = objectToGraph(JSON.parse(request.responseText));
+                                var data = JSON.parse(request.responseText);
+                                myself.wordnet_nouns = objectToGraph(data);
+                                // DiGraph.copy() is slow, this is fast. Go
+                                // figure.
+                                myself.G = objectToGraph(data);
+                                myself.addAttrsFromGraph();
+                                myself.showGraphSlice('', 0);
+                                myself.parentThatIsA(IDE_Morph).showMessage(
+                                    "WordNet has been loaded as the " +
+                                    "active graph.\nYou may now display a " +
+                                    "subgraph starting from a given synset.");
                             } else {
                                 throw new Error("Could not load: " + request.statusText);
                             }
