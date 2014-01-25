@@ -419,7 +419,7 @@ SpriteMorph.prototype.setGraphToDisplay2 = function(G) {
         var msg = "Too many nodes to display (" + G.number_of_nodes() +
                   ", maximum is " + maxVisibleNodes + ").\n" +
                   "Consider increasing the limit under Settings > Maximum " +
-                  "visible nodes.";
+                  "visible nodes or displaying a subgraph.";
         if(ide) {
             throw new Error(msg);
         } else {
