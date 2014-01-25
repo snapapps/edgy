@@ -444,7 +444,7 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
         maxVisibleNodes = ide.maxVisibleNodes;
     }
 
-    if(G.number_of_nodes() < maxVisibleNodes) {
+    if(G.number_of_nodes() <= maxVisibleNodes) {
         setGraphToDisplay(G);
         oldCurrentGraph = null;
     } else {
