@@ -522,6 +522,15 @@ SpriteMorph.prototype.numberOfEdges = function () {
 };
 
 SpriteMorph.prototype.addNode = function(nodes) {
+    var ide = this.parentThatIsA(IDE_Morph),
+        totalNodes = this.G.number_of_nodes() + nodes.length();
+    if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
+        // Too many nodes. Hide the graph and throw up a message.
+        oldCurrentGraph = this.G;
+        this.hideActiveGraph();
+        ide.showMessage(formatTooManyNodesMessage(totalNodes,
+                                                  ide.maxVisibleNodes));
+    }
     this.G.add_nodes_from(nodes.asArray().map(parseNode));
     // No need to update the slice, as adding nodes can never update a slice
     // due to not being connected.
