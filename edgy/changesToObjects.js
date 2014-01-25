@@ -1750,6 +1750,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                                 myself.G = objectToGraph(data);
                                 myself.addAttrsFromGraph();
                                 myself.showGraphSlice('', 0);
+                                myself.hideActiveGraph();
                                 myself.parentThatIsA(IDE_Morph).showMessage(
                                     "WordNet has been loaded as the " +
                                     "active graph.\nYou may now display a " +
