@@ -219,6 +219,15 @@ function redrawGraph() {
 }
 
 function setGraphToDisplay (G) {
+    // Remove the JSNetworkX mutator bindings from the current graph, so we
+    // don't get mysterious slowdowns from unbound graphs floating around and
+    // being laid out in the background.
+    if(currentGraph) {
+        jsnx.unbind(currentGraph, true);
+    }
+    if(layout) {
+        layout.stop();
+    }
     currentGraph = G;
     redrawGraph();
 }
