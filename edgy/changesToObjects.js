@@ -871,13 +871,40 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
     addGraph(this.G, grid);
 };
 
+SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
+    var myself = this,
+        nodeattrset = {},
+        edgeattrset = {};
+    if(!graph) {
+        graph = this.G;
+    }
+    jsnx.forEach(graph.nodes_iter(true), function(n) {
+        Object.keys(n[1]).forEach(function(attr) {
+            nodeattrset[attr] = true;
+        });
+    });
+    jsnx.forEach(graph.edges_iter(true), function(e) {
+       Object.keys(e[2]).forEach(function(attr) {
+            edgeattrset[attr] = true;
+        });
+    });
+    Object.keys(nodeattrset).forEach(function(attr) {
+        addNodeAttribute(myself, attr, false);
+    });
+    Object.keys(edgeattrset).forEach(function(attr) {
+        addEdgeAttribute(myself, attr, false);
+    });
+}
+
 SpriteMorph.prototype.loadGraphFromURL = function(url) {
     var request = new XMLHttpRequest();
     request.open('GET', url, false);
     request.send(null);
     if (request.status === 200) {
         try {
-            addGraph(this.G, objectToGraph(JSON.parse(request.responseText)));
+            var graph = objectToGraph(JSON.parse(request.responseText));
+            addGraph(this.G, graph);
+            this.addAttrsFromGraph(graph);
         } catch(e) {
             if(e instanceof SyntaxError) {
                 var text = request.responseText.trim();
