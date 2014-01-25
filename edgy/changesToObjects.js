@@ -431,6 +431,11 @@ SpriteMorph.prototype.newDiGraph = function() {
     }
 };
 
+function formatTooManyNodesMessage(n, max) {
+    return "Too many nodes to display (" + n + ", maximum is " + max + ")." +
+           "\nConsider increasing the limit under Settings > Maximum " +
+           "visible nodes or displaying a subgraph.";
+}
 
 StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDisplay2 = function(G) {
     var ide = this.parentThatIsA(IDE_Morph),
@@ -443,11 +448,8 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
         setGraphToDisplay(G);
         oldCurrentGraph = null;
     } else {
-        var msg = "Too many nodes to display (" + G.number_of_nodes() +
-                  ", maximum is " + maxVisibleNodes + ").\n" +
-                  "Consider increasing the limit under Settings > Maximum " +
-                  "visible nodes or displaying a subgraph.";
         oldCurrentGraph = G;
+        var msg = formatTooManyNodesMessage(G.number_of_nodes(), maxVisibleNodes);
         if(ide) {
             throw new Error(msg);
         } else {
@@ -872,29 +874,38 @@ function addGraph(G, other) {
     G.add_edges_from(other.edges(null, true));
 }
 
-function renumberAndAdd(G, other, startNum) {
+SpriteMorph.prototype.renumberAndAdd = function(other, startNum) {
+    var ide = this.parentThatIsA(IDE_Morph),
+        totalNodes = this.G.number_of_nodes() + other.number_of_nodes();
+    if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
+        // Too many nodes. Hide the graph and throw up a message.
+        oldCurrentGraph = this.G;
+        this.hideActiveGraph();
+        ide.showMessage(formatTooManyNodesMessage(totalNodes,
+                                                  ide.maxVisibleNodes));
+    }
     var relabeled = jsnx.relabel.relabel_nodes(other, function (n) { return n + startNum; });
-    addGraph(G, relabeled);
+    addGraph(this.G, relabeled);
 }
 
 SpriteMorph.prototype.generateBalancedTree = function(r, h, n) {
     var tree = jsnx.generators.classic.balanced_tree(r, h, new this.G.constructor());
-    renumberAndAdd(this.G, tree, n);
+    this.renumberAndAdd(tree, n);
 };
 
 SpriteMorph.prototype.generateCycleGraph = function(l, n) {
     var cycle = jsnx.generators.classic.cycle_graph(l, new this.G.constructor());
-    renumberAndAdd(this.G, cycle, n);
+    this.renumberAndAdd(cycle, n);
 };
 
 SpriteMorph.prototype.generateCompleteGraph = function(k, n) {
     var complete = jsnx.generators.classic.complete_graph(k, new this.G.constructor());
-    renumberAndAdd(this.G, complete, n);
+    this.renumberAndAdd(complete, n);
 };
 
 SpriteMorph.prototype.generatePathGraph = function(k, n) {
     var path = jsnx.generators.classic.path_graph(k, new this.G.constructor());
-    renumberAndAdd(this.G, path, n);
+    this.renumberAndAdd(path, n);
 };
 
 SpriteMorph.prototype.generateGridGraph = function(w, h) {
