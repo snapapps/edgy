@@ -2056,6 +2056,8 @@ IDE_Morph.prototype.settingsMenu = function () {
     }
 
     menu = new MenuMorph(this);
+    menu.addItem('Maximum visible nodes', 'setMaxVisibleNodes')
+    menu.addLine();
     menu.addItem('Language...', 'languageMenu');
     menu.addItem(
         'Zoom blocks...',

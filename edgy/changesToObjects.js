@@ -13,6 +13,7 @@ var graphEl = d3.select(document.body)
                 '-webkit-user-select': 'none',
                 'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
+    oldCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
     sliceStart,
     sliceRadius;
@@ -176,10 +177,20 @@ function redrawGraph() {
         },
         edge_style: {
             fill: function(d) {
-                return d.data.color || DEFAULT_EDGE_COLOR;
+                if(d.G.graph.edgecostume) {
+                    // Display the edge pattern if there is one.
+                    return "url(#edgepattern)";
+                } else {
+                    return d.data.color || DEFAULT_EDGE_COLOR;
+                }
             },
             'stroke-width': function(d) {
-                return d.data.width * DEFAULT_EDGE_WIDTH || DEFAULT_EDGE_WIDTH;
+                if(d.G.graph.edgecostume) {
+                    // Needs to be doubled, for some reason.
+                    return d.G.graph.edgecostume.height * 2;
+                } else {
+                    return d.data.width * DEFAULT_EDGE_WIDTH || DEFAULT_EDGE_WIDTH;
+                }
             }
         },
         label_style: {fill: DEFAULT_LABEL_COLOR},
@@ -200,9 +211,24 @@ function redrawGraph() {
         },
         pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
     }, true);
+
+    // Calling jsnx.draw() will purge the graph container element, so we need
+    // to reset the edge pattern regardless of whether it has changed.
+    if(currentGraph.graph.edgecostume) {
+        setEdgePattern(currentGraph.graph.edgecostume);
+    }
 }
 
 function setGraphToDisplay (G) {
+    // Remove the JSNetworkX mutator bindings from the current graph, so we
+    // don't get mysterious slowdowns from unbound graphs floating around and
+    // being laid out in the background.
+    if(currentGraph) {
+        jsnx.unbind(currentGraph, true);
+    }
+    if(layout) {
+        layout.stop();
+    }
     currentGraph = G;
     redrawGraph();
 }
@@ -311,6 +337,70 @@ SpriteMorph.prototype.init = (function init (oldInit) {
 // Stub this out to hide the actual sprite on the stage.
 SpriteMorph.prototype.drawOn = function() {}
 
+StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNodesChanged = function(num) {
+    if(oldCurrentGraph &&
+       num >= oldCurrentGraph.number_of_nodes()) {
+        try {
+            this.setGraphToDisplay2(oldCurrentGraph);
+        } catch(e) {
+            this.parentThatIsA(IDE_Morph).showMessage(e.message);
+        }
+        oldCurrentGraph = null;
+    } else if (currentGraph.number_of_nodes() > num) {
+        oldCurrentGraph = currentGraph;
+        justHideGraph();
+    }
+}
+
+function setEdgePattern(canvas) {
+    // Make the edge pattern element. We're using SVG's pattern support to
+    // make the fancy tiled edge patterns work.
+    var pattern = graphEl.select("#edgepattern");
+    if(pattern.empty()) {
+        pattern = graphEl.select("svg")
+            .insert("defs", ":first-child")
+                .append("pattern")
+                    .attr({
+                        id: "edgepattern",
+                        patternUnits: "userSpaceOnUse",
+                    })
+        pattern.append("image");
+    }
+
+    pattern.attr({
+        width: canvas.width,
+        height: canvas.height,
+        // Compensate for edge path x-axis going along middle of edge like |-
+        y: canvas.height/2
+    }).select("image")
+        .attr({
+            width: canvas.width,
+            height: canvas.height,
+            "xlink:href": canvas.toDataURL()
+        });
+}
+
+SpriteMorph.prototype.wearCostume = (function wearCostume(oldWearCostume) {
+    return function(costume) {
+        oldWearCostume.call(this, costume);
+        if(costume) {
+            setEdgePattern(costume.contents);
+            this.G.graph.edgecostume = costume.contents;
+            if(currentGraph === this.G) {
+                // Fix edge patterns.
+                graphEl.selectAll(".edge").selectAll(".line").style("fill", "url(#edgepattern)");
+                // Fix edge widths.
+                layout.resume();
+            }
+        } else {
+            delete this.G.graph.edgecostume;
+            if(currentGraph === this.G) {
+                redrawGraph();
+            }
+        }
+    }
+}(SpriteMorph.prototype.wearCostume));
+
 function autoNumericize(x) {
     if(isNumeric(x)) {
         return parseFloat(x);
@@ -341,8 +431,37 @@ SpriteMorph.prototype.newDiGraph = function() {
     }
 };
 
+function formatTooManyNodesMessage(n, max) {
+    return "Too many nodes to display (" + n + ", maximum is " + max + ")." +
+           "\nConsider increasing the limit under Settings > Maximum " +
+           "visible nodes or displaying a subgraph.";
+}
+
+StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDisplay2 = function(G) {
+    var ide = this.parentThatIsA(IDE_Morph),
+        maxVisibleNodes = DEFAULT_MAX_VISIBLE_NODES;
+    if(ide) {
+        maxVisibleNodes = ide.maxVisibleNodes;
+    }
+
+    if(G.number_of_nodes() <= maxVisibleNodes) {
+        setGraphToDisplay(G);
+        oldCurrentGraph = null;
+    } else {
+        oldCurrentGraph = G;
+        var msg = formatTooManyNodesMessage(G.number_of_nodes(), maxVisibleNodes);
+        if(ide) {
+            throw new Error(msg);
+        } else {
+            // Argh. We don't have a parent IDE_Morph, because we're doing
+            // loading or something.
+            ide_.showMessage(msg);
+        }
+    }
+};
+
 SpriteMorph.prototype.setActiveGraph = function() {
-    setGraphToDisplay(this.G);
+    this.setGraphToDisplay2(this.G);
 };
 
 SpriteMorph.prototype.showGraphSlice = function(start, radius) {
@@ -351,7 +470,7 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         G;
 
     if(!this.G.has_node(start)) {
-        setGraphToDisplay(new this.G.constructor())
+        this.setGraphToDisplay2(new this.G.constructor())
         return;
     }
 
@@ -371,14 +490,20 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         }));
     } else {
         G.parent_graph = this.G;
-        setGraphToDisplay(G);
+        this.setGraphToDisplay2(G);
     }
     sliceStart = start;
     sliceRadius = radius;
 };
 
-SpriteMorph.prototype.hideActiveGraph = function() {
+function justHideGraph() {
     setGraphToDisplay(jsnx.Graph());
+}
+
+SpriteMorph.prototype.hideActiveGraph = function() {
+    if(currentGraph === this.G || currentGraph.parent_graph === this.G) {
+        justHideGraph();
+    }
 };
 
 SpriteMorph.prototype.clearGraph = function() {
@@ -397,6 +522,15 @@ SpriteMorph.prototype.numberOfEdges = function () {
 };
 
 SpriteMorph.prototype.addNode = function(nodes) {
+    var ide = this.parentThatIsA(IDE_Morph),
+        totalNodes = this.G.number_of_nodes() + nodes.length();
+    if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
+        // Too many nodes. Hide the graph and throw up a message.
+        oldCurrentGraph = this.G;
+        this.hideActiveGraph();
+        ide.showMessage(formatTooManyNodesMessage(totalNodes,
+                                                  ide.maxVisibleNodes));
+    }
     this.G.add_nodes_from(nodes.asArray().map(parseNode));
     // No need to update the slice, as adding nodes can never update a slice
     // due to not being connected.
@@ -619,7 +753,10 @@ SpriteMorph.prototype.isStronglyConnected = function() {
         return false;
     }
 
-    var stack = [this.G.nodes_iter().next()];
+    // Adapted version of Kosaraju's algorithm.
+    var start = this.G.nodes_iter().next();
+
+    var stack = [start];
     var visited = new jsnx.contrib.Set();
     while(stack.length > 0) {
         var node = stack.pop();
@@ -630,6 +767,22 @@ SpriteMorph.prototype.isStronglyConnected = function() {
             }
         });
     }
+
+    if(visited.count() !== this.G.number_of_nodes())
+        return false;
+
+    var stack = [start];
+    var visited = new jsnx.contrib.Set();
+    while(stack.length > 0) {
+        var node = stack.pop();
+        visited.add(node);
+        jsnx.forEach(this.G.predecessors_iter(node), function(predecessor) {
+            if(!visited.has(predecessor)) {
+                stack.push(predecessor);
+            }
+        });
+    }
+
     return visited.count() === this.G.number_of_nodes();
 };
 
@@ -730,29 +883,38 @@ function addGraph(G, other) {
     G.add_edges_from(other.edges(null, true));
 }
 
-function renumberAndAdd(G, other, startNum) {
+SpriteMorph.prototype.renumberAndAdd = function(other, startNum) {
+    var ide = this.parentThatIsA(IDE_Morph),
+        totalNodes = this.G.number_of_nodes() + other.number_of_nodes();
+    if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
+        // Too many nodes. Hide the graph and throw up a message.
+        oldCurrentGraph = this.G;
+        this.hideActiveGraph();
+        ide.showMessage(formatTooManyNodesMessage(totalNodes,
+                                                  ide.maxVisibleNodes));
+    }
     var relabeled = jsnx.relabel.relabel_nodes(other, function (n) { return n + startNum; });
-    addGraph(G, relabeled);
+    addGraph(this.G, relabeled);
 }
 
 SpriteMorph.prototype.generateBalancedTree = function(r, h, n) {
     var tree = jsnx.generators.classic.balanced_tree(r, h, new this.G.constructor());
-    renumberAndAdd(this.G, tree, n);
+    this.renumberAndAdd(tree, n);
 };
 
 SpriteMorph.prototype.generateCycleGraph = function(l, n) {
     var cycle = jsnx.generators.classic.cycle_graph(l, new this.G.constructor());
-    renumberAndAdd(this.G, cycle, n);
+    this.renumberAndAdd(cycle, n);
 };
 
 SpriteMorph.prototype.generateCompleteGraph = function(k, n) {
     var complete = jsnx.generators.classic.complete_graph(k, new this.G.constructor());
-    renumberAndAdd(this.G, complete, n);
+    this.renumberAndAdd(complete, n);
 };
 
 SpriteMorph.prototype.generatePathGraph = function(k, n) {
     var path = jsnx.generators.classic.path_graph(k, new this.G.constructor());
-    renumberAndAdd(this.G, path, n);
+    this.renumberAndAdd(path, n);
 };
 
 SpriteMorph.prototype.generateGridGraph = function(w, h) {
@@ -763,13 +925,40 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
     addGraph(this.G, grid);
 };
 
+SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
+    var myself = this,
+        nodeattrset = {},
+        edgeattrset = {};
+    if(!graph) {
+        graph = this.G;
+    }
+    jsnx.forEach(graph.nodes_iter(true), function(n) {
+        Object.keys(n[1]).forEach(function(attr) {
+            nodeattrset[attr] = true;
+        });
+    });
+    jsnx.forEach(graph.edges_iter(true), function(e) {
+       Object.keys(e[2]).forEach(function(attr) {
+            edgeattrset[attr] = true;
+        });
+    });
+    Object.keys(nodeattrset).forEach(function(attr) {
+        addNodeAttribute(myself, attr, false);
+    });
+    Object.keys(edgeattrset).forEach(function(attr) {
+        addEdgeAttribute(myself, attr, false);
+    });
+}
+
 SpriteMorph.prototype.loadGraphFromURL = function(url) {
     var request = new XMLHttpRequest();
     request.open('GET', url, false);
     request.send(null);
     if (request.status === 200) {
         try {
-            addGraph(this.G, objectToGraph(JSON.parse(request.responseText)));
+            var graph = objectToGraph(JSON.parse(request.responseText));
+            addGraph(this.G, graph);
+            this.addAttrsFromGraph(graph);
         } catch(e) {
             if(e instanceof SyntaxError) {
                 var text = request.responseText.trim();
@@ -1563,7 +1752,18 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                             request.open('GET', 'wordnet_nouns.json', false);
                             request.send(null);
                             if (request.status === 200) {
-                                myself.wordnet_nouns = objectToGraph(JSON.parse(request.responseText));
+                                var data = JSON.parse(request.responseText);
+                                myself.wordnet_nouns = objectToGraph(data);
+                                // DiGraph.copy() is slow, this is fast. Go
+                                // figure.
+                                myself.G = objectToGraph(data);
+                                myself.addAttrsFromGraph();
+                                myself.showGraphSlice('', 0);
+                                myself.hideActiveGraph();
+                                myself.parentThatIsA(IDE_Morph).showMessage(
+                                    "WordNet has been loaded as the " +
+                                    "active graph.\nYou may now display a " +
+                                    "subgraph starting from a given synset.");
                             } else {
                                 throw new Error("Could not load: " + request.statusText);
                             }
@@ -1678,7 +1878,17 @@ function graphToObject(G) {
     data.directed = G.is_directed();
     data.multigraph = multigraph;
     data.graph = [];
-    mergeObjectIn(data.graph, G.graph, function(k, v) { return [k, v]; });
+    for(var k in G.graph) {
+        if(G.graph.hasOwnProperty(k)) {
+            if(k === "edgecostume") {
+                // G.graph.edgecostume is a DOM <canvas> object, so need to
+                // handle specially.
+                data.graph.push([k, G.graph[k].toDataURL()]);
+            } else {
+                data.graph.push([k, G.graph[k]]);
+            }
+        }
+    }
 
     data.nodes = [];
     jsnx.forEach(G.nodes_iter(true), function(node) {

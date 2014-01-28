@@ -31,7 +31,8 @@
 		<script type="text/javascript" src="edgy/changesToMorphic.js"></script>
 		<script type="text/javascript">
 			var world = new WorldMorph(document.getElementById('world'));
-			new IDE_Morph().openIn(world);
+			var ide_ = new IDE_Morph();
+			ide_.openIn(world);
 			setInterval(loop, 1);
 			function loop() {
 				world.doOneCycle();
