@@ -13,6 +13,7 @@ var graphEl = d3.select(document.body)
                 '-webkit-user-select': 'none',
                 'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
+    currentGraphSprite = null,
     oldCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
     sliceStart,
@@ -292,6 +293,39 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             document.body.removeChild(link);
         });
 
+        menu.addItem("import from file", function () {
+            var inp = document.createElement('input');
+            inp.type = 'file';
+            inp.style.color = "transparent";
+            inp.style.backgroundColor = "transparent";
+            inp.style.border = "none";
+            inp.style.outline = "none";
+            inp.style.position = "absolute";
+            inp.style.top = "0px";
+            inp.style.left = "0px";
+            inp.style.width = "0px";
+            inp.style.height = "0px";
+            inp.addEventListener(
+                "change",
+                function () {
+                    document.body.removeChild(inp);
+                    var frd = new FileReader();
+                    var s = currentGraphSprite;
+                    frd.onloadend = function(e) {
+                        console.log(e);
+                        s.loadGraphFromString(e.target.result);
+                    }
+                    console.log(inp.files);
+                    for (var i = 0; i < inp.files.length; i += 1) {
+                        frd.readAsText(inp.files[i]);
+                    }
+                },
+                false
+            );
+            document.body.appendChild(inp);
+            inp.click();
+        });
+
         return menu;
     };
 }(StageMorph.prototype.userMenu));
@@ -321,6 +355,7 @@ SpriteMorph.prototype.init = (function init (oldInit) {
         this.G = new jsnx.Graph();
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
+            currentGraphSprite = this;
         }
         this.nodeAttributes = [];
         this.nodeAttributes.toXML = serializeAttributes;
@@ -446,6 +481,7 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
 
     if(G.number_of_nodes() <= maxVisibleNodes) {
         setGraphToDisplay(G);
+        currentGraphSprite = this;
         oldCurrentGraph = null;
     } else {
         oldCurrentGraph = G;
@@ -508,6 +544,7 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
 
 function justHideGraph() {
     setGraphToDisplay(jsnx.Graph());
+    currentGraphSprite = null;
 }
 
 SpriteMorph.prototype.hideActiveGraph = function() {
@@ -960,29 +997,33 @@ SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
     });
 }
 
+SpriteMorph.prototype.loadGraphFromString = function(string) {
+    try {
+        var graph = objectToGraph(JSON.parse(string));
+        addGraph(this.G, graph);
+        this.addAttrsFromGraph(graph);
+    } catch(e) {
+        if(e instanceof SyntaxError) {
+            var text = string.trim();
+            if(text[0] == ',') {
+                // Try parsing as adjacency matrix.
+                addGraph(this.G, parseAdjacencyMatrix(text));
+            } else {
+                // Try parsing as adjacency list.
+                addGraph(this.G, parseAdjacencyList(text));
+            }
+        } else {
+            throw e;
+        }
+    }
+};
+
 SpriteMorph.prototype.loadGraphFromURL = function(url) {
     var request = new XMLHttpRequest();
     request.open('GET', url, false);
     request.send(null);
     if (request.status === 200) {
-        try {
-            var graph = objectToGraph(JSON.parse(request.responseText));
-            addGraph(this.G, graph);
-            this.addAttrsFromGraph(graph);
-        } catch(e) {
-            if(e instanceof SyntaxError) {
-                var text = request.responseText.trim();
-                if(text[0] == ',') {
-                    // Try parsing as adjacency matrix.
-                    addGraph(this.G, parseAdjacencyMatrix(text));
-                } else {
-                    // Try parsing as adjacency list.
-                    addGraph(this.G, parseAdjacencyList(text));
-                }
-            } else {
-                throw e;
-            }
-        }
+        this.loadGraphFromString(request.responseText);
     } else {
         throw new Error("Could not load URL: " + request.statusText);
     }
