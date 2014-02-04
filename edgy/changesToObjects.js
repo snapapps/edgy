@@ -466,7 +466,6 @@ SpriteMorph.prototype.setActiveGraph = function() {
 
 SpriteMorph.prototype.showGraphSlice = function(start, radius) {
     var start = parseNode(start),
-        distances,
         G;
 
     if(!this.G.has_node(start)) {
@@ -474,8 +473,19 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         return;
     }
 
-    distances = jsnx.single_source_shortest_path_length(this.G, start, radius);
-    G = this.G.subgraph(distances.keys());
+    if(this.G.is_directed())
+    {
+        var distancesA = jsnx.single_source_shortest_path_length(this.G, start, radius);
+        this.G.reverse(false);
+        var distancesB = jsnx.single_source_shortest_path_length(this.G, start, radius);
+        this.G.reverse(false);
+        G = this.G.subgraph(distancesA.keys().concat(distancesB.keys()));
+    }
+    else
+    {
+        var distances = jsnx.single_source_shortest_path_length(this.G, start, radius);
+        G = this.G.subgraph(distances.keys());
+    }
 
     if(currentGraph.parent_graph === this.G) {
         currentGraph.add_nodes_from(G);
