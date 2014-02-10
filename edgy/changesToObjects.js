@@ -79,7 +79,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.G.add_node(d.node, {color: color});
-                    }).prompt('Node color', '', world);
+                    }).prompt('Node color', d.data.color || DEFAULT_NODE_COLOR, world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set radius', function () {
@@ -117,7 +117,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.G.add_edge(d.edge[0], d.edge[1], {color: color});
-                    }).prompt('Edge color', '', world);
+                    }).prompt('Edge color', d.data.color || DEFAULT_EDGE_COLOR, world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set width', function () {
