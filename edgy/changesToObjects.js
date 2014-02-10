@@ -286,14 +286,18 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
         }
 
         menu.addItem("export to file", function () {
-            var data = JSON.stringify(graphToObject(currentGraph)),
-                link = document.createElement('a');
+            var submenu = new MenuMorph(myself);
+            submenu.addItem("JSON", function() {
+                var data = JSON.stringify(graphToObject(currentGraph)),
+                    link = document.createElement('a');
 
-            link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
-            link.setAttribute('download', (this.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
+                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            submenu.popUpAtHand(world);
         });
 
         menu.addItem("import from file", function () {
