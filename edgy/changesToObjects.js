@@ -1011,13 +1011,13 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
         this.addAttrsFromGraph(graph);
     } catch(e) {
         if(e instanceof SyntaxError) {
-            var text = string.trim();
-            if(text[0] == ',') {
+            var data = CSV.csvToArray(string);
+            if(data[0][0] === '' || data[0][0] === null) {
                 // Try parsing as adjacency matrix.
-                addGraph(this.G, parseAdjacencyMatrix(text));
+                addGraph(this.G, parseAdjacencyMatrix(data));
             } else {
                 // Try parsing as adjacency list.
-                addGraph(this.G, parseAdjacencyList(text));
+                addGraph(this.G, parseAdjacencyList(data));
             }
         } else {
             throw e;
@@ -1979,13 +1979,13 @@ function graphToObject(G) {
     return data;
 }
 
-function parseAdjacencyList (text) {
-    var lines = text.split("\n"),
-        G = jsnx.DiGraph(),
+function parseAdjacencyList (list) {
+    var G = jsnx.DiGraph(),
         row;
 
-    for (var i = 0; i < lines.length; i++) {
-        row = lines[i].split(",");
+    for (var i = 0; i < list.length; i++) {
+        row = list[i];
+
         if(row.length === 3) {
             G.add_edge(parseNode(row[0]), parseNode(row[1]), {label: row[2]})
         } else if(row.length === 2)  {
@@ -1997,24 +1997,26 @@ function parseAdjacencyList (text) {
     return G;
 }
 
-function parseAdjacencyMatrix (text) {
-    var lines = text.split("\n").map(function(L) { return L.split(","); }),
-        G = jsnx.DiGraph(),
-        row;
+function parseAdjacencyMatrix (mat) {
+    var G = jsnx.DiGraph(),
+        row, a, b, label_;
 
-    for (var i = 1; i < lines[0].length; i++) {
-        G.add_node(lines[0][i]);
+    for (var i = 1; i < mat[0].length; i++) {
+        G.add_node(mat[0][i].toString());
     }
 
-    for (var i = 1; i < lines.length; i++) {
-        row = lines[i];
+    for (var i = 1; i < mat.length; i++) {
+        row = mat[i];
         for (var j = 1; j < row.length; j++) {
-            if(row[j].length > 0) {
+            if(row[j] !== null && row[j] !== '') {
+                a = parseNode(row[0].toString());
+                b = parseNode(mat[0][j].toString());
+                label_ = row[j].toString();
                 // Let's hope no one ever uses '1' as an edge label.
-                if(row[j] === '1') {
-                    G.add_edge(row[0], lines[0][j]);
+                if(label_ === '1') {
+                    G.add_edge(a, b);
                 } else {
-                    G.add_edge(row[0], lines[0][j], {label: row[j]});
+                    G.add_edge(a, b, {label: label_});
                 }
             }
         }
