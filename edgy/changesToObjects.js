@@ -85,7 +85,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set radius', function () {
                     new DialogBoxMorph(null, function (radius) {
                         d.G.add_node(d.node, {radius: radius});
-                    }).prompt('Node radius', '', world);
+                    }).prompt('Node radius', d.data.radius || 1, world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -123,7 +123,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
                         d.G.add_edge(d.edge[0], d.edge[1], {width: width});
-                    }).prompt('Edge width', '', world);
+                    }).prompt('Edge width', d.data.width || 1, world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -153,8 +153,8 @@ function updateGraphDimensions(stage) {
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
-    DEFAULT_NODE_RADIUS = 10,
-    DEFAULT_EDGE_WIDTH = 8;
+    NODE_RADIUS_FACTOR = 10,
+    EDGE_WIDTH_FACTOR = 8;
 
 function redrawGraph() {
     // console.log("redrawing graph")
@@ -173,7 +173,7 @@ function redrawGraph() {
         },
         node_attr: {
             r: function(d) {
-                return d.data.radius * DEFAULT_NODE_RADIUS || DEFAULT_NODE_RADIUS;
+                return d.data.radius * NODE_RADIUS_FACTOR || NODE_RADIUS_FACTOR;
             }
         },
         edge_style: {
@@ -190,7 +190,7 @@ function redrawGraph() {
                     // Needs to be doubled, for some reason.
                     return d.G.graph.edgecostume.height * 2;
                 } else {
-                    return d.data.width * DEFAULT_EDGE_WIDTH || DEFAULT_EDGE_WIDTH;
+                    return d.data.width * EDGE_WIDTH_FACTOR || EDGE_WIDTH_FACTOR;
                 }
             }
         },
@@ -648,7 +648,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
         if(attrib === "label")
             return node.toString();
         if(attrib === "radius")
-            return 1; // Radius is normalized to 1; multiplied with DEFAULT_NODE_RADIUS.
+            return 1; // Radius is normalized to 1; multiplied with NODE_RADIUS_FACTOR.
 
         throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
     } else {
@@ -691,7 +691,7 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
         if(attrib === "label")
             return "";
         if(attrib === "width")
-            return 1; // Width is normalized to 1; multiplied with DEFAULT_EDGE_WIDTH.
+            return 1; // Width is normalized to 1; multiplied with EDGE_WIDTH_FACTOR.
 
         throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
     } else {
