@@ -297,6 +297,39 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                 link.click();
                 document.body.removeChild(link);
             });
+            submenu.addItem("comma-separated adjacency matrix", function() {
+                var G = currentGraph,
+                    nodes = G.nodes(),
+                    header = [""].concat(nodes),
+                    data = [header];
+
+                for (var i = 0; i < nodes.length; i++) {
+                    var row = [nodes[i]];
+                    for (var j = 0; j < nodes.length; j++) {
+                        if(G.has_edge(nodes[i], nodes[j])) {
+                            var label = G.edge.get(nodes[i]).get(nodes[j]).label;
+                            if(label) {
+                                row.push(label);
+                            } else {
+                                row.push(1);
+                            }
+                        } else {
+                            row.push("");
+                        }
+                    }
+                    data.push(row);
+                }
+
+                var csv = CSV.arrayToCsv(data);
+
+                var link = document.createElement('a');
+
+                link.setAttribute('href', 'data:text/csv,' + encodeURIComponent(csv));
+                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
             submenu.popUpAtHand(world);
         });
 
