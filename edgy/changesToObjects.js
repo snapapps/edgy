@@ -1951,18 +1951,20 @@ function graphToObject(G) {
 
     if (multigraph) {
         data.links = [];
-        jsnx.forEach(G.edges_iter(true, true), function(edge) {
+        jsnx.forEach(G.edges_iter(true), function(edge) {
             var u = edge[0], v = edge[1], k = edge[2], d = edge[3],
                 link = {source: mapping[u], target: mapping[v], key: k};
             mergeObjectIn(link, d);
+            delete link.__d3datum__;
             data.links.push(link);
         });
     } else {
         data.links = [];
-        jsnx.forEach(G.edges_iter(true, true), function(edge) {
-            var u = edge[0], v = edge[1], d = edge[3],
+        jsnx.forEach(G.edges_iter(true), function(edge) {
+            var u = edge[0], v = edge[1], d = edge[2],
                 link = {source: mapping[u], target: mapping[v]};
             mergeObjectIn(link, d);
+            delete link.__d3datum__;
             data.links.push(link);
         });
     }
