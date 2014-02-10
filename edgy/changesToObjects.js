@@ -352,10 +352,10 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                     var frd = new FileReader();
                     var s = currentGraphSprite;
                     frd.onloadend = function(e) {
-                        console.log(e);
+                        // console.log(e);
                         s.loadGraphFromString(e.target.result);
                     }
-                    console.log(inp.files);
+                    // console.log(inp.files);
                     for (var i = 0; i < inp.files.length; i += 1) {
                         frd.readAsText(inp.files[i]);
                     }
@@ -1184,7 +1184,7 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
-        console.log(data);
+        // console.log(data);
         return new List(data.lovedtracks.track.map(function(track) {
             return track.artist.name + " - " + track.name;
         }));
