@@ -73,7 +73,7 @@ graphEl.on("DOMNodeInserted", function() {
                     new DialogBoxMorph(null, function (label) {
                         d.G.node.get(d.node).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
-                    }).prompt('Node label', '', world);
+                    }).prompt('Node label', d.data.label || d.node, world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
@@ -111,7 +111,7 @@ graphEl.on("DOMNodeInserted", function() {
                     new DialogBoxMorph(null, function (label) {
                         d.G.adj.get(d.edge[0]).get(d.edge[1]).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
-                    }).prompt('Edge label', '', world);
+                    }).prompt('Edge label', d.data.label || '', world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
