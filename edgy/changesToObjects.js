@@ -273,10 +273,13 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
 
             menu.addItem("add edge", function () {
                 new DialogBoxMorph(null, function (start) {
-                    new DialogBoxMorph(null, function (end) {
-                        currentGraph.add_edge(parseNode(start), parseNode(end));
-                    }).prompt('End node', '', world);
-                    world.worldCanvas.focus();
+                    // HACK: work around not being able to give focus to the
+                    // new DialogBoxMorph while the previous one still exists.
+                    setTimeout(function() {
+                        new DialogBoxMorph(null, function (end) {
+                            currentGraph.add_edge(parseNode(start), parseNode(end));
+                        }).prompt('End node', '', world);
+                    }, 0);
                 }).prompt('Start node', '', world);
                 world.worldCanvas.focus();
             });
