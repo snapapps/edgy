@@ -5335,6 +5335,7 @@ Costume.prototype.edit = function (aWorld, anIDE, isnew, oncancel, onsubmit) {
         function (img, rc) {
             myself.contents = img;
             myself.rotationCenter = rc;
+            myself.loaded = true;
             if (anIDE.currentSprite instanceof SpriteMorph) {
                 // don't shrinkwrap stage costumes
                 myself.shrinkWrap();

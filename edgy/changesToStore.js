@@ -7,6 +7,12 @@
 SnapSerializer.prototype.loadObject = (function loadObject (oldLoadObject) {
     return function (object, model)
     {
+        var retval = oldLoadObject.call(this, object, model);
+
+        if(object.graphFromJSON) {
+            object.loadCostumesAsPatterns();
+        }
+
         var graphLoaded = false;
         model.children.forEach(function (child) {
             if (child.tag === 'graph') {
@@ -24,10 +30,12 @@ SnapSerializer.prototype.loadObject = (function loadObject (oldLoadObject) {
                 });
             }
         });
+
         if(graphLoaded) {
             object.setActiveGraph();
         }
-        return oldLoadObject.call(this, object, model);
+
+        return retval;
     };
 }(SnapSerializer.prototype.loadObject));
 

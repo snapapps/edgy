@@ -16,6 +16,8 @@ var graphEl = d3.select(document.body)
     currentGraphSprite = null,
     oldCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
+    costumeIdMap = {},
+    numEdgePatterns = 0,
     sliceStart,
     sliceRadius;
 
@@ -85,7 +87,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set radius', function () {
                     new DialogBoxMorph(null, function (radius) {
                         d.G.add_node(d.node, {radius: radius});
-                    }).prompt('Node radius', d.data.radius || 1, world);
+                    }).prompt('Node radius', (d.data.radius || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -123,7 +125,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
                         d.G.add_edge(d.edge[0], d.edge[1], {width: width});
-                    }).prompt('Edge width', d.data.width || 1, world);
+                    }).prompt('Edge width', (d.data.width || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -178,19 +180,26 @@ function redrawGraph() {
         },
         edge_style: {
             fill: function(d) {
-                if(d.G.graph.edgecostume) {
-                    // Display the edge pattern if there is one.
-                    return "url(#edgepattern)";
+                if(d.data.__costume__) {
+                    // Display edge pattern if there one is set.
+                    return "url(#" + d.data.__costume__.patternId + ")";
                 } else {
                     return d.data.color || DEFAULT_EDGE_COLOR;
                 }
             },
             'stroke-width': function(d) {
-                if(d.G.graph.edgecostume) {
+                if(d.data.__costume__) {
                     // Needs to be doubled, for some reason.
-                    return d.G.graph.edgecostume.height * 2;
+                    return d.data.__costume__.contents.height * 2;
                 } else {
                     return d.data.width * EDGE_WIDTH_FACTOR || EDGE_WIDTH_FACTOR;
+                }
+            },
+        },
+        edge_attr: {
+            transform: function(d) {
+                if(d.data.__costume__) {
+                    return "scale(1 " + (d.data.width || 1) + ")";
                 }
             }
         },
@@ -214,9 +223,12 @@ function redrawGraph() {
     }, true);
 
     // Calling jsnx.draw() will purge the graph container element, so we need
-    // to reset the edge pattern regardless of whether it has changed.
-    if(currentGraph.graph.edgecostume) {
-        setEdgePattern(currentGraph.graph.edgecostume);
+    // to re-add the edge patterns regardless of whether they have changed.
+    for(var costumeId in costumeIdMap) {
+        if(costumeIdMap.hasOwnProperty(costumeId)) {
+            var costume = costumeIdMap[costumeId];
+            addEdgePattern(costume.patternNum, costume.contents);
+        }
     }
 }
 
@@ -412,6 +424,10 @@ SpriteMorph.prototype.init = (function init (oldInit) {
 // Stub this out to hide the actual sprite on the stage.
 SpriteMorph.prototype.drawOn = function() {}
 
+SpriteMorph.prototype.loadCostumesAsPatterns = function() {
+    this.costumes.asArray().forEach(loadCostumeAsEdgePattern);
+}
+
 StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNodesChanged = function(num) {
     if(oldCurrentGraph &&
        num >= oldCurrentGraph.number_of_nodes()) {
@@ -427,19 +443,30 @@ StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNo
     }
 }
 
-function setEdgePattern(canvas) {
+function formatCostumeImageId(name) {
+    return "costume-" + name;
+}
+
+function formatEdgePatternId(name) {
+    return "edgepattern-" + name;
+}
+
+function addEdgePattern(name, canvas) {
     // Make the edge pattern element. We're using SVG's pattern support to
     // make the fancy tiled edge patterns work.
-    var pattern = graphEl.select("#edgepattern");
+    var costumeId = formatCostumeImageId(name),
+        patternId = formatEdgePatternId(name),
+        image = graphEl.select("#" + costumeId),
+        pattern = graphEl.select("#" + patternId);
     if(pattern.empty()) {
-        pattern = graphEl.select("svg")
-            .insert("defs", ":first-child")
-                .append("pattern")
-                    .attr({
-                        id: "edgepattern",
-                        patternUnits: "userSpaceOnUse",
-                    })
-        pattern.append("image");
+        var defs = graphEl.select("svg").insert("defs", ":first-child");
+        image = defs.append("image");
+        var pattern = defs.append("pattern")
+            .attr({
+                id: patternId,
+                patternUnits: "userSpaceOnUse",
+            });
+        pattern.append("use").attr({"xlink:href": "#" + costumeId});
     }
 
     pattern.attr({
@@ -447,34 +474,44 @@ function setEdgePattern(canvas) {
         height: canvas.height,
         // Compensate for edge path x-axis going along middle of edge like |-
         y: canvas.height/2
-    }).select("image")
-        .attr({
-            width: canvas.width,
-            height: canvas.height,
-            "xlink:href": canvas.toDataURL()
-        });
+    });
+    image.attr({
+        id: costumeId,
+        width: canvas.width,
+        height: canvas.height,
+        "xlink:href": canvas.toDataURL()
+    });
+    return patternId;
 }
 
-SpriteMorph.prototype.wearCostume = (function wearCostume(oldWearCostume) {
-    return function(costume) {
-        oldWearCostume.call(this, costume);
-        if(costume) {
-            setEdgePattern(costume.contents);
-            this.G.graph.edgecostume = costume.contents;
-            if(currentGraph === this.G) {
-                // Fix edge patterns.
-                graphEl.selectAll(".edge").selectAll(".line").style("fill", "url(#edgepattern)");
-                // Fix edge widths.
-                layout.resume();
+function loadCostumeAsEdgePattern(costume) {
+    // numEdgePatterns might be modified later, so save it here if we use the
+    // loaded callback.
+    var num = numEdgePatterns, costumeId;
+    numEdgePatterns++;
+    if(costume.loaded === true) {
+        costumeId = addEdgePattern(num, costume.contents);
+    } else {
+        costume.loaded = (function loaded(oldLoaded) {
+            return function() {
+                addEdgePattern(num, costume.contents);
+                return oldLoaded.call(costume);
             }
-        } else {
-            delete this.G.graph.edgecostume;
-            if(currentGraph === this.G) {
-                redrawGraph();
-            }
-        }
+        }(costume.loaded));
+        var costumeId = formatEdgePatternId(num);
     }
-}(SpriteMorph.prototype.wearCostume));
+    costume.patternId = costumeId;
+    costume.patternNum = num;
+    costumeIdMap[costumeId] = costume;
+    return costumeId;
+}
+
+SpriteMorph.prototype.addCostume = (function addCostume(oldAddCostume) {
+    return function(costume) {
+        loadCostumeAsEdgePattern(costume);
+        return oldAddCostume.call(this, costume);
+    };
+}(SpriteMorph.prototype.addCostume));
 
 function autoNumericize(x) {
     if(isNumeric(x)) {
@@ -736,6 +773,35 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
         throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
     } else {
         return val;
+    }
+};
+
+SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
+    // NB: Due to InputSlotMorph not having support for multiple dropdown
+    // elements with the same name, we are only able to get the first costume
+    // with the given name. Other costumes which share the same name will be
+    // unusable unless renamed.
+    var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
+    if(this.G.has_edge(a, b)) {
+        var props = this.G.edge.get(a).get(b);
+        if(costumename === "default") {
+            delete props.__costume__;
+        } else {
+            props.__costume__ = detect(this.costumes.asArray(), function(costume) {
+                return costume.name === costumename;
+            });
+        }
+        if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
+            graphEl.select(".edge").each(function(d) {
+                if(d === props.__d3datum__) {
+                    if(props.__costume__) {
+                        d3.select(this).select(".line").style("fill", "url(#" + props.__costume__.patternId + ")");
+                    } else {
+                        d3.select(this).select(".line").style("fill", props.color || DEFAULT_EDGE_COLOR);
+                    }
+                }
+            })
+        }
     }
 };
 
@@ -1331,6 +1397,11 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             category: 'nodes+edges',
             spec: '%edgeAttr of edge %l'
         },
+        setEdgeCostume: {
+            type: 'command',
+            category: 'nodes+edges',
+            spec: 'set costume of edge %l to %cst2'
+        },
         getNodes: {
             type: 'reporter',
             category: 'nodes+edges',
@@ -1629,6 +1700,17 @@ InputSlotMorph.prototype.getEdgeAttrsDict = function () {
     return dict;
 };
 
+InputSlotMorph.prototype.costumesMenu2 = function () {
+    var rcvr = this.parentThatIsA(BlockMorph).receiver(),
+        dict = {};
+    dict["default"] = "default";
+    dict["~"] = null;
+    rcvr.costumes.asArray().forEach(function (costume) {
+        dict[costume.name] = costume.name;
+    });
+    return dict;
+};
+
 SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplates) {
     return function (category)
     {
@@ -1792,6 +1874,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getNodeAttrib'));
             blocks.push(block('getEdgeAttrib'));
+            blocks.push(block('setEdgeCostume'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
             blocks.push(block('sortNodes'));
@@ -1912,8 +1995,14 @@ SpriteMorph.prototype.graphFromJSON = function(json) {
     jsnx.forEach(this.G.edges_iter(true), function (edge) {
         var data = edge[2], k;
         for (k in data) {
-            if (data.hasOwnProperty(k) && k !== 'color' && k !== 'label') {
-                addEdgeAttribute(myself, k, false);
+            if (data.hasOwnProperty(k)) {
+                if(k === "__costume__") {
+                    data[k] = detect(myself.costumes.asArray(), function(costume) {
+                        return costume.name === data[k];
+                    });
+                } else if(k !== 'color' && k !== 'label') {
+                    addEdgeAttribute(myself, k, false);
+                }
             }
         }
     });
@@ -1971,13 +2060,7 @@ function graphToObject(G) {
     data.graph = [];
     for(var k in G.graph) {
         if(G.graph.hasOwnProperty(k)) {
-            if(k === "edgecostume") {
-                // G.graph.edgecostume is a DOM <canvas> object, so need to
-                // handle specially.
-                data.graph.push([k, G.graph[k].toDataURL()]);
-            } else {
-                data.graph.push([k, G.graph[k]]);
-            }
+            data.graph.push([k, G.graph[k]]);
         }
     }
 
@@ -1996,6 +2079,7 @@ function graphToObject(G) {
                 link = {source: mapping[u], target: mapping[v], key: k};
             mergeObjectIn(link, d);
             delete link.__d3datum__;
+            delete link.__costume__;
             data.links.push(link);
         });
     } else {
@@ -2005,6 +2089,9 @@ function graphToObject(G) {
                 link = {source: mapping[u], target: mapping[v]};
             mergeObjectIn(link, d);
             delete link.__d3datum__;
+            if(link.__costume__) {
+                link.__costume__ = link.__costume__.name;
+            }
             data.links.push(link);
         });
     }
