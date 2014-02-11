@@ -13,6 +13,7 @@ var graphEl = d3.select(document.body)
                 '-webkit-user-select': 'none',
                 'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
+    currentGraphSprite = null,
     oldCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
     sliceStart,
@@ -72,19 +73,19 @@ graphEl.on("DOMNodeInserted", function() {
                     new DialogBoxMorph(null, function (label) {
                         d.G.node.get(d.node).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
-                    }).prompt('Node label', '', world);
+                    }).prompt('Node label', d.data.label || d.node, world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.G.add_node(d.node, {color: color});
-                    }).prompt('Node color', '', world);
+                    }).prompt('Node color', d.data.color || DEFAULT_NODE_COLOR, world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set radius', function () {
                     new DialogBoxMorph(null, function (radius) {
                         d.G.add_node(d.node, {radius: radius});
-                    }).prompt('Node radius', '', world);
+                    }).prompt('Node radius', d.data.radius || 1, world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -110,19 +111,19 @@ graphEl.on("DOMNodeInserted", function() {
                     new DialogBoxMorph(null, function (label) {
                         d.G.adj.get(d.edge[0]).get(d.edge[1]).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
-                    }).prompt('Edge label', '', world);
+                    }).prompt('Edge label', d.data.label || '', world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.G.add_edge(d.edge[0], d.edge[1], {color: color});
-                    }).prompt('Edge color', '', world);
+                    }).prompt('Edge color', d.data.color || DEFAULT_EDGE_COLOR, world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
                         d.G.add_edge(d.edge[0], d.edge[1], {width: width});
-                    }).prompt('Edge width', '', world);
+                    }).prompt('Edge width', d.data.width || 1, world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -152,8 +153,8 @@ function updateGraphDimensions(stage) {
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
-    DEFAULT_NODE_RADIUS = 10,
-    DEFAULT_EDGE_WIDTH = 8;
+    NODE_RADIUS_FACTOR = 10,
+    EDGE_WIDTH_FACTOR = 8;
 
 function redrawGraph() {
     // console.log("redrawing graph")
@@ -172,7 +173,7 @@ function redrawGraph() {
         },
         node_attr: {
             r: function(d) {
-                return d.data.radius * DEFAULT_NODE_RADIUS || DEFAULT_NODE_RADIUS;
+                return d.data.radius * NODE_RADIUS_FACTOR || NODE_RADIUS_FACTOR;
             }
         },
         edge_style: {
@@ -189,7 +190,7 @@ function redrawGraph() {
                     // Needs to be doubled, for some reason.
                     return d.G.graph.edgecostume.height * 2;
                 } else {
-                    return d.data.width * DEFAULT_EDGE_WIDTH || DEFAULT_EDGE_WIDTH;
+                    return d.data.width * EDGE_WIDTH_FACTOR || EDGE_WIDTH_FACTOR;
                 }
             }
         },
@@ -272,24 +273,97 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
 
             menu.addItem("add edge", function () {
                 new DialogBoxMorph(null, function (start) {
-                    new DialogBoxMorph(null, function (end) {
-                        currentGraph.add_edge(parseNode(start), parseNode(end));
-                    }).prompt('End node', '', world);
-                    world.worldCanvas.focus();
+                    // HACK: work around not being able to give focus to the
+                    // new DialogBoxMorph while the previous one still exists.
+                    setTimeout(function() {
+                        new DialogBoxMorph(null, function (end) {
+                            currentGraph.add_edge(parseNode(start), parseNode(end));
+                        }).prompt('End node', '', world);
+                    }, 0);
                 }).prompt('Start node', '', world);
                 world.worldCanvas.focus();
             });
         }
 
         menu.addItem("export to file", function () {
-            var data = JSON.stringify(graphToObject(currentGraph)),
-                link = document.createElement('a');
+            var submenu = new MenuMorph(myself);
+            submenu.addItem("JSON", function() {
+                var data = JSON.stringify(graphToObject(currentGraph)),
+                    link = document.createElement('a');
 
-            link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
-            link.setAttribute('download', (this.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
+                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            submenu.addItem("comma-separated adjacency matrix", function() {
+                var G = currentGraph,
+                    nodes = G.nodes(),
+                    header = [""].concat(nodes),
+                    data = [header];
+
+                for (var i = 0; i < nodes.length; i++) {
+                    var row = [nodes[i]];
+                    for (var j = 0; j < nodes.length; j++) {
+                        if(G.has_edge(nodes[i], nodes[j])) {
+                            var label = G.edge.get(nodes[i]).get(nodes[j]).label;
+                            if(label) {
+                                row.push(label);
+                            } else {
+                                row.push(1);
+                            }
+                        } else {
+                            row.push("");
+                        }
+                    }
+                    data.push(row);
+                }
+
+                var csv = CSV.arrayToCsv(data);
+
+                var link = document.createElement('a');
+
+                link.setAttribute('href', 'data:text/csv,' + encodeURIComponent(csv));
+                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            submenu.popUpAtHand(world);
+        });
+
+        menu.addItem("import from file", function () {
+            var inp = document.createElement('input');
+            inp.type = 'file';
+            inp.style.color = "transparent";
+            inp.style.backgroundColor = "transparent";
+            inp.style.border = "none";
+            inp.style.outline = "none";
+            inp.style.position = "absolute";
+            inp.style.top = "0px";
+            inp.style.left = "0px";
+            inp.style.width = "0px";
+            inp.style.height = "0px";
+            inp.addEventListener(
+                "change",
+                function () {
+                    document.body.removeChild(inp);
+                    var frd = new FileReader();
+                    var s = currentGraphSprite;
+                    frd.onloadend = function(e) {
+                        // console.log(e);
+                        s.loadGraphFromString(e.target.result);
+                    }
+                    // console.log(inp.files);
+                    for (var i = 0; i < inp.files.length; i += 1) {
+                        frd.readAsText(inp.files[i]);
+                    }
+                },
+                false
+            );
+            document.body.appendChild(inp);
+            inp.click();
         });
 
         return menu;
@@ -321,6 +395,7 @@ SpriteMorph.prototype.init = (function init (oldInit) {
         this.G = new jsnx.Graph();
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
+            currentGraphSprite = this;
         }
         this.nodeAttributes = [];
         this.nodeAttributes.toXML = serializeAttributes;
@@ -446,6 +521,7 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
 
     if(G.number_of_nodes() <= maxVisibleNodes) {
         setGraphToDisplay(G);
+        currentGraphSprite = this;
         oldCurrentGraph = null;
     } else {
         oldCurrentGraph = G;
@@ -466,7 +542,6 @@ SpriteMorph.prototype.setActiveGraph = function() {
 
 SpriteMorph.prototype.showGraphSlice = function(start, radius) {
     var start = parseNode(start),
-        distances,
         G;
 
     if(!this.G.has_node(start)) {
@@ -474,8 +549,19 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         return;
     }
 
-    distances = jsnx.single_source_shortest_path_length(this.G, start, radius);
-    G = this.G.subgraph(distances.keys());
+    if(this.G.is_directed())
+    {
+        var distancesA = jsnx.single_source_shortest_path_length(this.G, start, radius);
+        this.G.reverse(false);
+        var distancesB = jsnx.single_source_shortest_path_length(this.G, start, radius);
+        this.G.reverse(false);
+        G = this.G.subgraph(distancesA.keys().concat(distancesB.keys()));
+    }
+    else
+    {
+        var distances = jsnx.single_source_shortest_path_length(this.G, start, radius);
+        G = this.G.subgraph(distances.keys());
+    }
 
     if(currentGraph.parent_graph === this.G) {
         currentGraph.add_nodes_from(G);
@@ -498,6 +584,7 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
 
 function justHideGraph() {
     setGraphToDisplay(jsnx.Graph());
+    currentGraphSprite = null;
 }
 
 SpriteMorph.prototype.hideActiveGraph = function() {
@@ -601,7 +688,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
         if(attrib === "label")
             return node.toString();
         if(attrib === "radius")
-            return 1; // Radius is normalized to 1; multiplied with DEFAULT_NODE_RADIUS.
+            return 1; // Radius is normalized to 1; multiplied with NODE_RADIUS_FACTOR.
 
         throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
     } else {
@@ -644,7 +731,7 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
         if(attrib === "label")
             return "";
         if(attrib === "width")
-            return 1; // Width is normalized to 1; multiplied with DEFAULT_EDGE_WIDTH.
+            return 1; // Width is normalized to 1; multiplied with EDGE_WIDTH_FACTOR.
 
         throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
     } else {
@@ -950,29 +1037,33 @@ SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
     });
 }
 
+SpriteMorph.prototype.loadGraphFromString = function(string) {
+    try {
+        var graph = objectToGraph(JSON.parse(string));
+        addGraph(this.G, graph);
+        this.addAttrsFromGraph(graph);
+    } catch(e) {
+        if(e instanceof SyntaxError) {
+            var data = CSV.csvToArray(string);
+            if(data[0][0] === '' || data[0][0] === null) {
+                // Try parsing as adjacency matrix.
+                addGraph(this.G, parseAdjacencyMatrix(data));
+            } else {
+                // Try parsing as adjacency list.
+                addGraph(this.G, parseAdjacencyList(data));
+            }
+        } else {
+            throw e;
+        }
+    }
+};
+
 SpriteMorph.prototype.loadGraphFromURL = function(url) {
     var request = new XMLHttpRequest();
     request.open('GET', url, false);
     request.send(null);
     if (request.status === 200) {
-        try {
-            var graph = objectToGraph(JSON.parse(request.responseText));
-            addGraph(this.G, graph);
-            this.addAttrsFromGraph(graph);
-        } catch(e) {
-            if(e instanceof SyntaxError) {
-                var text = request.responseText.trim();
-                if(text[0] == ',') {
-                    // Try parsing as adjacency matrix.
-                    addGraph(this.G, parseAdjacencyMatrix(text));
-                } else {
-                    // Try parsing as adjacency list.
-                    addGraph(this.G, parseAdjacencyList(text));
-                }
-            } else {
-                throw e;
-            }
-        }
+        this.loadGraphFromString(request.responseText);
     } else {
         throw new Error("Could not load URL: " + request.statusText);
     }
@@ -1093,7 +1184,7 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
-        console.log(data);
+        // console.log(data);
         return new List(data.lovedtracks.track.map(function(track) {
             return track.artist.name + " - " + track.name;
         }));
@@ -1900,18 +1991,20 @@ function graphToObject(G) {
 
     if (multigraph) {
         data.links = [];
-        jsnx.forEach(G.edges_iter(true, true), function(edge) {
+        jsnx.forEach(G.edges_iter(true), function(edge) {
             var u = edge[0], v = edge[1], k = edge[2], d = edge[3],
                 link = {source: mapping[u], target: mapping[v], key: k};
             mergeObjectIn(link, d);
+            delete link.__d3datum__;
             data.links.push(link);
         });
     } else {
         data.links = [];
-        jsnx.forEach(G.edges_iter(true, true), function(edge) {
-            var u = edge[0], v = edge[1], d = edge[3],
+        jsnx.forEach(G.edges_iter(true), function(edge) {
+            var u = edge[0], v = edge[1], d = edge[2],
                 link = {source: mapping[u], target: mapping[v]};
             mergeObjectIn(link, d);
+            delete link.__d3datum__;
             data.links.push(link);
         });
     }
@@ -1919,13 +2012,13 @@ function graphToObject(G) {
     return data;
 }
 
-function parseAdjacencyList (text) {
-    var lines = text.split("\n"),
-        G = jsnx.DiGraph(),
+function parseAdjacencyList (list) {
+    var G = jsnx.DiGraph(),
         row;
 
-    for (var i = 0; i < lines.length; i++) {
-        row = lines[i].split(",");
+    for (var i = 0; i < list.length; i++) {
+        row = list[i];
+
         if(row.length === 3) {
             G.add_edge(parseNode(row[0]), parseNode(row[1]), {label: row[2]})
         } else if(row.length === 2)  {
@@ -1937,24 +2030,26 @@ function parseAdjacencyList (text) {
     return G;
 }
 
-function parseAdjacencyMatrix (text) {
-    var lines = text.split("\n").map(function(L) { return L.split(","); }),
-        G = jsnx.DiGraph(),
-        row;
+function parseAdjacencyMatrix (mat) {
+    var G = jsnx.DiGraph(),
+        row, a, b, label_;
 
-    for (var i = 1; i < lines[0].length; i++) {
-        G.add_node(lines[0][i]);
+    for (var i = 1; i < mat[0].length; i++) {
+        G.add_node(mat[0][i].toString());
     }
 
-    for (var i = 1; i < lines.length; i++) {
-        row = lines[i];
+    for (var i = 1; i < mat.length; i++) {
+        row = mat[i];
         for (var j = 1; j < row.length; j++) {
-            if(row[j].length > 0) {
+            if(row[j] !== null && row[j] !== '') {
+                a = parseNode(row[0].toString());
+                b = parseNode(mat[0][j].toString());
+                label_ = row[j].toString();
                 // Let's hope no one ever uses '1' as an edge label.
-                if(row[j] === '1') {
-                    G.add_edge(row[0], lines[0][j]);
+                if(label_ === '1') {
+                    G.add_edge(a, b);
                 } else {
-                    G.add_edge(row[0], lines[0][j], {label: row[j]});
+                    G.add_edge(a, b, {label: label_});
                 }
             }
         }
