@@ -87,7 +87,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set radius', function () {
                     new DialogBoxMorph(null, function (radius) {
                         d.G.add_node(d.node, {radius: radius});
-                    }).prompt('Node radius', d.data.radius || 1, world);
+                    }).prompt('Node radius', (d.data.radius || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -125,7 +125,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
                         d.G.add_edge(d.edge[0], d.edge[1], {width: width});
-                    }).prompt('Edge width', d.data.width || 1, world);
+                    }).prompt('Edge width', (d.data.width || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
