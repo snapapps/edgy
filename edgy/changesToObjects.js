@@ -443,6 +443,10 @@ StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNo
     }
 }
 
+function formatCostumeImageId(name) {
+    return "costume-" + name;
+}
+
 function formatEdgePatternId(name) {
     return "edgepattern-" + name;
 }
@@ -450,17 +454,19 @@ function formatEdgePatternId(name) {
 function addEdgePattern(name, canvas) {
     // Make the edge pattern element. We're using SVG's pattern support to
     // make the fancy tiled edge patterns work.
-    var patternId = formatEdgePatternId(name);
-    var pattern = graphEl.select("#" + patternId);
+    var costumeId = formatCostumeImageId(name),
+        patternId = formatEdgePatternId(name),
+        image = graphEl.select("#" + costumeId),
+        pattern = graphEl.select("#" + patternId);
     if(pattern.empty()) {
-        pattern = graphEl.select("svg")
-            .insert("defs", ":first-child")
-                .append("pattern")
-                    .attr({
-                        id: patternId,
-                        patternUnits: "userSpaceOnUse",
-                    })
-        pattern.append("image");
+        var defs = graphEl.select("svg").insert("defs", ":first-child");
+        image = defs.append("image");
+        var pattern = defs.append("pattern")
+            .attr({
+                id: patternId,
+                patternUnits: "userSpaceOnUse",
+            });
+        pattern.append("use").attr({"xlink:href": "#" + costumeId});
     }
 
     pattern.attr({
@@ -468,12 +474,13 @@ function addEdgePattern(name, canvas) {
         height: canvas.height,
         // Compensate for edge path x-axis going along middle of edge like |-
         y: canvas.height/2
-    }).select("image")
-        .attr({
-            width: canvas.width,
-            height: canvas.height,
-            "xlink:href": canvas.toDataURL()
-        });
+    });
+    image.attr({
+        id: costumeId,
+        width: canvas.width,
+        height: canvas.height,
+        "xlink:href": canvas.toDataURL()
+    });
     return patternId;
 }
 
