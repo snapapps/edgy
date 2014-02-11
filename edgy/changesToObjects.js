@@ -194,6 +194,13 @@ function redrawGraph() {
                 } else {
                     return d.data.width * EDGE_WIDTH_FACTOR || EDGE_WIDTH_FACTOR;
                 }
+            },
+        },
+        edge_attr: {
+            transform: function(d) {
+                if(d.data.__costume__) {
+                    return "scale(1 " + (d.data.width || 1) + ")";
+                }
             }
         },
         label_style: {fill: DEFAULT_LABEL_COLOR},
