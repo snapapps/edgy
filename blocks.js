@@ -896,6 +896,14 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
                 true
             );
             break;
+        case '%cst2':
+            part = new InputSlotMorph(
+                null,
+                false,
+                'costumesMenu2',
+                true
+            );
+            break;
         case '%eff':
             part = new InputSlotMorph(
                 null,
