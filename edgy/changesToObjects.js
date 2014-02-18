@@ -219,7 +219,7 @@ function redrawGraph() {
                 return '';
             }
         },
-        pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
+        pan_zoom: {enabled: true}
     }, true);
 
     // Calling jsnx.draw() will purge the graph container element, so we need
