@@ -2036,8 +2036,14 @@ SpriteMorph.prototype.graphFromJSON = function(json) {
     jsnx.forEach(this.G.nodes_iter(true), function (node) {
         var data = node[1], k;
         for (k in data) {
-            if (data.hasOwnProperty(k) && k !== 'color' && k !== 'label') {
-                addNodeAttribute(myself, k, false);
+            if (data.hasOwnProperty(k)) {
+                if(k === "__costume__") {
+                    data[k] = detect(myself.costumes.asArray(), function(costume) {
+                        return costume.name === data[k];
+                    });
+                } else if(k !== 'color' && k !== 'label') {
+                    addNodeAttribute(myself, k, false);
+                }
             }
         }
     });
@@ -2118,6 +2124,9 @@ function graphToObject(G) {
         var d = {id: node[0]};
         mergeObjectIn(d, node[1]);
         delete d.__d3datum__; // Don't serialize the D3 gunk.
+        if(d.__costume__) {
+            d.__costume__ = d.__costume__.name;
+        }
         data.nodes.push(d);
     });
 
