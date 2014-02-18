@@ -86,7 +86,7 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.addItem('set radius', function () {
                     new DialogBoxMorph(null, function (radius) {
-                        d.G.add_node(d.node, {radius: radius});
+                        d.G.add_node(d.node, {radius: parseFloat(radius)});
                     }).prompt('Node radius', (d.data.radius || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
@@ -124,7 +124,7 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
-                        d.G.add_edge(d.edge[0], d.edge[1], {width: width});
+                        d.G.add_edge(d.edge[0], d.edge[1], {width: parseFloat(width)});
                     }).prompt('Edge width', (d.data.width || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
@@ -156,26 +156,46 @@ var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
     NODE_RADIUS_FACTOR = 10,
-    EDGE_WIDTH_FACTOR = 8;
-
-function redrawGraph() {
-    // console.log("redrawing graph")
-    layout = jsnx.draw(currentGraph, {
+    EDGE_WIDTH_FACTOR = 8,
+    LAYOUT_OPTS = {
+        layout: d3.force,
         element: graphEl.node(),
         with_labels: true,
         with_edge_labels: true,
         layout_attr: {
-            linkDistance: 70
+            linkDistance: function(d) {
+                var sr = d.source.data.radius || 1,
+                    tr = d.target.data.radius || 1;
+                return 60 + (sr + tr) * NODE_RADIUS_FACTOR;
+            },
+            charge: function(d) {
+                var r = (d.data.radius || 1) * 8;
+                return -r*r;
+            }
         },
+        node_shape: 'use',
         node_style: {
             fill: function(d) {
                 return d.data.color || DEFAULT_NODE_COLOR;
             },
-            'stroke-width': 1
+            'stroke-width': function(d) {
+                return 1 / (d.data.radius || 1);
+            }
         },
         node_attr: {
             r: function(d) {
                 return d.data.radius * NODE_RADIUS_FACTOR || NODE_RADIUS_FACTOR;
+            },
+            transform: function(d) {
+                return "scale(" + (d.data.radius || 1) + ")";
+            },
+            "xlink:href": function(d) {
+                if(d.data.__costume__) {
+                    // Display costume if one is set.
+                    return "#" + formatCostumeImageId(d.data.__costume__.patternNum);
+                } else {
+                    return "#defaultcircle";
+                }
             }
         },
         edge_style: {
@@ -199,8 +219,15 @@ function redrawGraph() {
         edge_attr: {
             transform: function(d) {
                 if(d.data.__costume__) {
-                    return "scale(1 " + (d.data.width || 1) + ")";
+                    return "scale(" + (d.data.width || 1) + ")";
                 }
+            }
+        },
+        edge_len: function(d) {
+            if(d.data.__costume__) {
+                return 1 / (d.data.width || 1);
+            } else {
+                return 1;
             }
         },
         label_style: {fill: DEFAULT_LABEL_COLOR},
@@ -219,8 +246,18 @@ function redrawGraph() {
                 return '';
             }
         },
-        pan_zoom: {enabled: false} // Allow forwarding mouse events to Snap!
-    }, true);
+        pan_zoom: {enabled: true}
+    };
+
+function redrawGraph() {
+    // console.log("redrawing graph")
+    layout = jsnx.draw(currentGraph, LAYOUT_OPTS, true);
+
+    graphEl.select("svg")
+        .insert("defs", ":first-child")
+            .append("circle")
+                .attr("id", "defaultcircle")
+                .attr("r", NODE_RADIUS_FACTOR);
 
     // Calling jsnx.draw() will purge the graph container element, so we need
     // to re-add the edge patterns regardless of whether they have changed.
@@ -338,6 +375,84 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
 
                 link.setAttribute('href', 'data:text/csv,' + encodeURIComponent(csv));
                 link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            submenu.addItem("DOT format", function() {
+                var G = currentGraph,
+                    edgeout = "",
+                    graphtype = jsnx.is_directed(G) ? "digraph" : "graph",
+                    edgeseparator = jsnx.is_directed(G) ? "->" : "--";
+
+                function formatID(x) { return '"' + x.toString().replace('"', '\\"') + '"'; }
+                function formatAttrs(attrs) {
+                    var output = [];
+                    for(var k in attrs) {
+                        if(attrs.hasOwnProperty(k)) {
+                            output.push([k, "=", attrs[k]].join(""));
+                        }
+                    }
+                    if(output.length > 0) {
+                        return "[" + output.join(",") + "]";
+                    } else {
+                        return "";
+                    }
+                }
+
+                var nodeout = jsnx.toArray(jsnx.map(G.nodes_iter(true), function(x) {
+                    var node = x[0],
+                        data = x[1],
+                        dotattrs = {};
+                    for(var k in data) {
+                        if(data.hasOwnProperty(k)) {
+                            // We don't really have an option for radius
+                            // unless we force circular nodes and dot will
+                            // autosize the nodes anyway, so don't handle it.
+                            //
+                            // label is handled implicitly
+                            if(k === "__d3datum__" || k === "__costume__") {
+                                continue
+                            } else if(k === "color") {
+                                dotattrs["style"] = "filled";
+                                dotattrs["fillcolor"] = formatID(data[k]);
+                            } else {
+                                dotattrs[formatID(k)] = formatID(data[k]);
+                            }
+                        }
+                    }
+                    return [formatID(node), " ", formatAttrs(dotattrs),
+                            ";"].join("");
+                })).join("\n");
+
+                var edgeout = jsnx.toArray(jsnx.map(G.edges_iter(true), function(x) {
+                    var a = x[0],
+                        b = x[1],
+                        data = x[2],
+                        dotattrs = {};
+                    for(var k in data) {
+                        if(data.hasOwnProperty(k)) {
+                            // label and color are handled implicitly
+                            if(k === "__d3datum__" || k === "__costume__") {
+                                continue
+                            } else if(k === "width") {
+                                dotattrs["penwidth"] = formatID(data[k]);
+                            } else {
+                                dotattrs[formatID(k)] = formatID(data[k]);
+                            }
+                        }
+                    }
+                    return [formatID(a), " ", edgeseparator, " ",
+                            formatID(b), formatAttrs(dotattrs),
+                            ";"].join("");
+                })).join("\n");
+
+                var dot = [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
+
+                var link = document.createElement('a');
+
+                link.setAttribute('href', 'data:text/plain,' + encodeURIComponent(dot));
+                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.dot');
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -695,7 +810,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
     if(this.G.has_node(node)) {
         var data = {};
-        data[attrib] = val;
+        data[attrib] = autoNumericize(val);
         this.G.add_node(node, data);
         if(this.G === currentGraph.parent_graph) {
             currentGraph.add_node(node, data);
@@ -737,7 +852,7 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(this.G.has_edge(a, b)) {
         var data = {};
-        data[attrib] = val;
+        data[attrib] = autoNumericize(val);
         this.G.add_edge(a, b, data);
         if(this.G === currentGraph.parent_graph) {
             currentGraph.add_edge(a, b, data);
@@ -776,6 +891,27 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     }
 };
 
+SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
+    // NB: Due to InputSlotMorph not having support for multiple dropdown
+    // elements with the same name, we are only able to get the first costume
+    // with the given name. Other costumes which share the same name will be
+    // unusable unless renamed.
+    var n = parseNode(node);
+    if(this.G.has_node(n)) {
+        var props = this.G.node.get(n);
+        if(costumename === "default") {
+            delete props.__costume__;
+        } else {
+            props.__costume__ = detect(this.costumes.asArray(), function(costume) {
+                return costume.name === costumename;
+            });
+        }
+        if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
+            graphEl.select(".node-shape").attr("xlink:href", LAYOUT_OPTS["node_attr"]["xlink:href"]);
+        }
+    }
+};
+
 SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
     // NB: Due to InputSlotMorph not having support for multiple dropdown
     // elements with the same name, we are only able to get the first costume
@@ -792,15 +928,9 @@ SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
             });
         }
         if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
-            graphEl.select(".edge").each(function(d) {
-                if(d === props.__d3datum__) {
-                    if(props.__costume__) {
-                        d3.select(this).select(".line").style("fill", "url(#" + props.__costume__.patternId + ")");
-                    } else {
-                        d3.select(this).select(".line").style("fill", props.color || DEFAULT_EDGE_COLOR);
-                    }
-                }
-            })
+            graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
+            graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
+            layout.resume();
         }
     }
 };
@@ -1397,6 +1527,11 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             category: 'nodes+edges',
             spec: '%edgeAttr of edge %l'
         },
+        setNodeCostume: {
+            type: 'command',
+            category: 'nodes+edges',
+            spec: 'set costume of node %s to %cst2'
+        },
         setEdgeCostume: {
             type: 'command',
             category: 'nodes+edges',
@@ -1874,6 +2009,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getNodeAttrib'));
             blocks.push(block('getEdgeAttrib'));
+            blocks.push(block('setNodeCostume'));
             blocks.push(block('setEdgeCostume'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
@@ -1987,8 +2123,14 @@ SpriteMorph.prototype.graphFromJSON = function(json) {
     jsnx.forEach(this.G.nodes_iter(true), function (node) {
         var data = node[1], k;
         for (k in data) {
-            if (data.hasOwnProperty(k) && k !== 'color' && k !== 'label') {
-                addNodeAttribute(myself, k, false);
+            if (data.hasOwnProperty(k)) {
+                if(k === "__costume__") {
+                    data[k] = detect(myself.costumes.asArray(), function(costume) {
+                        return costume.name === data[k];
+                    });
+                } else if(k !== 'color' && k !== 'label') {
+                    addNodeAttribute(myself, k, false);
+                }
             }
         }
     });
@@ -2069,6 +2211,9 @@ function graphToObject(G) {
         var d = {id: node[0]};
         mergeObjectIn(d, node[1]);
         delete d.__d3datum__; // Don't serialize the D3 gunk.
+        if(d.__costume__) {
+            d.__costume__ = d.__costume__.name;
+        }
         data.nodes.push(d);
     });
 
