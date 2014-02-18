@@ -86,7 +86,7 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.addItem('set radius', function () {
                     new DialogBoxMorph(null, function (radius) {
-                        d.G.add_node(d.node, {radius: radius});
+                        d.G.add_node(d.node, {radius: parseFloat(radius)});
                     }).prompt('Node radius', (d.data.radius || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
@@ -124,7 +124,7 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
-                        d.G.add_edge(d.edge[0], d.edge[1], {width: width});
+                        d.G.add_edge(d.edge[0], d.edge[1], {width: parseFloat(width)});
                     }).prompt('Edge width', (d.data.width || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
@@ -723,7 +723,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
     if(this.G.has_node(node)) {
         var data = {};
-        data[attrib] = val;
+        data[attrib] = autoNumericize(val);
         this.G.add_node(node, data);
         if(this.G === currentGraph.parent_graph) {
             currentGraph.add_node(node, data);
@@ -765,7 +765,7 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(this.G.has_edge(a, b)) {
         var data = {};
-        data[attrib] = val;
+        data[attrib] = autoNumericize(val);
         this.G.add_edge(a, b, data);
         if(this.G === currentGraph.parent_graph) {
             currentGraph.add_edge(a, b, data);
