@@ -156,26 +156,37 @@ var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
     NODE_RADIUS_FACTOR = 10,
-    EDGE_WIDTH_FACTOR = 8;
-
-function redrawGraph() {
-    // console.log("redrawing graph")
-    layout = jsnx.draw(currentGraph, {
+    EDGE_WIDTH_FACTOR = 8,
+    LAYOUT_OPTS = {
         element: graphEl.node(),
         with_labels: true,
         with_edge_labels: true,
         layout_attr: {
             linkDistance: 70
         },
+        node_shape: 'use',
         node_style: {
             fill: function(d) {
                 return d.data.color || DEFAULT_NODE_COLOR;
             },
-            'stroke-width': 1
+            'stroke-width': function(d) {
+                return 1 / (d.data.radius || 1);
+            }
         },
         node_attr: {
             r: function(d) {
                 return d.data.radius * NODE_RADIUS_FACTOR || NODE_RADIUS_FACTOR;
+            },
+            transform: function(d) {
+                return "scale(" + (d.data.radius || 1) + ")";
+            },
+            "xlink:href": function(d) {
+                if(d.data.__costume__) {
+                    // Display costume if one is set.
+                    return "#" + formatCostumeImageId(d.data.__costume__.patternNum);
+                } else {
+                    return "#defaultcircle";
+                }
             }
         },
         edge_style: {
@@ -220,7 +231,17 @@ function redrawGraph() {
             }
         },
         pan_zoom: {enabled: true}
-    }, true);
+    };
+
+function redrawGraph() {
+    // console.log("redrawing graph")
+    layout = jsnx.draw(currentGraph, LAYOUT_OPTS, true);
+
+    graphEl.select("svg")
+        .insert("defs", ":first-child")
+            .append("circle")
+                .attr("id", "defaultcircle")
+                .attr("r", NODE_RADIUS_FACTOR);
 
     // Calling jsnx.draw() will purge the graph container element, so we need
     // to re-add the edge patterns regardless of whether they have changed.
@@ -773,6 +794,27 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
         throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
     } else {
         return val;
+    }
+};
+
+SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
+    // NB: Due to InputSlotMorph not having support for multiple dropdown
+    // elements with the same name, we are only able to get the first costume
+    // with the given name. Other costumes which share the same name will be
+    // unusable unless renamed.
+    var n = parseNode(node);
+    if(this.G.has_node(n)) {
+        var props = this.G.node.get(n);
+        if(costumename === "default") {
+            delete props.__costume__;
+        } else {
+            props.__costume__ = detect(this.costumes.asArray(), function(costume) {
+                return costume.name === costumename;
+            });
+        }
+        if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
+            graphEl.select(".node-shape").attr("xlink:href", LAYOUT_OPTS["node_attr"]["xlink:href"]);
+        }
     }
 };
 
@@ -1397,6 +1439,11 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             category: 'nodes+edges',
             spec: '%edgeAttr of edge %l'
         },
+        setNodeCostume: {
+            type: 'command',
+            category: 'nodes+edges',
+            spec: 'set costume of node %s to %cst2'
+        },
         setEdgeCostume: {
             type: 'command',
             category: 'nodes+edges',
@@ -1874,6 +1921,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getNodeAttrib'));
             blocks.push(block('getEdgeAttrib'));
+            blocks.push(block('setNodeCostume'));
             blocks.push(block('setEdgeCostume'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
