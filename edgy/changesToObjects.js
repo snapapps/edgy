@@ -379,6 +379,84 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                 link.click();
                 document.body.removeChild(link);
             });
+            submenu.addItem("DOT format", function() {
+                var G = currentGraph,
+                    edgeout = "",
+                    graphtype = jsnx.is_directed(G) ? "digraph" : "graph",
+                    edgeseparator = jsnx.is_directed(G) ? "->" : "--";
+
+                function formatID(x) { return '"' + x.toString().replace('"', '\\"') + '"'; }
+                function formatAttrs(attrs) {
+                    var output = [];
+                    for(var k in attrs) {
+                        if(attrs.hasOwnProperty(k)) {
+                            output.push([k, "=", attrs[k]].join(""));
+                        }
+                    }
+                    if(output.length > 0) {
+                        return "[" + output.join(",") + "]";
+                    } else {
+                        return "";
+                    }
+                }
+
+                var nodeout = jsnx.toArray(jsnx.map(G.nodes_iter(true), function(x) {
+                    var node = x[0],
+                        data = x[1],
+                        dotattrs = {};
+                    for(var k in data) {
+                        if(data.hasOwnProperty(k)) {
+                            // We don't really have an option for radius
+                            // unless we force circular nodes and dot will
+                            // autosize the nodes anyway, so don't handle it.
+                            //
+                            // label is handled implicitly
+                            if(k === "__d3datum__" || k === "__costume__") {
+                                continue
+                            } else if(k === "color") {
+                                dotattrs["style"] = "filled";
+                                dotattrs["fillcolor"] = formatID(data[k]);
+                            } else {
+                                dotattrs[formatID(k)] = formatID(data[k]);
+                            }
+                        }
+                    }
+                    return [formatID(node), " ", formatAttrs(dotattrs),
+                            ";"].join("");
+                })).join("\n");
+
+                var edgeout = jsnx.toArray(jsnx.map(G.edges_iter(true), function(x) {
+                    var a = x[0],
+                        b = x[1],
+                        data = x[2],
+                        dotattrs = {};
+                    for(var k in data) {
+                        if(data.hasOwnProperty(k)) {
+                            // label and color are handled implicitly
+                            if(k === "__d3datum__" || k === "__costume__") {
+                                continue
+                            } else if(k === "width") {
+                                dotattrs["penwidth"] = formatID(data[k]);
+                            } else {
+                                dotattrs[formatID(k)] = formatID(data[k]);
+                            }
+                        }
+                    }
+                    return [formatID(a), " ", edgeseparator, " ",
+                            formatID(b), formatAttrs(dotattrs),
+                            ";"].join("");
+                })).join("\n");
+
+                var dot = [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
+
+                var link = document.createElement('a');
+
+                link.setAttribute('href', 'data:text/plain,' + encodeURIComponent(dot));
+                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.dot');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
             submenu.popUpAtHand(world);
         });
 
