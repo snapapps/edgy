@@ -158,6 +158,7 @@ var DEFAULT_NODE_COLOR = "white",
     NODE_RADIUS_FACTOR = 10,
     EDGE_WIDTH_FACTOR = 8,
     LAYOUT_OPTS = {
+        layout: d3.force,
         element: graphEl.node(),
         with_labels: true,
         with_edge_labels: true,
