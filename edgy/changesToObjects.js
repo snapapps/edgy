@@ -162,7 +162,15 @@ var DEFAULT_NODE_COLOR = "white",
         with_labels: true,
         with_edge_labels: true,
         layout_attr: {
-            linkDistance: 70
+            linkDistance: function(d) {
+                var sr = d.source.data.radius || 1,
+                    tr = d.target.data.radius || 1;
+                return 60 + (sr + tr) * NODE_RADIUS_FACTOR;
+            },
+            charge: function(d) {
+                var r = (d.data.radius || 1) * 8;
+                return -r*r;
+            }
         },
         node_shape: 'use',
         node_style: {
