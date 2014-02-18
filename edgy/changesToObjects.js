@@ -210,8 +210,15 @@ var DEFAULT_NODE_COLOR = "white",
         edge_attr: {
             transform: function(d) {
                 if(d.data.__costume__) {
-                    return "scale(1 " + (d.data.width || 1) + ")";
+                    return "scale(" + (d.data.width || 1) + ")";
                 }
+            }
+        },
+        edge_len: function(d) {
+            if(d.data.__costume__) {
+                return 1 / (d.data.width || 1);
+            } else {
+                return 1;
             }
         },
         label_style: {fill: DEFAULT_LABEL_COLOR},
@@ -834,15 +841,9 @@ SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
             });
         }
         if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
-            graphEl.select(".edge").each(function(d) {
-                if(d === props.__d3datum__) {
-                    if(props.__costume__) {
-                        d3.select(this).select(".line").style("fill", "url(#" + props.__costume__.patternId + ")");
-                    } else {
-                        d3.select(this).select(".line").style("fill", props.color || DEFAULT_EDGE_COLOR);
-                    }
-                }
-            })
+            graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
+            graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
+            layout.resume();
         }
     }
 };
