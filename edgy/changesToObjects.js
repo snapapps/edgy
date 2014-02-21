@@ -739,8 +739,12 @@ function justHideGraph() {
     currentGraphSprite = null;
 }
 
+SpriteMorph.prototype.isActiveGraph = function() {
+    return currentGraph === this.G || currentGraph.parent_graph === this.G;
+};
+
 SpriteMorph.prototype.hideActiveGraph = function() {
-    if(currentGraph === this.G || currentGraph.parent_graph === this.G) {
+    if(this.isActiveGraph()) {
         justHideGraph();
     }
 };
@@ -817,7 +821,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         }
 
         // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && (currentGraph === this.G || this.G === currentGraph.parent_graph)) {
+        if(attrib === "label" && this.isActiveGraph()) {
             var nodes = graphEl.selectAll(".node");
             nodes.each(function(d, i) {
                 if(d.node === node) {
@@ -859,7 +863,7 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
         }
 
         // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && (currentGraph === this.G || this.G === currentGraph.parent_graph)) {
+        if(attrib === "label" && this.isActiveGraph()) {
             var edges = graphEl.selectAll(".edge");
             edges.each(function(d, i) {
                 if(d.edge[0] === a && d.edge[1] === b) {
@@ -906,7 +910,7 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
                 return costume.name === costumename;
             });
         }
-        if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
+        if(this.isActiveGraph()) {
             graphEl.select(".node-shape").attr("xlink:href", LAYOUT_OPTS["node_attr"]["xlink:href"]);
         }
     }
@@ -927,7 +931,7 @@ SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
                 return costume.name === costumename;
             });
         }
-        if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
+        if(this.isActiveGraph()) {
             graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
             graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
             layout.resume();
@@ -1416,7 +1420,6 @@ SpriteMorph.prototype.getWordNetSynsets = function(lemma) {
     })));
 };
 
-
 SpriteMorph.prototype.getWordNetDefinition = function(noun) {
     if(!this.wordnet_nouns) {
         throw new Error("WordNet is not loaded. Please load WordNet.")
@@ -1428,6 +1431,31 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
         throw new Error(noun.toString() + " could not be found.")
     }
 };
+
+SpriteMorph.prototype.setGraph = function(newGraph) {
+    var wasActive = this.isActiveGraph();
+    this.G = newGraph;
+    if(wasActive) {
+        if(currentGraph.parent_graph) {
+            this.showGraphSlice(sliceStart, sliceRadius);
+        } else {
+            this.setActiveGraph();
+        }
+    }
+};
+
+SpriteMorph.prototype.convertToDigraph = function() {
+    if(!jsnx.is_directed(this.G)) {
+        this.setGraph(jsnx.DiGraph(this.G));
+    }
+};
+
+SpriteMorph.prototype.convertToGraph = function() {
+    if(jsnx.is_directed(this.G)) {
+        this.setGraph(jsnx.Graph(this.G));
+    }
+};
+
 
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
@@ -1721,6 +1749,16 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             type: 'reporter',
             category: 'external',
             spec: 'definition of %s'
+        },
+        convertToDigraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'convert to digraph'
+        },
+        convertToGraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'convert to graph'
         }
     };
 
@@ -1864,6 +1902,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         {
             blocks.push(block('newGraph'));
             blocks.push(block('newDiGraph'));
+            blocks.push(block('convertToGraph'));
+            blocks.push(block('convertToDigraph'));
             blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
             blocks.push(block('showGraphSlice'));
