@@ -2685,7 +2685,7 @@ IDE_Morph.prototype.exportToHTML = function () {
         htmlData;
 
     docClone.select("#graph-display").remove();
-    docClone.select("#replace-me").text("world.children[0].openProjectString(" + data + ");");
+    docClone.select("#replace-me").text("ide_.rawOpenProjectString(" + data + ");");
 
     htmlData = encodeURIComponent(('<html>' + docClone.html() + '</html>'));
     link.setAttribute('href', 'data:text/html,' + htmlData);
