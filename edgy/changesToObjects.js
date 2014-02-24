@@ -1242,19 +1242,78 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
         var graph = objectToGraph(JSON.parse(string));
         addGraph(this.G, graph);
         this.addAttrsFromGraph(graph);
+        return;
     } catch(e) {
-        if(e instanceof SyntaxError) {
-            var data = CSV.csvToArray(string);
-            if(data[0][0] === '' || data[0][0] === null) {
-                // Try parsing as adjacency matrix.
-                addGraph(this.G, parseAdjacencyMatrix(data));
-            } else {
-                // Try parsing as adjacency list.
-                addGraph(this.G, parseAdjacencyList(data));
-            }
-        } else {
+        if(!(e instanceof SyntaxError)) {
             throw e;
         }
+    }
+
+    try {
+        var dotgraph = new DotGraph(DotParser.parse(string)),
+            graph;
+        dotgraph.walk();
+        if(dotgraph.rootGraph.type == "graph") {
+            graph = jsnx.Graph();
+        } else if(dotgraph.rootGraph.type == "digraph") {
+            graph = jsnx.DiGraph();
+        } else {
+            throw new Error("Invalid DOT graph type");
+        }
+        console.log(dotgraph);
+        for(var node in dotgraph.nodes) {
+            if(dotgraph.nodes.hasOwnProperty(node)) {
+                var ournode = parseNode(node);
+                graph.add_node(ournode);
+                console.log(ournode);
+                var attrs = dotgraph.nodes[node].attrs;
+                for(var attr in attrs) {
+                    if(attrs.hasOwnProperty(attr)) {
+                        if(attr === "fillcolor") {
+                            graph.node.get(ournode).color = attrs[attr];
+                        } else {
+                            graph.node.get(ournode)[attr] = attrs[attr];
+                        }
+                    }
+                }
+            }
+        }
+        for(var edgeid in dotgraph.edges) {
+            if(dotgraph.edges.hasOwnProperty(edgeid)) {
+                dotgraph.edges[edgeid].forEach(function(datum) {
+                    var edge = datum.edge;
+                    var a = parseNode(edge[0]), b = parseNode(edge[1]);
+                    graph.add_edge(a, b);
+                    console.log(a, b);
+                    var attrs = datum.attrs;
+                    for(var attr in attrs) {
+                        if(attrs.hasOwnProperty(attr)) {
+                            if(attr === "penwidth") {
+                                graph.edge.get(a).get(b).width = attrs[attr];
+                            } else {
+                                graph.edge.get(a).get(b)[attr] = attrs[attr];
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        addGraph(this.G, graph);
+        this.addAttrsFromGraph(graph);
+        return;
+    } catch(e) {
+        if(!(e instanceof SyntaxError)) {
+            throw e;
+        }
+    }
+
+    var data = CSV.csvToArray(string);
+    if(data[0][0] === '' || data[0][0] === null) {
+        // Try parsing as adjacency matrix.
+        addGraph(this.G, parseAdjacencyMatrix(data));
+    } else {
+        // Try parsing as adjacency list.
+        addGraph(this.G, parseAdjacencyList(data));
     }
 };
 
