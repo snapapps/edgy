@@ -3800,7 +3800,7 @@ IDE_Morph.prototype.getURL = function (url) {
         }
         throw new Error('unable to retrieve ' + url);
     } catch (err) {
-        myself.showMessage(err);
+        myself.showMessage(err.toString());
         return;
     }
 };
