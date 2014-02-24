@@ -1477,7 +1477,7 @@ CounterMorph.prototype = new MultiArgMorph();
 CounterMorph.prototype.constructor = CounterMorph;
 CounterMorph.uber = MultiArgMorph.prototype;
 
-CounterMorph.prototype.addInput = function (contents) {
+CounterMorph.prototype.addInput = function(contents) {
     // The arrow morph is the last child.
     if (this.children.length > 2) {
         this.children.splice(this.children.length - 1, 0, this.labelPart(','));
@@ -1485,7 +1485,7 @@ CounterMorph.prototype.addInput = function (contents) {
     MultiArgMorph.prototype.addInput.call(this, contents);
     MultiArgMorph.prototype.addInput.call(this, contents);
 }
-CounterMorph.prototype.removeInput = function (contents) {
+CounterMorph.prototype.removeInput = function(contents) {
     MultiArgMorph.prototype.removeInput.call(this, contents);
     MultiArgMorph.prototype.removeInput.call(this, contents);
     if (this.children.length > 2) {
@@ -1495,7 +1495,11 @@ CounterMorph.prototype.removeInput = function (contents) {
 }
 
 SpriteMorph.prototype.reportNewCounter = function(elements) {
-    return elements;
+    var res = new Map();
+    for(var i=0;i<elements.contents.length;i+=2){
+        res.set(elements.contents[i], parseInt(elements.contents[i+1]));
+    }
+    return res;
 };
 
 (function() {
