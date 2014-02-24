@@ -1732,6 +1732,25 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
     }
 }());
 
+(function() {
+    // Add counter blocks.
+    var blockName, counterBlocks = {
+        // Counter
+        newCounter: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'new counter',
+        },
+    };
+
+    // Add the new blocks.
+    for (blockName in counterBlocks) {
+        if(counterBlocks.hasOwnProperty(blockName)) {
+            SpriteMorph.prototype.blocks[blockName] = counterBlocks[blockName];
+        }
+    }
+}());
+
 function allNodeAttributes(morph) {
     return morph.parentThatIsA(StageMorph).nodeAttributes.concat(morph.nodeAttributes);
 }
@@ -2106,6 +2125,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                 blocks.push(block('log'));
                 blocks.push(block('alert'));
             }
+        } else if (category === 'variables') {
+            blocks = blocks.concat(oldBlockTemplates.call(this, category));
+            blocks.push('-');
+            blocks.push(block('newCounter'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
