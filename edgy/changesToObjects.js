@@ -1429,6 +1429,11 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
     }
 };
 
+
+SpriteMorph.prototype.reportNewCounter = function(elements) {
+    return elements;
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
@@ -1736,10 +1741,10 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
     // Add counter blocks.
     var blockName, counterBlocks = {
         // Counter
-        newCounter: {
+        reportNewCounter: {
             type: 'reporter',
             category: 'lists',
-            spec: 'new counter',
+            spec: 'counter %exp',
         },
     };
 
@@ -2128,7 +2133,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         } else if (category === 'variables') {
             blocks = blocks.concat(oldBlockTemplates.call(this, category));
             blocks.push('-');
-            blocks.push(block('newCounter'));
+            blocks.push(block('reportNewCounter'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
