@@ -1430,6 +1430,63 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
 };
 
 
+SyntaxElementMorph.prototype.labelPart = (function(){
+    var oldLabelPart = SyntaxElementMorph.prototype.labelPart;
+
+    return function (spec) {
+        var part = oldLabelPart.call(this, spec);
+        if(part === undefined){
+            switch (spec) {
+                case '%counter':
+                    part = new CounterMorph('%s', null, 0);
+                    part.addInput();
+                    part.isStatic = true;
+                    part.canBeEmpty = false;
+                    return part;
+            }
+        }else{
+            return part;
+        }
+    }
+})();
+
+function CounterMorph(
+    slotSpec,
+    labelTxt,
+    min,
+    eSpec,
+    arrowColor,
+    labelColor,
+    shadowColor,
+    shadowOffset,
+    isTransparent
+) {
+    this.init(
+        slotSpec,
+        labelTxt,
+        min,
+        eSpec,
+        arrowColor,
+        labelColor,
+        shadowColor,
+        shadowOffset,
+        isTransparent
+    );
+}
+CounterMorph.prototype = new MultiArgMorph();
+CounterMorph.prototype.constructor = CounterMorph;
+CounterMorph.uber = MultiArgMorph.prototype;
+
+CounterMorph.prototype.addInput = function (contents) {
+    MultiArgMorph.prototype.addInput.call(this, contents);
+    MultiArgMorph.prototype.addInput.call(this, contents);
+}
+CounterMorph.prototype.removeInput = function (contents) {
+    MultiArgMorph.prototype.removeInput.call(this, contents);
+    MultiArgMorph.prototype.removeInput.call(this, contents);
+}
+
+
 SpriteMorph.prototype.reportNewCounter = function(elements) {
     return elements;
 };
@@ -1744,7 +1801,7 @@ SpriteMorph.prototype.reportNewCounter = function(elements) {
         reportNewCounter: {
             type: 'reporter',
             category: 'lists',
-            spec: 'counter %exp',
+            spec: 'counter %counter',
         },
     };
 
