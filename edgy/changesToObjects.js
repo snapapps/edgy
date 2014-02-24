@@ -1462,10 +1462,12 @@ SpriteMorph.prototype.convertToGraph = function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('network');
-    SpriteMorph.prototype.categories.push('nodes+edges');
+    SpriteMorph.prototype.categories.push('nodes');
+    SpriteMorph.prototype.categories.push('edges');
     SpriteMorph.prototype.categories.push('external');
     SpriteMorph.prototype.blockColor.network = new Color(74, 108, 212);
-    SpriteMorph.prototype.blockColor['nodes+edges'] = new Color(215, 0, 64);
+    SpriteMorph.prototype.blockColor['nodes'] = new Color(215, 0, 64);
+    SpriteMorph.prototype.blockColor['edges'] = new Color(180, 34, 64);
     SpriteMorph.prototype.blockColor.external = new Color(74, 108, 212);
 
     var blockName, networkBlocks = {
@@ -1502,137 +1504,137 @@ SpriteMorph.prototype.convertToGraph = function() {
         },
         numberOfNodes: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'number of nodes'
         },
         numberOfEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'number of edges'
         },
         addNode: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'add node %exp'
         },
         removeNode: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'remove node %s'
         },
         addEdge: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'add edge %expL'
         },
         removeEdge: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'remove edge %l'
         },
         getNeighbors: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'neighbors of %s'
         },
         setNodeAttrib: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'set %nodeAttr of node %s to %s'
         },
         getNodeAttrib: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: '%nodeAttr of node %s'
         },
         setEdgeAttrib: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'set %edgeAttr of edge %l to %s'
         },
         getEdgeAttrib: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: '%edgeAttr of edge %l'
         },
         setNodeCostume: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'set costume of node %s to %cst2'
         },
         setEdgeCostume: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'set costume of edge %l to %cst2'
         },
         getNodes: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'all the nodes'
         },
         getNodesWithAttr: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'nodes with %nodeAttr equal to %s'
         },
         getEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'all the edges'
         },
         getDegree: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'degree of %s'
         },
         getInDegree: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'in-degree of %s'
         },
         getOutDegree: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'out-degree of %s'
         },
         getEdgesWithAttr: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edges with %edgeAttr equal to %s'
         },
         hasNode: {
             type: 'predicate',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'node %s exists'
         },
         hasEdge: {
             type: 'predicate',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edge %l exists'
         },
         getOutgoing: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'outgoing nodes of %s'
         },
         getIncoming: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'incoming nodes of %s'
         },
         getNeighborEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edges of %s'
         },
         getOutgoingEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'outgoing edges of %s'
         },
         getIncomingEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'incoming edges of %s'
         },
         isEmpty: {
@@ -1697,27 +1699,27 @@ SpriteMorph.prototype.convertToGraph = function() {
         },
         reportEdge: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edge %s %s'
         },
         startNode: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'start node of %l'
         },
         endNode: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'end node of %l'
         },
         sortNodes: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'nodes %l sorted by %nodeAttr %ascdesc'
         },
         sortEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edges %l sorted by %edgeAttr %ascdesc'
         },
         getLastfmFriends: {
@@ -1922,7 +1924,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('generateCompleteGraph'));
             blocks.push(block('generatePathGraph'));
             blocks.push(block('generateGridGraph'));
-        } else if(category === 'nodes+edges') {
+        } else if(category === 'nodes') {
             // Node attributes.
             button = new PushButtonMorph(
                 null,
@@ -1974,6 +1976,30 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
 
             blocks.push('-');
 
+            blocks.push(block('startNode'));
+            blocks.push(block('endNode'));
+            blocks.push('-');
+            blocks.push(block('addNode'));
+            blocks.push(block('removeNode'));
+            blocks.push(block('hasNode'));
+            blocks.push('-');
+            blocks.push(block('numberOfNodes'));
+            blocks.push(block('getNodes'));
+            blocks.push('-');
+            blocks.push(block('setNodeAttrib'));
+            blocks.push(block('getNodeAttrib'));
+            blocks.push(block('setNodeCostume'));
+            blocks.push(block('getNodesWithAttr'));
+            blocks.push(block('sortNodes'));
+            blocks.push('-');
+            blocks.push(block('getNeighbors'));
+            blocks.push(block('getOutgoing'));
+            blocks.push(block('getIncoming'));
+            blocks.push('-');
+            blocks.push(block('getDegree'));
+            blocks.push(block('getInDegree'));
+            blocks.push(block('getOutDegree'));
+        } else if(category === 'edges') {
             // Edge attributes.
             button = new PushButtonMorph(
                 null,
@@ -2026,39 +2052,19 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push('-');
 
             blocks.push(block('reportEdge'));
-            blocks.push(block('startNode'));
-            blocks.push(block('endNode'));
             blocks.push('-');
-            blocks.push(block('addNode'));
             blocks.push(block('addEdge'));
-            blocks.push(block('removeNode'));
             blocks.push(block('removeEdge'));
-            blocks.push(block('hasNode'));
             blocks.push(block('hasEdge'));
             blocks.push('-');
-            blocks.push(block('numberOfNodes'));
             blocks.push(block('numberOfEdges'));
-            blocks.push(block('getNodes'));
             blocks.push(block('getEdges'));
             blocks.push('-');
-            blocks.push(block('getDegree'));
-            blocks.push(block('getInDegree'));
-            blocks.push(block('getOutDegree'));
-            blocks.push('-');
-            blocks.push(block('setNodeAttrib'));
             blocks.push(block('setEdgeAttrib'));
-            blocks.push(block('getNodeAttrib'));
             blocks.push(block('getEdgeAttrib'));
-            blocks.push(block('setNodeCostume'));
             blocks.push(block('setEdgeCostume'));
-            blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
-            blocks.push(block('sortNodes'));
             blocks.push(block('sortEdges'));
-            blocks.push('-');
-            blocks.push(block('getNeighbors'));
-            blocks.push(block('getOutgoing'));
-            blocks.push(block('getIncoming'));
             blocks.push('-');
             blocks.push(block('getNeighborEdges'));
             blocks.push(block('getOutgoingEdges'));
