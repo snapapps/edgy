@@ -1478,14 +1478,21 @@ CounterMorph.prototype.constructor = CounterMorph;
 CounterMorph.uber = MultiArgMorph.prototype;
 
 CounterMorph.prototype.addInput = function (contents) {
+    // The arrow morph is the last child.
+    if (this.children.length > 2) {
+        this.children.splice(this.children.length - 1, 0, this.labelPart(','));
+    }
     MultiArgMorph.prototype.addInput.call(this, contents);
     MultiArgMorph.prototype.addInput.call(this, contents);
 }
 CounterMorph.prototype.removeInput = function (contents) {
     MultiArgMorph.prototype.removeInput.call(this, contents);
     MultiArgMorph.prototype.removeInput.call(this, contents);
+    if (this.children.length > 2) {
+        var oldPart = this.children[this.children.length - 2];
+        this.removeChild(oldPart);
+    }
 }
-
 
 SpriteMorph.prototype.reportNewCounter = function(elements) {
     return elements;
