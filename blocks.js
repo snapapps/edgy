@@ -2902,6 +2902,11 @@ BlockMorph.prototype.fixChildrensBlockColor = function (isForced) {
 
 BlockMorph.prototype.setCategory = function (aString) {
     this.category = aString;
+    if(!SpriteMorph.prototype.blockColor[this.category]) {
+        // Uh oh. There block definition has a nonexistent category specified.
+        // Put it under variables by default to avoid crashing horribly.
+        this.category = "variables";
+    }
     this.startLayout();
     this.fixBlockColor();
     this.endLayout();
