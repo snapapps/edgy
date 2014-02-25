@@ -1,6 +1,8 @@
 // Since we're not supposed to be altering the original file too much, monkey
 // patching is in order.
 
+var redrawGraph;
+
 (function() {
 "use strict";
 
@@ -60,10 +62,6 @@ graphEl.on("DOMNodeInserted", function() {
             if(d3.event.ctrlKey || d3.event.button === 2)
             {
                 var menu = new MenuMorph(this);
-
-                d3.event.preventDefault();
-                d3.event.stopPropagation();
-
                 var d = node.datum();
 
                 if(!d.G.parent_graph) {
@@ -75,6 +73,7 @@ graphEl.on("DOMNodeInserted", function() {
                     new DialogBoxMorph(null, function (label) {
                         d.G.node.get(d.node).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
+                        updateNodeDimensionsAndCostume(node);
                     }).prompt('Node label', d.data.label || d.node, world);
                     world.worldCanvas.focus();
                 });
@@ -98,10 +97,6 @@ graphEl.on("DOMNodeInserted", function() {
             if(d3.event.ctrlKey || d3.event.button === 2)
             {
                 var menu = new MenuMorph(this);
-
-                d3.event.preventDefault();
-                d3.event.stopPropagation();
-
                 var d = node.datum();
 
                 if(!d.G.parent_graph) {
@@ -152,18 +147,83 @@ function updateGraphDimensions(stage) {
     }
 }
 
+function getNodeElementType(d)
+{
+    return d.data.__costume__ ? "use" : "rect";
+}
+
+function updateNodeDimensionsAndCostume(node, dataArg) {
+	var data = dataArg || node.datum();
+	
+	//What should the element be?
+	var shape = getNodeElementType(data);
+	//Select that element then
+    var selectResult = node.select(shape);
+    if (selectResult.size() == 0)
+    {
+        //Keep the label
+        var text = node.select("text");
+        
+        //Clear everything
+        var all = node.selectAll("*");
+        all.remove();
+        
+        //Add right element
+        selectResult = node.append(shape);
+        
+        //Add text back
+        node.node().appendChild(text[0][0]);
+    }
+    
+    //Apply styles
+    for (var attribute in LAYOUT_OPTS.node_style) {
+        var value = LAYOUT_OPTS.node_style[attribute];
+        if (typeof value === "function")
+            value = value(data);
+        if (value !== undefined)
+            selectResult.style(attribute, value);
+    };
+    
+    //Apply attributes
+    for (var attribute in LAYOUT_OPTS.node_attr) {
+        var value = LAYOUT_OPTS.node_attr[attribute];
+        if (typeof value === "function")
+            value = value(data);
+        if (value !== undefined)
+            selectResult.attr(attribute, value);
+    };
+}
+
+function svgTextDimensions(text)
+{
+	var svgEl = graphEl.select("svg");
+	var appendedText = svgEl.append("text");
+	var appendedNode = appendedText.node();
+	appendedNode.textContent = text;
+	var retnVal = appendedNode.getBBox();
+	appendedText.remove();
+	return retnVal;
+}
+
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
     NODE_RADIUS_FACTOR = 10,
     EDGE_WIDTH_FACTOR = 8,
     LAYOUT_OPTS = {
-        layout: d3.force,
+        layout: function () { 
+			return edgyLayoutAlgorithm();  /* See changesToGui.js... change it if you want! */
+		},
         element: graphEl.node(),
         with_labels: true,
         with_edge_labels: true,
         layout_attr: {
             linkDistance: function(d) {
+				if (!d)
+				{
+					//WebCOLA does not support different link-distances for different nodes.
+					return 60;
+				}
                 var sr = d.source.data.radius || 1,
                     tr = d.target.data.radius || 1;
                 return 60 + (sr + tr) * NODE_RADIUS_FACTOR;
@@ -171,30 +231,48 @@ var DEFAULT_NODE_COLOR = "white",
             charge: function(d) {
                 var r = (d.data.radius || 1) * 8;
                 return -r*r;
-            }
+            },
+			avoidOverlaps: true
         },
-        node_shape: 'use',
+        node_shape: function(d) {
+            return this.ownerDocument.createElementNS(this.namespaceURI, getNodeElementType(d));
+        },
         node_style: {
             fill: function(d) {
                 return d.data.color || DEFAULT_NODE_COLOR;
             },
             'stroke-width': function(d) {
                 return 1 / (d.data.radius || 1);
+            },
+            stroke: function(d) {
+                return d.data.__costume ? undefined : '#333333';
             }
         },
         node_attr: {
-            r: function(d) {
-                return d.data.radius * NODE_RADIUS_FACTOR || NODE_RADIUS_FACTOR;
-            },
-            transform: function(d) {
-                return "scale(" + (d.data.radius || 1) + ")";
-            },
+			width: function(d) {
+                if (d.data.__costume__)
+                    return undefined;
+				var dim = svgTextDimensions(d.data.label || d.node);
+				d.width = dim.width + 16;
+				return dim.width + 8;
+			},
+			height: function(d) {
+                if (d.data.__costume__)
+                    return undefined;
+				var dim = svgTextDimensions(d.data.label || d.node);
+				d.height = dim.height + 16;
+				return dim.height + 8;
+			},
+			transform: function(d) {
+				var dim = svgTextDimensions(d.data.label || d.node);
+				return 'translate('+(-(dim.width + 8) / 2)+','+(-(dim.height + 8) / 2)+')scale(' + (d.data.radius || 1) + ')';
+			},
             "xlink:href": function(d) {
                 if(d.data.__costume__) {
                     // Display costume if one is set.
                     return "#" + formatCostumeImageId(d.data.__costume__.patternNum);
                 } else {
-                    return "#defaultcircle";
+                    return undefined;
                 }
             }
         },
@@ -249,15 +327,9 @@ var DEFAULT_NODE_COLOR = "white",
         pan_zoom: {enabled: true}
     };
 
-function redrawGraph() {
+redrawGraph = function() {
     // console.log("redrawing graph")
     layout = jsnx.draw(currentGraph, LAYOUT_OPTS, true);
-
-    graphEl.select("svg")
-        .insert("defs", ":first-child")
-            .append("circle")
-                .attr("id", "defaultcircle")
-                .attr("r", NODE_RADIUS_FACTOR);
 
     // Calling jsnx.draw() will purge the graph container element, so we need
     // to re-add the edge patterns regardless of whether they have changed.
@@ -268,6 +340,7 @@ function redrawGraph() {
         }
     }
 }
+
 
 function setGraphToDisplay (G) {
     // Remove the JSNetworkX mutator bindings from the current graph, so we
@@ -529,9 +602,10 @@ SpriteMorph.prototype.init = (function init (oldInit) {
         this.edgeAttributes = [];
         this.edgeAttributes.toXML = serializeAttributes;
         var retval = oldInit.call(this, globals);
-
+		
         this.name = localize('Graph');
 
+		this.isDraggable = false;
         return retval;
     };
 }(SpriteMorph.prototype.init));
@@ -821,8 +895,10 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
             var nodes = graphEl.selectAll(".node");
             nodes.each(function(d, i) {
                 if(d.node === node) {
-                    var textEl = d3.select(nodes[0][i]).select("text");
+                    var nodeSelection = d3.select(nodes[0][i]);
+                    var textEl = nodeSelection.select("text");
                     textEl.node().textContent = val.toString();
+                    updateNodeDimensionsAndCostume(nodeSelection);
                 }
             });
         }
@@ -907,7 +983,12 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
             });
         }
         if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
-            graphEl.select(".node-shape").attr("xlink:href", LAYOUT_OPTS["node_attr"]["xlink:href"]);
+            var nodes = graphEl.selectAll(".node");
+            nodes.each(function(d, i) {
+                if(d.node === node) {
+                    updateNodeDimensionsAndCostume(d3.select(nodes[0][i]));
+                }
+            });
         }
     }
 };
