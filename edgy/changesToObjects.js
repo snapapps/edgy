@@ -1816,11 +1816,14 @@ SyntaxElementMorph.prototype.labelPart = (function(){
         var part = oldLabelPart.call(this, spec);
         if(part === undefined){
             switch (spec) {
-                case '%counter':
+                case '%exppairs':
                     part = new CounterArgMorph('%s', null, 0);
                     part.addInput();
                     part.isStatic = true;
                     part.canBeEmpty = false;
+                    return part;
+                case '%counter':
+                    part = new ArgMorph('list');
                     return part;
             }
         }else{
@@ -1836,6 +1839,10 @@ SpriteMorph.prototype.reportNewCounter = function(elements) {
         res.set(elements.contents[i], parseInt(elements.contents[i+1]));
     }
     return res;
+};
+
+SpriteMorph.prototype.reportCounterCount = function(key, counter) {
+    return counter.get(key);
 };
 
 CellMorph.prototype.drawNew = (function() {
@@ -2162,13 +2169,21 @@ User Menu
 }());
 
 (function() {
+    SpriteMorph.prototype.categories.push('counter');
+    SpriteMorph.prototype.blockColor.counter = new Color(74, 108, 212);
+
     // Add counter blocks.
     var blockName, counterBlocks = {
         // Counter
         reportNewCounter: {
             type: 'reporter',
             category: 'lists',
-            spec: 'counter %counter',
+            spec: 'counter %exppairs',
+        },
+        reportCounterCount: {
+            type: 'reporter',
+            category: 'operators',
+            spec: 'count %s in %counter',
         },
     };
 
@@ -2179,6 +2194,10 @@ User Menu
         }
     }
 }());
+
+/*
+Attributes
+*/
 
 function allNodeAttributes(morph) {
     return morph.parentThatIsA(StageMorph).nodeAttributes.concat(morph.nodeAttributes);
@@ -2554,10 +2573,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                 blocks.push(block('log'));
                 blocks.push(block('alert'));
             }
-        } else if (category === 'variables') {
-            blocks = blocks.concat(oldBlockTemplates.call(this, category));
-            blocks.push('-');
+        } else if (category === 'counter') {
             blocks.push(block('reportNewCounter'));
+            blocks.push(block('reportCounterCount'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
