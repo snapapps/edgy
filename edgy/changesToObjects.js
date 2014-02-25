@@ -1434,7 +1434,7 @@ Counter
 */
 
 // Menu element.
-function CounterArgMorph(
+function MultiArgPairsMorph(
     slotSpec,
     labelTxt,
     min,
@@ -1457,11 +1457,11 @@ function CounterArgMorph(
         isTransparent
     );
 }
-CounterArgMorph.prototype = new MultiArgMorph();
-CounterArgMorph.prototype.constructor = CounterArgMorph;
-CounterArgMorph.uber = MultiArgMorph.prototype;
+MultiArgPairsMorph.prototype = new MultiArgMorph();
+MultiArgPairsMorph.prototype.constructor = MultiArgPairsMorph;
+MultiArgPairsMorph.uber = MultiArgMorph.prototype;
 
-CounterArgMorph.prototype.addInput = function(contents) {
+MultiArgPairsMorph.prototype.addInput = function(contents) {
     // The arrow morph is the last child.
     if (this.children.length > 2) {
         this.children.splice(this.children.length - 1, 0, this.labelPart(','));
@@ -1469,7 +1469,7 @@ CounterArgMorph.prototype.addInput = function(contents) {
     MultiArgMorph.prototype.addInput.call(this, contents);
     MultiArgMorph.prototype.addInput.call(this, contents);
 }
-CounterArgMorph.prototype.removeInput = function(contents) {
+MultiArgPairsMorph.prototype.removeInput = function(contents) {
     MultiArgMorph.prototype.removeInput.call(this, contents);
     MultiArgMorph.prototype.removeInput.call(this, contents);
     if (this.children.length > 2) {
@@ -1807,7 +1807,7 @@ CounterMorph.prototype.drawNew = function () {
     this.fixLayout();
 };
 
-// CounterArgMorph input.
+// MultiArgPairsMorph input.
 
 SyntaxElementMorph.prototype.labelPart = (function(){
     var oldLabelPart = SyntaxElementMorph.prototype.labelPart;
@@ -1817,7 +1817,7 @@ SyntaxElementMorph.prototype.labelPart = (function(){
         if(part === undefined){
             switch (spec) {
                 case '%exppairs':
-                    part = new CounterArgMorph('%s', null, 0);
+                    part = new MultiArgPairsMorph('%s', null, 0);
                     part.addInput();
                     part.isStatic = true;
                     part.canBeEmpty = false;
