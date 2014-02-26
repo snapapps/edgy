@@ -54,5 +54,20 @@ IDE_Morph.prototype.setMaxVisibleNodes = function () {
     );
 };
 
+function getStageHTML(ide) {
+    // It is not possible to have a closing <script> tag in inline JS.
+    // Escape all forward slashes.
+    var data = JSON.stringify(ide.serializer.serialize(ide.stage)).replace(/\//g, "\\/"),
+        docClone = d3.select(document.documentElement.cloneNode(true));
+
+    docClone.select("#graph-display").remove();
+    docClone.select("#replace-me").text("ide_.rawOpenProjectString(" + data + ");");
+    return docClone.node().outerHTML;
+}
+
+IDE_Morph.prototype.exportToHTML = function () {
+    saveAs(new Blob([getStageHTML(this)], {type: 'text/html'}),
+           (this.projectName || 'project') + '.html');
+}
 
 }());

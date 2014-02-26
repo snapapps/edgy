@@ -2676,25 +2676,6 @@ IDE_Morph.prototype.saveProjectToDisk = function (plain) {
     }
 };
 
-IDE_Morph.prototype.exportToHTML = function () {
-    // It is not possible to have a closing <script> tag in inline JS.
-    // Escape all forward slashes.
-    var data = JSON.stringify(this.serializer.serialize(this.stage)).replace(/\//g, "\\/"),
-        link = document.createElement('a'),
-        docClone = d3.select(document.documentElement.cloneNode(true)),
-        htmlData;
-
-    docClone.select("#graph-display").remove();
-    docClone.select("#replace-me").text("ide_.rawOpenProjectString(" + data + ");");
-
-    htmlData = encodeURIComponent(('<html>' + docClone.html() + '</html>'));
-    link.setAttribute('href', 'data:text/html,' + htmlData);
-    link.setAttribute('download', (this.projectName || 'project') + '.html');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
 IDE_Morph.prototype.exportProject = function (name, plain) {
     var menu, str;
     if (name) {
