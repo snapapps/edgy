@@ -1411,6 +1411,14 @@ Process.prototype.getLastfmFriends = function(username) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
+        if(data.error) {
+            throw new Error(data.message);
+        }
+        if(data.friends.user === undefined) {
+            return new List();
+        } else if(!(data.friends.user instanceof Array)) {
+            data.friends.user = [data.friends.user];
+        }
         return new List(data.friends.user.map(function(x) { return x.name; }));
     }
 
