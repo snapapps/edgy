@@ -80,13 +80,15 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.G.add_node(d.node, {color: color});
+                        updateNodeDimensionsAndCostume(node);
                     }).prompt('Node color', d.data.color || DEFAULT_NODE_COLOR, world);
                     world.worldCanvas.focus();
                 });
-                menu.addItem('set radius', function () {
-                    new DialogBoxMorph(null, function (radius) {
-                        d.G.add_node(d.node, {radius: parseFloat(radius)});
-                    }).prompt('Node radius', (d.data.radius || 1).toString(), world);
+                menu.addItem('set scale', function () {
+                    new DialogBoxMorph(null, function (scale) {
+                        d.G.add_node(d.node, {scale: parseFloat(scale)});
+                        updateNodeDimensionsAndCostume(node);
+                    }).prompt('Node scale', (d.data.scale || 1).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -177,20 +179,12 @@ function updateNodeDimensionsAndCostume(node, dataArg) {
     
     //Apply styles
     for (var attribute in LAYOUT_OPTS.node_style) {
-        var value = LAYOUT_OPTS.node_style[attribute];
-        if (typeof value === "function")
-            value = value(data);
-        if (value !== undefined)
-            selectResult.style(attribute, value);
+        selectResult.style(attribute, LAYOUT_OPTS.node_style[attribute]);
     };
     
     //Apply attributes
     for (var attribute in LAYOUT_OPTS.node_attr) {
-        var value = LAYOUT_OPTS.node_attr[attribute];
-        if (typeof value === "function")
-            value = value(data);
-        if (value !== undefined)
-            selectResult.attr(attribute, value);
+        selectResult.attr(attribute, LAYOUT_OPTS.node_attr[attribute]);
     };
 }
 
@@ -208,7 +202,6 @@ function svgTextDimensions(text)
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
-    NODE_RADIUS_FACTOR = 10,
     EDGE_WIDTH_FACTOR = 8,
     LAYOUT_OPTS = {
         layout: function () { 
@@ -224,12 +217,12 @@ var DEFAULT_NODE_COLOR = "white",
 					//WebCOLA does not support different link-distances for different nodes.
 					return 60;
 				}
-                var sr = d.source.data.radius || 1,
-                    tr = d.target.data.radius || 1;
-                return 60 + (sr + tr) * NODE_RADIUS_FACTOR;
+                var sr = d.source.data.scale || 1,
+                    tr = d.target.data.scale || 1;
+                return 60 + (sr + tr);
             },
             charge: function(d) {
-                var r = (d.data.radius || 1) * 8;
+                var r = (d.data.scale || 1) * 8;
                 return -r*r;
             },
 			avoidOverlaps: true
@@ -242,7 +235,7 @@ var DEFAULT_NODE_COLOR = "white",
                 return d.data.color || DEFAULT_NODE_COLOR;
             },
             'stroke-width': function(d) {
-                return 1 / (d.data.radius || 1);
+                return 1 / (d.data.scale || 1);
             },
             stroke: function(d) {
                 return d.data.__costume ? undefined : '#333333';
@@ -265,7 +258,8 @@ var DEFAULT_NODE_COLOR = "white",
 			},
 			transform: function(d) {
 				var dim = svgTextDimensions(d.data.label || d.node);
-				return 'translate('+(-(dim.width + 8) / 2)+','+(-(dim.height + 8) / 2)+')scale(' + (d.data.radius || 1) + ')';
+				var scale = (d.data.scale || 1);
+				return 'scale(' + scale + ')translate('+(-(dim.width + 8) / 2)+','+(-(dim.height + 8) / 2)+')';
 			},
             "xlink:href": function(d) {
                 if(d.data.__costume__) {
@@ -309,6 +303,11 @@ var DEFAULT_NODE_COLOR = "white",
             }
         },
         label_style: {fill: DEFAULT_LABEL_COLOR},
+        label_attr: {
+			transform: function(d) {
+				return 'scale(' + (d.data.scale || 1) + ')';
+			}
+        },
         labels: function(d) {
             if(d.data.label !== undefined) {
                 return d.data.label.toString();
@@ -915,8 +914,8 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
             return DEFAULT_NODE_COLOR;
         if(attrib === "label")
             return node.toString();
-        if(attrib === "radius")
-            return 1; // Radius is normalized to 1; multiplied with NODE_RADIUS_FACTOR.
+        if(attrib === "scale")
+            return 1;
 
         throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
     } else {
@@ -1850,7 +1849,7 @@ function deleteNodeAttribute(morph, name) {
 InputSlotMorph.prototype.getNodeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
-        dict = {'color': 'color', 'label': 'label', 'radius': 'radius'};
+        dict = {'color': 'color', 'label': 'label', 'scale': 'scale'};
 
     if (!block) {
         return dict;
