@@ -2283,6 +2283,12 @@ IDE_Morph.prototype.projectMenu = function () {
             'experimental - save as self-contained HTML',
             new Color(100, 0, 0)
         )
+        menu.addItem(
+            'Export to ZIP',
+            'exportToZIP',
+            'experimental - save as self-contained ZIP',
+            new Color(100, 0, 0)
+        )
     }
     menu.addItem('Save As...', 'saveProjectsBrowser');
     menu.addLine();
