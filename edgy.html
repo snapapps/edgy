@@ -27,19 +27,30 @@
 		<script type="text/javascript" src="edgy/changesToObjects.js"></script>
 		<script type="text/javascript" src="edgy/changesToStore.js"></script>
 		<script type="text/javascript" src="edgy/changesToGui.js"></script>
+		<script type="text/javascript" src="dotparser.js"></script>
+		<script type="text/javascript" src="dotgraph.js"></script>
 		<script type="text/javascript" src="jsonp.js"></script>
+		<script type="text/javascript" src="jszip.js"></script>
 		<script type="text/javascript" src="ucsv-1.1.0.js"></script>
+		<script type="text/javascript" src="Blob.js"></script>
+		<script type="text/javascript" src="FileSaver.js"></script>
 		<script type="text/javascript" src="edgy/changesToMorphic.js"></script>
 		<script type="text/javascript">
 			var world = new WorldMorph(document.getElementById('world'));
 			var ide_ = new IDE_Morph();
+		</script>
+		<script type="text/javascript" id="replace-me-pre">
+		</script>
+		<script type="text/javascript">
 			ide_.openIn(world);
+		</script>
+		<script type="text/javascript" id="replace-me-post">
+		</script>
+		<script type="text/javascript">
 			setInterval(loop, 1);
 			function loop() {
 				world.doOneCycle();
 			}
-		</script>
-		<script type="text/javascript" id="replace-me">
 		</script>
     </body>
 </html>

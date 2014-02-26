@@ -739,8 +739,12 @@ function justHideGraph() {
     currentGraphSprite = null;
 }
 
+SpriteMorph.prototype.isActiveGraph = function() {
+    return currentGraph === this.G || currentGraph.parent_graph === this.G;
+};
+
 SpriteMorph.prototype.hideActiveGraph = function() {
-    if(currentGraph === this.G || currentGraph.parent_graph === this.G) {
+    if(this.isActiveGraph()) {
         justHideGraph();
     }
 };
@@ -817,7 +821,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         }
 
         // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && (currentGraph === this.G || this.G === currentGraph.parent_graph)) {
+        if(attrib === "label" && this.isActiveGraph()) {
             var nodes = graphEl.selectAll(".node");
             nodes.each(function(d, i) {
                 if(d.node === node) {
@@ -859,7 +863,7 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
         }
 
         // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && (currentGraph === this.G || this.G === currentGraph.parent_graph)) {
+        if(attrib === "label" && this.isActiveGraph()) {
             var edges = graphEl.selectAll(".edge");
             edges.each(function(d, i) {
                 if(d.edge[0] === a && d.edge[1] === b) {
@@ -906,7 +910,7 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
                 return costume.name === costumename;
             });
         }
-        if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
+        if(this.isActiveGraph()) {
             graphEl.select(".node-shape").attr("xlink:href", LAYOUT_OPTS["node_attr"]["xlink:href"]);
         }
     }
@@ -927,7 +931,7 @@ SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
                 return costume.name === costumename;
             });
         }
-        if(this.G === currentGraph || this.G === currentGraph.parent_graph) {
+        if(this.isActiveGraph()) {
             graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
             graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
             layout.resume();
@@ -1238,19 +1242,78 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
         var graph = objectToGraph(JSON.parse(string));
         addGraph(this.G, graph);
         this.addAttrsFromGraph(graph);
+        return;
     } catch(e) {
-        if(e instanceof SyntaxError) {
-            var data = CSV.csvToArray(string);
-            if(data[0][0] === '' || data[0][0] === null) {
-                // Try parsing as adjacency matrix.
-                addGraph(this.G, parseAdjacencyMatrix(data));
-            } else {
-                // Try parsing as adjacency list.
-                addGraph(this.G, parseAdjacencyList(data));
-            }
-        } else {
+        if(!(e instanceof SyntaxError)) {
             throw e;
         }
+    }
+
+    try {
+        var dotgraph = new DotGraph(DotParser.parse(string)),
+            graph;
+        dotgraph.walk();
+        if(dotgraph.rootGraph.type == "graph") {
+            graph = jsnx.Graph();
+        } else if(dotgraph.rootGraph.type == "digraph") {
+            graph = jsnx.DiGraph();
+        } else {
+            throw new Error("Invalid DOT graph type");
+        }
+        console.log(dotgraph);
+        for(var node in dotgraph.nodes) {
+            if(dotgraph.nodes.hasOwnProperty(node)) {
+                var ournode = parseNode(node);
+                graph.add_node(ournode);
+                console.log(ournode);
+                var attrs = dotgraph.nodes[node].attrs;
+                for(var attr in attrs) {
+                    if(attrs.hasOwnProperty(attr)) {
+                        if(attr === "fillcolor") {
+                            graph.node.get(ournode).color = attrs[attr];
+                        } else {
+                            graph.node.get(ournode)[attr] = attrs[attr];
+                        }
+                    }
+                }
+            }
+        }
+        for(var edgeid in dotgraph.edges) {
+            if(dotgraph.edges.hasOwnProperty(edgeid)) {
+                dotgraph.edges[edgeid].forEach(function(datum) {
+                    var edge = datum.edge;
+                    var a = parseNode(edge[0]), b = parseNode(edge[1]);
+                    graph.add_edge(a, b);
+                    console.log(a, b);
+                    var attrs = datum.attrs;
+                    for(var attr in attrs) {
+                        if(attrs.hasOwnProperty(attr)) {
+                            if(attr === "penwidth") {
+                                graph.edge.get(a).get(b).width = attrs[attr];
+                            } else {
+                                graph.edge.get(a).get(b)[attr] = attrs[attr];
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        addGraph(this.G, graph);
+        this.addAttrsFromGraph(graph);
+        return;
+    } catch(e) {
+        if(!(e instanceof SyntaxError)) {
+            throw e;
+        }
+    }
+
+    var data = CSV.csvToArray(string);
+    if(data[0][0] === '' || data[0][0] === null) {
+        // Try parsing as adjacency matrix.
+        addGraph(this.G, parseAdjacencyMatrix(data));
+    } else {
+        // Try parsing as adjacency list.
+        addGraph(this.G, parseAdjacencyList(data));
     }
 };
 
@@ -1348,6 +1411,14 @@ Process.prototype.getLastfmFriends = function(username) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
+        if(data.error) {
+            throw new Error(data.message);
+        }
+        if(data.friends.user === undefined) {
+            return new List();
+        } else if(!(data.friends.user instanceof Array)) {
+            data.friends.user = [data.friends.user];
+        }
         return new List(data.friends.user.map(function(x) { return x.name; }));
     }
 
@@ -1380,7 +1451,14 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
-        // console.log(data);
+        if(data.error) {
+            throw new Error(data.message);
+        }
+        if(data.lovedtracks.track === undefined) {
+            return new List();
+        } else if(!(data.lovedtracks.track instanceof Array)) {
+            data.lovedtracks.track = [data.lovedtracks.track];
+        }
         return new List(data.lovedtracks.track.map(function(track) {
             return track.artist.name + " - " + track.name;
         }));
@@ -1416,7 +1494,6 @@ SpriteMorph.prototype.getWordNetSynsets = function(lemma) {
     })));
 };
 
-
 SpriteMorph.prototype.getWordNetDefinition = function(noun) {
     if(!this.wordnet_nouns) {
         throw new Error("WordNet is not loaded. Please load WordNet.")
@@ -1429,15 +1506,42 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
     }
 };
 
+SpriteMorph.prototype.setGraph = function(newGraph) {
+    var wasActive = this.isActiveGraph();
+    this.G = newGraph;
+    if(wasActive) {
+        if(currentGraph.parent_graph) {
+            this.showGraphSlice(sliceStart, sliceRadius);
+        } else {
+            this.setActiveGraph();
+        }
+    }
+};
+
+SpriteMorph.prototype.convertToDigraph = function() {
+    if(!jsnx.is_directed(this.G)) {
+        this.setGraph(jsnx.DiGraph(this.G));
+    }
+};
+
+SpriteMorph.prototype.convertToGraph = function() {
+    if(jsnx.is_directed(this.G)) {
+        this.setGraph(jsnx.Graph(this.G));
+    }
+};
+
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('network');
-    SpriteMorph.prototype.categories.push('nodes+edges');
+    SpriteMorph.prototype.categories.push('nodes');
+    SpriteMorph.prototype.categories.push('edges');
     SpriteMorph.prototype.categories.push('external');
     SpriteMorph.prototype.blockColor.network = new Color(74, 108, 212);
-    SpriteMorph.prototype.blockColor['nodes+edges'] = new Color(215, 0, 64);
+    SpriteMorph.prototype.blockColor['nodes'] = new Color(215, 0, 64);
+    SpriteMorph.prototype.blockColor['edges'] = new Color(180, 34, 64);
     SpriteMorph.prototype.blockColor.external = new Color(74, 108, 212);
 
     var blockName, networkBlocks = {
@@ -1474,137 +1578,137 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
         },
         numberOfNodes: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'number of nodes'
         },
         numberOfEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'number of edges'
         },
         addNode: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'add node %exp'
         },
         removeNode: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'remove node %s'
         },
         addEdge: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'add edge %expL'
         },
         removeEdge: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'remove edge %l'
         },
         getNeighbors: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'neighbors of %s'
         },
         setNodeAttrib: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'set %nodeAttr of node %s to %s'
         },
         getNodeAttrib: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: '%nodeAttr of node %s'
         },
         setEdgeAttrib: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'set %edgeAttr of edge %l to %s'
         },
         getEdgeAttrib: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: '%edgeAttr of edge %l'
         },
         setNodeCostume: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'set costume of node %s to %cst2'
         },
         setEdgeCostume: {
             type: 'command',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'set costume of edge %l to %cst2'
         },
         getNodes: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'all the nodes'
         },
         getNodesWithAttr: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'nodes with %nodeAttr equal to %s'
         },
         getEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'all the edges'
         },
         getDegree: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'degree of %s'
         },
         getInDegree: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'in-degree of %s'
         },
         getOutDegree: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'out-degree of %s'
         },
         getEdgesWithAttr: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edges with %edgeAttr equal to %s'
         },
         hasNode: {
             type: 'predicate',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'node %s exists'
         },
         hasEdge: {
             type: 'predicate',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edge %l exists'
         },
         getOutgoing: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'outgoing nodes of %s'
         },
         getIncoming: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'incoming nodes of %s'
         },
         getNeighborEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edges of %s'
         },
         getOutgoingEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'outgoing edges of %s'
         },
         getIncomingEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'incoming edges of %s'
         },
         isEmpty: {
@@ -1669,27 +1773,27 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
         },
         reportEdge: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edge %s %s'
         },
         startNode: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'start node of %l'
         },
         endNode: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'end node of %l'
         },
         sortNodes: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'nodes',
             spec: 'nodes %l sorted by %nodeAttr %ascdesc'
         },
         sortEdges: {
             type: 'reporter',
-            category: 'nodes+edges',
+            category: 'edges',
             spec: 'edges %l sorted by %edgeAttr %ascdesc'
         },
         getLastfmFriends: {
@@ -1721,6 +1825,16 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
             type: 'reporter',
             category: 'external',
             spec: 'definition of %s'
+        },
+        convertToDigraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'convert to digraph'
+        },
+        convertToGraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'convert to graph'
         }
     };
 
@@ -1864,6 +1978,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         {
             blocks.push(block('newGraph'));
             blocks.push(block('newDiGraph'));
+            blocks.push(block('convertToGraph'));
+            blocks.push(block('convertToDigraph'));
             blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
             blocks.push(block('showGraphSlice'));
@@ -1882,7 +1998,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('generateCompleteGraph'));
             blocks.push(block('generatePathGraph'));
             blocks.push(block('generateGridGraph'));
-        } else if(category === 'nodes+edges') {
+        } else if(category === 'nodes') {
             // Node attributes.
             button = new PushButtonMorph(
                 null,
@@ -1934,6 +2050,30 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
 
             blocks.push('-');
 
+            blocks.push(block('startNode'));
+            blocks.push(block('endNode'));
+            blocks.push('-');
+            blocks.push(block('addNode'));
+            blocks.push(block('removeNode'));
+            blocks.push(block('hasNode'));
+            blocks.push('-');
+            blocks.push(block('numberOfNodes'));
+            blocks.push(block('getNodes'));
+            blocks.push('-');
+            blocks.push(block('setNodeAttrib'));
+            blocks.push(block('getNodeAttrib'));
+            blocks.push(block('setNodeCostume'));
+            blocks.push(block('getNodesWithAttr'));
+            blocks.push(block('sortNodes'));
+            blocks.push('-');
+            blocks.push(block('getNeighbors'));
+            blocks.push(block('getOutgoing'));
+            blocks.push(block('getIncoming'));
+            blocks.push('-');
+            blocks.push(block('getDegree'));
+            blocks.push(block('getInDegree'));
+            blocks.push(block('getOutDegree'));
+        } else if(category === 'edges') {
             // Edge attributes.
             button = new PushButtonMorph(
                 null,
@@ -1986,39 +2126,19 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push('-');
 
             blocks.push(block('reportEdge'));
-            blocks.push(block('startNode'));
-            blocks.push(block('endNode'));
             blocks.push('-');
-            blocks.push(block('addNode'));
             blocks.push(block('addEdge'));
-            blocks.push(block('removeNode'));
             blocks.push(block('removeEdge'));
-            blocks.push(block('hasNode'));
             blocks.push(block('hasEdge'));
             blocks.push('-');
-            blocks.push(block('numberOfNodes'));
             blocks.push(block('numberOfEdges'));
-            blocks.push(block('getNodes'));
             blocks.push(block('getEdges'));
             blocks.push('-');
-            blocks.push(block('getDegree'));
-            blocks.push(block('getInDegree'));
-            blocks.push(block('getOutDegree'));
-            blocks.push('-');
-            blocks.push(block('setNodeAttrib'));
             blocks.push(block('setEdgeAttrib'));
-            blocks.push(block('getNodeAttrib'));
             blocks.push(block('getEdgeAttrib'));
-            blocks.push(block('setNodeCostume'));
             blocks.push(block('setEdgeCostume'));
-            blocks.push(block('getNodesWithAttr'));
             blocks.push(block('getEdgesWithAttr'));
-            blocks.push(block('sortNodes'));
             blocks.push(block('sortEdges'));
-            blocks.push('-');
-            blocks.push(block('getNeighbors'));
-            blocks.push(block('getOutgoing'));
-            blocks.push(block('getIncoming'));
             blocks.push('-');
             blocks.push(block('getNeighborEdges'));
             blocks.push(block('getOutgoingEdges'));
