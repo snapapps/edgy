@@ -1451,7 +1451,14 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
-        // console.log(data);
+        if(data.error) {
+            throw new Error(data.message);
+        }
+        if(data.lovedtracks.track === undefined) {
+            return new List();
+        } else if(!(data.lovedtracks.track instanceof Array)) {
+            data.lovedtracks.track = [data.lovedtracks.track];
+        }
         return new List(data.lovedtracks.track.map(function(track) {
             return track.artist.name + " - " + track.name;
         }));
