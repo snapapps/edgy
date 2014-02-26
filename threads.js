@@ -676,12 +676,25 @@ Process.prototype.handleError = function (error, element) {
     this.stop();
     this.errorFlag = true;
     this.topBlock.addErrorHighlight();
-    (element || this.topBlock).showBubble(
-        (element ? '' : 'Inside: ')
-            + error.name
-            + '\n'
-            + error.message
-    );
+
+    if(element && element.world()) {
+        element.showBubble(error.name + '\n' + error.message);
+    } else {
+        // The root of a custom block is not the world, so needs to be handled
+        // slightly specially. Also attach an image of the failing block to
+        // help in debugging.
+        var errorMorph = new AlignmentMorph('row');
+        var value = error.name + '\n' + error.message;
+        var txt  = value.length > 500 ? value.slice(0, 500) + '...' : value;
+        errorMorph.add(new TextMorph(
+            txt,
+            this.topBlock.fontSize
+        ));
+        errorMorph.add(element);
+        errorMorph.drawNew();
+        errorMorph.fixLayout();
+        this.topBlock.showBubble(errorMorph);
+    }
 };
 
 // Process Lambda primitives
