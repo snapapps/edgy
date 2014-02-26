@@ -2,6 +2,7 @@
 // patching is in order.
 
 var DEFAULT_MAX_VISIBLE_NODES = 150;
+var edgyLayoutAlgorithm = cola.d3adaptor;
 
 (function() {
 "use strict";
@@ -54,5 +55,15 @@ IDE_Morph.prototype.setMaxVisibleNodes = function () {
     );
 };
 
-
+IDE_Morph.prototype.toggleUseWebCola = function () {
+	if (edgyLayoutAlgorithm == d3.layout.force)
+	{
+		edgyLayoutAlgorithm = cola.d3adaptor;
+	}
+	else
+	{
+		edgyLayoutAlgorithm = d3.layout.force;
+	}
+	redrawGraph();
+}
 }());

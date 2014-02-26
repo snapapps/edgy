@@ -2056,7 +2056,15 @@ IDE_Morph.prototype.settingsMenu = function () {
     }
 
     menu = new MenuMorph(this);
-    menu.addItem('Maximum visible nodes', 'setMaxVisibleNodes')
+    menu.addItem('Maximum visible nodes', 'setMaxVisibleNodes');
+    addPreference(
+        'Use newer layout algorithm',
+        'toggleUseWebCola',
+        (edgyLayoutAlgorithm == cola.d3adaptor),
+        'uncheck to use the default\n"D3" force-directed graph',
+        'check to use the WebCOLA\ngraph layout algorithm',
+        false
+    );
     menu.addLine();
     menu.addItem('Language...', 'languageMenu');
     menu.addItem(
