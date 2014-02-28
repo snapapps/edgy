@@ -586,16 +586,19 @@ function addEdgePattern(name, canvas) {
 
     pattern.attr({
         width: canvas.width,
-        height: canvas.height,
-        // Compensate for edge path x-axis going along middle of edge like |-
-        y: canvas.height/2
+        height: canvas.height
     });
     image.attr({
         id: costumeId,
         width: canvas.width,
         height: canvas.height,
+        // Compensate for image origin offset.
+        x: -canvas.width/2,
+        y: -canvas.height/2,
         "xlink:href": canvas.toDataURL()
     });
+    // Compensate for pattern bounding box.
+    pattern.select("use").attr("transform", ["translate(", canvas.width/2, " ", 0, ")"].join(""));
     return patternId;
 }
 
@@ -1239,9 +1242,7 @@ SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
 
 SpriteMorph.prototype.loadGraphFromString = function(string) {
     try {
-        var graph = objectToGraph(JSON.parse(string));
-        addGraph(this.G, graph);
-        this.addAttrsFromGraph(graph);
+        this.graphFromJSON(string, true);
         return;
     } catch(e) {
         if(!(e instanceof SyntaxError)) {
@@ -1298,11 +1299,10 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
                 });
             }
         }
-        addGraph(this.G, graph);
-        this.addAttrsFromGraph(graph);
+        this.importGraph(graph, true);
         return;
     } catch(e) {
-        if(!(e instanceof SyntaxError)) {
+        if(!(e instanceof DotParser.SyntaxError)) {
             throw e;
         }
     }
@@ -1310,10 +1310,10 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
     var data = CSV.csvToArray(string);
     if(data[0][0] === '' || data[0][0] === null) {
         // Try parsing as adjacency matrix.
-        addGraph(this.G, parseAdjacencyMatrix(data));
+        this.importGraph(parseAdjacencyMatrix(data), true);
     } else {
         // Try parsing as adjacency list.
-        addGraph(this.G, parseAdjacencyList(data));
+        this.importGraph(parseAdjacencyList(data), true);
     }
 };
 
@@ -2237,37 +2237,56 @@ SpriteMorph.prototype.graphToJSON = function() {
     return JSON.stringify(graphToObject(this.G));
 };
 
-SpriteMorph.prototype.graphFromJSON = function(json) {
+SpriteMorph.prototype.graphFromJSON = function(json, addTo) {
+    this.importGraph(objectToGraph(JSON.parse(json)), addTo);
+}
+
+SpriteMorph.prototype.importGraph = function(G, addTo) {
     var myself = this;
-    this.G = objectToGraph(JSON.parse(json));
-    jsnx.forEach(this.G.nodes_iter(true), function (node) {
+    jsnx.forEach(G.nodes_iter(true), function (node) {
         var data = node[1], k;
         for (k in data) {
             if (data.hasOwnProperty(k)) {
                 if(k === "__costume__") {
-                    data[k] = detect(myself.costumes.asArray(), function(costume) {
+                    var costume = detect(myself.costumes.asArray(), function(costume) {
                         return costume.name === data[k];
                     });
+                    if(costume) {
+                        data[k] = costume;
+                    } else {
+                        delete data[k];
+                    }
                 } else if(k !== 'color' && k !== 'label') {
                     addNodeAttribute(myself, k, false);
                 }
             }
         }
     });
-    jsnx.forEach(this.G.edges_iter(true), function (edge) {
+    jsnx.forEach(G.edges_iter(true), function (edge) {
         var data = edge[2], k;
         for (k in data) {
             if (data.hasOwnProperty(k)) {
                 if(k === "__costume__") {
-                    data[k] = detect(myself.costumes.asArray(), function(costume) {
+                    var costume = detect(myself.costumes.asArray(), function(costume) {
                         return costume.name === data[k];
                     });
+                    if(costume) {
+                        data[k] = costume;
+                    } else {
+                        delete data[k];
+                    }
                 } else if(k !== 'color' && k !== 'label') {
                     addEdgeAttribute(myself, k, false);
                 }
             }
         }
     });
+
+    if(addTo) {
+        addGraph(this.G, G);
+    } else {
+        this.setGraph(G);
+    }
 };
 
 // Merge source into target, possibly applying fn to (key, value) first.
