@@ -586,16 +586,19 @@ function addEdgePattern(name, canvas) {
 
     pattern.attr({
         width: canvas.width,
-        height: canvas.height,
-        // Compensate for edge path x-axis going along middle of edge like |-
-        y: canvas.height/2
+        height: canvas.height
     });
     image.attr({
         id: costumeId,
         width: canvas.width,
         height: canvas.height,
+        // Compensate for image origin offset.
+        x: -canvas.width/2,
+        y: -canvas.height/2,
         "xlink:href": canvas.toDataURL()
     });
+    // Compensate for pattern bounding box.
+    pattern.select("use").attr("transform", ["translate(", canvas.width/2, " ", 0, ")"].join(""));
     return patternId;
 }
 
