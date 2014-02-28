@@ -1302,7 +1302,7 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
         this.importGraph(graph, true);
         return;
     } catch(e) {
-        if(!(e instanceof SyntaxError)) {
+        if(!(e instanceof DotParser.SyntaxError)) {
             throw e;
         }
     }
