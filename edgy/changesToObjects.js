@@ -1247,9 +1247,17 @@ function addGraph(G, other) {
         throw new Error("The graphs are not disjoint.");
     }
     // HACK: for some reason, JSNetworkX throws an exception if I try adding
-    // the nodes along with their attributes in a single pass.
-    G.add_nodes_from(other.nodes());
-    G.add_nodes_from(other.nodes(true));
+    // the nodes along with their attributes in a single pass using
+    // add_nodes_from. This also works around a bug where costume images would
+    // not be set since the attribute-less nodes would be inserted before the
+    // attributes thus not triggering layout properly.
+    jsnx.forEach(other.nodes_iter(true), function(el) {
+        if(el[1]) {
+            G.add_node(el[0], el[1]);
+        } else {
+            G.add_node(el[0]);
+        }
+    });
     G.add_edges_from(other.edges(null, true));
 }
 
@@ -2318,7 +2326,37 @@ SpriteMorph.prototype.graphToJSON = function() {
 };
 
 SpriteMorph.prototype.graphFromJSON = function(json, addTo) {
-    this.importGraph(objectToGraph(JSON.parse(json)), addTo);
+    var myself = this,
+        parsed = JSON.parse(json);
+    parsed.graph.forEach(function(el) {
+        var k = el[0], v = el[1];
+        if(k === "__costumes__") {
+            for(var name in v) {
+                if(v.hasOwnProperty(name)) {
+                    var costume = new Costume(null, name, new Point());
+                    costume.loaded = function() {};
+                    var image = new Image();
+                    image.onload = function () {
+                        var canvas = newCanvas(
+                                new Point(image.width, image.height)
+                            ),
+                            context = canvas.getContext('2d');
+                        context.drawImage(image, 0, 0);
+                        costume.contents = canvas;
+                        costume.version = +new Date();
+                        if (typeof costume.loaded === 'function') {
+                            costume.loaded();
+                        } else {
+                            costume.loaded = true;
+                        }
+                    };
+                    image.src = v[name];
+                    myself.addCostume(costume);
+                }
+            }
+        }
+    });
+    this.importGraph(objectToGraph(parsed), addTo);
 }
 
 SpriteMorph.prototype.importGraph = function(G, addTo) {
@@ -2418,7 +2456,8 @@ function graphToObject(G) {
     var data = {};
     data.directed = G.is_directed();
     data.multigraph = multigraph;
-    data.graph = [];
+    var costumes = {};
+    data.graph = [["__costumes__", costumes]];
     for(var k in G.graph) {
         if(G.graph.hasOwnProperty(k)) {
             data.graph.push([k, G.graph[k]]);
@@ -2431,7 +2470,11 @@ function graphToObject(G) {
         mergeObjectIn(d, node[1]);
         delete d.__d3datum__; // Don't serialize the D3 gunk.
         if(d.__costume__) {
-            d.__costume__ = d.__costume__.name;
+            var name = d.__costume__.name;
+            if(!costumes.hasOwnProperty(name)) {
+                costumes[name] = d.__costume__.contents.toDataURL();
+            }
+            d.__costume__ = name;
         }
         data.nodes.push(d);
     });
@@ -2454,7 +2497,12 @@ function graphToObject(G) {
             mergeObjectIn(link, d);
             delete link.__d3datum__;
             if(link.__costume__) {
-                link.__costume__ = link.__costume__.name;
+                var name = link.__costume__.name;
+                if(!costumes.hasOwnProperty(name)) {
+                    costumes[name] = link.__costume__.contents.toDataURL();
+
+                }
+                link.__costume__ = name;
             }
             data.links.push(link);
         });
