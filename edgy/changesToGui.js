@@ -142,9 +142,9 @@ IDE_Morph.prototype.exportToZIP = function () {
     var filenames = getAllScripts().concat(baseFilenames),
         numLoaded = 0, hadError = false;
 
-    for (var i = 0; i < filenames.length; i++) {
-        loadFile(filenames[i], function(data) {
-            zip.file(filenames[i], data);
+    filenames.forEach(function(filename) {
+        loadFile(filename, function(data) {
+            zip.file(filename, data);
             numLoaded++;
             if(numLoaded === filenames.length) {
                 saveAs(zip.generate({type:"blob"}), (myself.projectName || 'project') + '.zip');
@@ -173,7 +173,7 @@ IDE_Morph.prototype.exportToZIP = function () {
                 dlg.drawNew();
             }
         });
-    };
+    });
 }
 
 IDE_Morph.prototype.toggleUseWebCola = function () {
