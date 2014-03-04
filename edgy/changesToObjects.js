@@ -259,7 +259,12 @@ var DEFAULT_NODE_COLOR = "white",
 			transform: function(d) {
 				var dim = svgTextDimensions(d.data.label || d.node);
 				var scale = (d.data.scale || 1);
-				return 'scale(' + scale + ')translate('+(-(dim.width + 8) / 2)+','+(-(dim.height + 8) / 2)+')';
+                var transform = ['scale(', scale, ')'];
+                if(!d.data.__costume__) {
+                    // No costume, adjust rectangle position.
+                    transform = transform.concat(['translate(', (-(dim.width + 8) / 2), ',', (-(dim.height + 8) / 2), ')']);
+                }
+                return transform.join('');
 			},
             "xlink:href": function(d) {
                 if(d.data.__costume__) {
