@@ -79,14 +79,14 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
-                        d.G.add_node(d.node, {color: color});
-                        updateNodeDimensionsAndCostume(node);
+                        d.data.color = autoNumericize(color);
+                        node.select(".node-shape").style("fill", LAYOUT_OPTS.node_style.fill);
                     }).prompt('Node color', d.data.color || DEFAULT_NODE_COLOR, world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set scale', function () {
                     new DialogBoxMorph(null, function (scale) {
-                        d.G.add_node(d.node, {scale: parseFloat(scale)});
+                        d.data.scale = autoNumericize(scale);
                         updateNodeDimensionsAndCostume(node);
                     }).prompt('Node scale', (d.data.scale || 1).toString(), world);
                     world.worldCanvas.focus();
@@ -115,7 +115,8 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
-                        d.G.add_edge(d.edge[0], d.edge[1], {color: color});
+                        d.data.color = autoNumericize(color);
+                        node.select(".node-shape").style("fill", LAYOUT_OPTS.edge_style.fill);
                     }).prompt('Edge color', d.data.color || DEFAULT_EDGE_COLOR, world);
                     world.worldCanvas.focus();
                 });
@@ -903,11 +904,15 @@ SpriteMorph.prototype.getNeighbors = function(node) {
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
     if(this.G.has_node(node)) {
-        var data = {};
-        data[attrib] = autoNumericize(val);
-        this.G.add_node(node, data);
-        if(this.G === currentGraph.parent_graph) {
-            currentGraph.add_node(node, data);
+        if(attrib === "color" || attrib === "label" || attrib === "scale") {
+            var data = {};
+            data[attrib] = autoNumericize(val);
+            this.G.add_node(node, data);
+            if(this.G === currentGraph.parent_graph) {
+                currentGraph.add_node(node, data);
+            }
+        } else {
+            this.G.node.get(node)[attrib] = autoNumericize(val);
         }
 
         // HACK: work around JSNetworkX bug with not updating labels.
@@ -947,11 +952,15 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(this.G.has_edge(a, b)) {
-        var data = {};
-        data[attrib] = autoNumericize(val);
-        this.G.add_edge(a, b, data);
-        if(this.G === currentGraph.parent_graph) {
-            currentGraph.add_edge(a, b, data);
+        if(attrib === "color" || attrib === "label" || attrib === "scale") {
+            var data = {};
+            data[attrib] = autoNumericize(val);
+            this.G.add_edge(a, b, data);
+            if(this.G === currentGraph.parent_graph) {
+                currentGraph.add_edge(a, b, data);
+            }
+        } else {
+            this.G.edge.get(a).get(b)[attrib] = autoNumericize(val);
         }
 
         // HACK: work around JSNetworkX bug with not updating labels.
