@@ -126,6 +126,15 @@ graphEl.on("DOMNodeInserted", function() {
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
+                d3.event.stopPropagation();
+            }
+        });
+
+        // Prevent panning of the graph if we've right clicked on an edge.
+        node.on("mousedown", function() {
+            if(d3.event.ctrlKey || d3.event.button === 2)
+            {
+                d3.event.stopPropagation();
             }
         });
     }
