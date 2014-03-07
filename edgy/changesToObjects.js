@@ -164,38 +164,21 @@ function getNodeElementType(d)
     return d.data.__costume__ ? "use" : "rect";
 }
 
-function updateNodeDimensionsAndCostume(node, dataArg) {
-	var data = dataArg || node.datum();
-
-	//What should the element be?
-	var shape = getNodeElementType(data);
-	//Select that element then
-    var selectResult = node.select(shape);
-    if (selectResult.size() == 0)
+function updateNodeDimensionsAndCostume(node) {
+    // If the current type of the node element is not what it should be (e.g.
+    // the node had a costume added), fix that.
+	var shape = getNodeElementType(node.datum());
+    var shapeEl = node.select(shape);
+    if (shapeEl.size() == 0)
     {
-        //Keep the label
-        var text = node.select("text");
-
-        //Clear everything
-        var all = node.selectAll("*");
-        all.remove();
-
-        //Add right element
-        selectResult = node.append(shape);
-
-        //Add text back
-        node.node().appendChild(text[0][0]);
+        node.selectAll(".node-shape").remove();
+        shapeEl = node.insert(shape, "text").classed("node-shape", true);
     }
 
-    //Apply styles
-    for (var attribute in LAYOUT_OPTS.node_style) {
-        selectResult.style(attribute, LAYOUT_OPTS.node_style[attribute]);
-    };
-
-    //Apply attributes
-    for (var attribute in LAYOUT_OPTS.node_attr) {
-        selectResult.attr(attribute, LAYOUT_OPTS.node_attr[attribute]);
-    };
+    // Reapply styles and attributes to reflect any changes (e.g. label
+    // changed).
+    shapeEl.style(LAYOUT_OPTS.node_style);
+    shapeEl.attr(LAYOUT_OPTS.node_attr);
 }
 
 function svgTextDimensions(text)
