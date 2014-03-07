@@ -74,14 +74,14 @@ graphEl.on("DOMNodeInserted", function() {
                         d.G.node.get(d.node).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                         updateNodeDimensionsAndCostume(node);
-                    }).prompt('Node label', d.data.label || d.node, world);
+                    }).prompt('Node label', (d.data.label || d.node).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.data.color = autoNumericize(color);
                         node.select(".node-shape").style("fill", LAYOUT_OPTS.node_style.fill);
-                    }).prompt('Node color', d.data.color || DEFAULT_NODE_COLOR, world);
+                    }).prompt('Node color', (d.data.color || DEFAULT_NODE_COLOR).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set scale', function () {
@@ -110,14 +110,14 @@ graphEl.on("DOMNodeInserted", function() {
                     new DialogBoxMorph(null, function (label) {
                         d.G.adj.get(d.edge[0]).get(d.edge[1]).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
-                    }).prompt('Edge label', d.data.label || '', world);
+                    }).prompt('Edge label', (d.data.label || '').toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.data.color = autoNumericize(color);
                         node.select(".node-shape").style("fill", LAYOUT_OPTS.edge_style.fill);
-                    }).prompt('Edge color', d.data.color || DEFAULT_EDGE_COLOR, world);
+                    }).prompt('Edge color', (d.data.color || DEFAULT_EDGE_COLOR).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set width', function () {
