@@ -1562,6 +1562,226 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
     this.pushContext();
 };
 
+Process.prototype.getTMDBMoviesByTitle = function(title) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovies)
+    {
+        this.context.gettingTMDBMovies = true;
+        this.context.TMDBMovies = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/search/movie?' +
+                  '&query=' + encodeURIComponent(title) +
+                  '&api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovies = data;
+        });
+    }
+
+    if(this.context.TMDBMovies)
+    {
+        var data = this.context.TMDBMovies;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return new List(data.results.map(function(movie) {
+            return movie.id;
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBPeopleByName = function(name) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBPeople)
+    {
+        this.context.gettingTMDBPeople = true;
+        this.context.TMDBPeople = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/search/person?' +
+                  '&query=' + encodeURIComponent(name) +
+                  '&api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBPeople = data;
+        });
+    }
+
+    if(this.context.TMDBPeople)
+    {
+        var data = this.context.TMDBPeople;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return new List(data.results.map(function(person) {
+            return person.id;
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBTitle = function(movie) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovieData)
+    {
+        this.context.gettingTMDBMovieData = true;
+        this.context.TMDBMovieData = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/movie/' + encodeURIComponent(movie) +
+                  '?api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovieData = data;
+        });
+    }
+
+    if(this.context.TMDBMovieData)
+    {
+        var data = this.context.TMDBMovieData;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return data.title;
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBCast = function(movie) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovieCredits)
+    {
+        this.context.gettingTMDBMovieCredits = true;
+        this.context.TMDBMovieCredits = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/movie/' + encodeURIComponent(movie) + '/credits' +
+                  '?api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovieCredits = data;
+        });
+    }
+
+    if(this.context.TMDBMovieCredits)
+    {
+        var data = this.context.TMDBMovieCredits;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return new List(data.cast.map(function(credit) {
+            return new List([credit.id, credit.character]);
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBMoviesByPerson = function(person) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovies)
+    {
+        this.context.gettingTMDBMovies = true;
+        this.context.TMDBMovies = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/person/' + encodeURIComponent(person) + '/movie_credits' +
+                  '?api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovies = data;
+        });
+    }
+
+    if(this.context.TMDBMovies)
+    {
+        var data = this.context.TMDBMovies;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return new List(data.cast.map(function(credit) {
+            return credit.id;
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBPersonName = function(person) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovies)
+    {
+        this.context.gettingTMDBMovies = true;
+        this.context.TMDBMovies = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/person/' + encodeURIComponent(person) +
+                  '?api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovies = data;
+        });
+    }
+
+    if(this.context.TMDBMovies)
+    {
+        var data = this.context.TMDBMovies;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return data.name;
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
 SpriteMorph.prototype.getWordNetNounHypernyms = function(noun) {
     if(!this.wordnet_nouns) {
         throw new Error("WordNet is not loaded. Please load WordNet.")
@@ -1919,6 +2139,36 @@ SpriteMorph.prototype.convertToGraph = function() {
             type: 'reporter',
             category: 'external',
             spec: 'definition of %s'
+        },
+        getTMDBMoviesByTitle: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'movie #s where title has %txt'
+        },
+        getTMDBPeopleByName: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'person #s where name has %txt'
+        },
+        getTMDBTitle: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'title of movie %n'
+        },
+        getTMDBCast: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'cast of movie %n'
+        },
+        getTMDBMoviesByPerson: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'movies with person %n'
+        },
+        getTMDBPersonName: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'name of person %n'
         },
         convertToDigraph: {
             type: 'command',
@@ -2303,6 +2553,36 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getWordNetNounHyponyms'));
             blocks.push(block('getWordNetSynsets'));
             blocks.push(block('getWordNetDefinition'));
+            blocks.push('-');
+            button = new PushButtonMorph(
+                null,
+                function () {
+                    new DialogBoxMorph(
+                        null,
+                        function receiveKey(key) {
+                            if(key) {
+                                myself.parentThatIsA(StageMorph).tmdbAPIkey = key;
+                            } else {
+                                new DialogBoxMorph(null, receiveKey)
+                                .prompt(
+                                    'API key',
+                                    myself.parentThatIsA(StageMorph).tmdbAPIkey || '',
+                                    myself.world());
+                            }
+                        }
+                    ).prompt('API key',
+                        myself.parentThatIsA(StageMorph).tmdbAPIkey || '',
+                        myself.world());
+                },
+                'Authenticate with TMDB'
+            );
+            blocks.push(button);
+            blocks.push(block('getTMDBMoviesByTitle'));
+            blocks.push(block('getTMDBPeopleByName'));
+            blocks.push(block('getTMDBTitle'));
+            blocks.push(block('getTMDBCast'));
+            blocks.push(block('getTMDBMoviesByPerson'));
+            blocks.push(block('getTMDBPersonName'));
         } else if (category === 'looks') {
             blocks.push(block('doSayFor'));
             blocks.push(block('bubble'));
