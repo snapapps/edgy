@@ -550,7 +550,11 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                     var s = currentGraphSprite;
                     frd.onloadend = function(e) {
                         // console.log(e);
-                        s.loadGraphFromString(e.target.result);
+                        try {
+                            s.loadGraphFromString(e.target.result);
+                        } catch(e) {
+                            ide.showMessage("Error loading file: " + e.message);
+                        }
                     }
                     // console.log(inp.files);
                     for (var i = 0; i < inp.files.length; i += 1) {
@@ -1264,9 +1268,16 @@ function areDisjoint(a, b) {
     return true;
 }
 
+function NotDisjointError(message) {
+    this.name = 'NotDisjointError';
+    this.message = message;
+    this.stack = (new Error()).stack;
+}
+NotDisjointError.prototype = new Error;
+
 function addGraph(G, other) {
     if(!areDisjoint(G, other)) {
-        throw new Error("The graphs are not disjoint.");
+        throw new NotDisjointError("The graphs are not disjoint.");
     }
     // HACK: for some reason, JSNetworkX throws an exception if I try adding
     // the nodes along with their attributes in a single pass using
@@ -1371,12 +1382,12 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
         } else {
             throw new Error("Invalid DOT graph type");
         }
-        console.log(dotgraph);
+        // console.log(dotgraph);
         for(var node in dotgraph.nodes) {
             if(dotgraph.nodes.hasOwnProperty(node)) {
                 var ournode = parseNode(node);
                 graph.add_node(ournode);
-                console.log(ournode);
+                // console.log(ournode);
                 var attrs = dotgraph.nodes[node].attrs;
                 for(var attr in attrs) {
                     if(attrs.hasOwnProperty(attr)) {
@@ -1395,7 +1406,7 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
                     var edge = datum.edge;
                     var a = parseNode(edge[0]), b = parseNode(edge[1]);
                     graph.add_edge(a, b);
-                    console.log(a, b);
+                    // console.log(a, b);
                     var attrs = datum.attrs;
                     for(var attr in attrs) {
                         if(attrs.hasOwnProperty(attr)) {

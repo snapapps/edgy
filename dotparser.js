@@ -2606,9 +2606,9 @@ DotParser = (function(){
     this.line = line;
     this.column = column;
   };
-  
-  result.SyntaxError.prototype = Error.prototype;
-  
+
+  result.SyntaxError.prototype = new Error();
+
   return result;
 })();
 /***************
