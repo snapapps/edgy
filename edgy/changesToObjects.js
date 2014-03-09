@@ -702,6 +702,22 @@ SpriteMorph.prototype.addCostume = (function addCostume(oldAddCostume) {
     };
 }(SpriteMorph.prototype.addCostume));
 
+Costume.prototype.edit = (function edit(oldEdit) {
+    return function (aWorld, anIDE, isnew, oncancel, onsubmit) {
+        var myself = this;
+        function newonsubmit() {
+            if(myself.patternNum !== undefined) {
+                addEdgePattern(myself.patternNum, myself.contents);
+            }
+
+            if(onsubmit) {
+                onsubmit();
+            }
+        }
+        return oldEdit.call(this, aWorld, anIDE, isnew, oncancel, newonsubmit);
+    };
+}(Costume.prototype.edit));
+
 function autoNumericize(x) {
     if(isNumeric(x)) {
         return parseFloat(x);
