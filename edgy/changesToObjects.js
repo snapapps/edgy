@@ -2078,7 +2078,7 @@ SpriteMorph.prototype.convertToGraph = function() {
         loadGraphFromURL: {
             type: 'command',
             category: 'external',
-            spec: 'load graph from URL: %s'
+            spec: 'load graph from URL: %txt'
         },
         topologicalSort: {
             type: 'reporter',
@@ -2113,32 +2113,32 @@ SpriteMorph.prototype.convertToGraph = function() {
         getLastfmFriends: {
             type: 'reporter',
             category: 'external',
-            spec: 'friends of %s'
+            spec: 'friends of %txt'
         },
         getLastfmUserLovedTracks: {
             type: 'reporter',
             category: 'external',
-            spec: 'loved tracks of %s'
+            spec: 'loved tracks of %txt'
         },
         getWordNetNounHypernyms: {
             type: 'reporter',
             category: 'external',
-            spec: 'hypernyms of %s'
+            spec: 'hypernyms of %txt'
         },
         getWordNetNounHyponyms: {
             type: 'reporter',
             category: 'external',
-            spec: 'hyponyms of %s'
+            spec: 'hyponyms of %txt'
         },
         getWordNetSynsets: {
             type: 'reporter',
             category: 'external',
-            spec: 'synsets of %s'
+            spec: 'synsets of %txt'
         },
         getWordNetDefinition: {
             type: 'reporter',
             category: 'external',
-            spec: 'definition of %s'
+            spec: 'definition of %txt'
         },
         getTMDBMoviesByTitle: {
             type: 'reporter',
