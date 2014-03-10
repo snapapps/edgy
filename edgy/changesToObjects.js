@@ -74,14 +74,14 @@ graphEl.on("DOMNodeInserted", function() {
                         d.G.node.get(d.node).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                         updateNodeDimensionsAndCostume(node);
-                    }).prompt('Node label', d.data.label || d.node, world);
+                    }).prompt('Node label', (d.data.label || d.node).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.data.color = autoNumericize(color);
                         node.select(".node-shape").style("fill", LAYOUT_OPTS.node_style.fill);
-                    }).prompt('Node color', d.data.color || DEFAULT_NODE_COLOR, world);
+                    }).prompt('Node color', (d.data.color || DEFAULT_NODE_COLOR).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set scale', function () {
@@ -110,14 +110,14 @@ graphEl.on("DOMNodeInserted", function() {
                     new DialogBoxMorph(null, function (label) {
                         d.G.adj.get(d.edge[0]).get(d.edge[1]).label = autoNumericize(label);
                         node.select("text").node().textContent = label;
-                    }).prompt('Edge label', d.data.label || '', world);
+                    }).prompt('Edge label', (d.data.label || '').toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.data.color = autoNumericize(color);
                         node.select(".node-shape").style("fill", LAYOUT_OPTS.edge_style.fill);
-                    }).prompt('Edge color', d.data.color || DEFAULT_EDGE_COLOR, world);
+                    }).prompt('Edge color', (d.data.color || DEFAULT_EDGE_COLOR).toString(), world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set width', function () {
@@ -164,38 +164,21 @@ function getNodeElementType(d)
     return d.data.__costume__ ? "use" : "rect";
 }
 
-function updateNodeDimensionsAndCostume(node, dataArg) {
-	var data = dataArg || node.datum();
-
-	//What should the element be?
-	var shape = getNodeElementType(data);
-	//Select that element then
-    var selectResult = node.select(shape);
-    if (selectResult.size() == 0)
+function updateNodeDimensionsAndCostume(node) {
+    // If the current type of the node element is not what it should be (e.g.
+    // the node had a costume added), fix that.
+	var shape = getNodeElementType(node.datum());
+    var shapeEl = node.select(shape);
+    if (shapeEl.size() == 0)
     {
-        //Keep the label
-        var text = node.select("text");
-
-        //Clear everything
-        var all = node.selectAll("*");
-        all.remove();
-
-        //Add right element
-        selectResult = node.append(shape);
-
-        //Add text back
-        node.node().appendChild(text[0][0]);
+        node.selectAll(".node-shape").remove();
+        shapeEl = node.insert(shape, "text").classed("node-shape", true);
     }
 
-    //Apply styles
-    for (var attribute in LAYOUT_OPTS.node_style) {
-        selectResult.style(attribute, LAYOUT_OPTS.node_style[attribute]);
-    };
-
-    //Apply attributes
-    for (var attribute in LAYOUT_OPTS.node_attr) {
-        selectResult.attr(attribute, LAYOUT_OPTS.node_attr[attribute]);
-    };
+    // Reapply styles and attributes to reflect any changes (e.g. label
+    // changed).
+    shapeEl.style(LAYOUT_OPTS.node_style);
+    shapeEl.attr(LAYOUT_OPTS.node_attr);
 }
 
 function svgTextDimensions(text)
@@ -567,7 +550,11 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                     var s = currentGraphSprite;
                     frd.onloadend = function(e) {
                         // console.log(e);
-                        s.loadGraphFromString(e.target.result);
+                        try {
+                            s.loadGraphFromString(e.target.result);
+                        } catch(e) {
+                            ide.showMessage("Error loading file: " + e.message);
+                        }
                     }
                     // console.log(inp.files);
                     for (var i = 0; i < inp.files.length; i += 1) {
@@ -718,6 +705,22 @@ SpriteMorph.prototype.addCostume = (function addCostume(oldAddCostume) {
         return oldAddCostume.call(this, costume);
     };
 }(SpriteMorph.prototype.addCostume));
+
+Costume.prototype.edit = (function edit(oldEdit) {
+    return function (aWorld, anIDE, isnew, oncancel, onsubmit) {
+        var myself = this;
+        function newonsubmit() {
+            if(myself.patternNum !== undefined) {
+                addEdgePattern(myself.patternNum, myself.contents);
+            }
+
+            if(onsubmit) {
+                onsubmit();
+            }
+        }
+        return oldEdit.call(this, aWorld, anIDE, isnew, oncancel, newonsubmit);
+    };
+}(Costume.prototype.edit));
 
 function autoNumericize(x) {
     if(isNumeric(x)) {
@@ -1265,9 +1268,16 @@ function areDisjoint(a, b) {
     return true;
 }
 
+function NotDisjointError(message) {
+    this.name = 'NotDisjointError';
+    this.message = message;
+    this.stack = (new Error()).stack;
+}
+NotDisjointError.prototype = new Error;
+
 function addGraph(G, other) {
     if(!areDisjoint(G, other)) {
-        throw new Error("The graphs are not disjoint.");
+        throw new NotDisjointError("The graphs are not disjoint.");
     }
     // HACK: for some reason, JSNetworkX throws an exception if I try adding
     // the nodes along with their attributes in a single pass using
@@ -1372,12 +1382,12 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
         } else {
             throw new Error("Invalid DOT graph type");
         }
-        console.log(dotgraph);
+        // console.log(dotgraph);
         for(var node in dotgraph.nodes) {
             if(dotgraph.nodes.hasOwnProperty(node)) {
                 var ournode = parseNode(node);
                 graph.add_node(ournode);
-                console.log(ournode);
+                // console.log(ournode);
                 var attrs = dotgraph.nodes[node].attrs;
                 for(var attr in attrs) {
                     if(attrs.hasOwnProperty(attr)) {
@@ -1396,7 +1406,7 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
                     var edge = datum.edge;
                     var a = parseNode(edge[0]), b = parseNode(edge[1]);
                     graph.add_edge(a, b);
-                    console.log(a, b);
+                    // console.log(a, b);
                     var attrs = datum.attrs;
                     for(var attr in attrs) {
                         if(attrs.hasOwnProperty(attr)) {
@@ -1573,6 +1583,226 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         return new List(data.lovedtracks.track.map(function(track) {
             return track.artist.name + " - " + track.name;
         }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBMoviesByTitle = function(title) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovies)
+    {
+        this.context.gettingTMDBMovies = true;
+        this.context.TMDBMovies = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/search/movie?' +
+                  '&query=' + encodeURIComponent(title) +
+                  '&api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovies = data;
+        });
+    }
+
+    if(this.context.TMDBMovies)
+    {
+        var data = this.context.TMDBMovies;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return new List(data.results.map(function(movie) {
+            return movie.id;
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBPeopleByName = function(name) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBPeople)
+    {
+        this.context.gettingTMDBPeople = true;
+        this.context.TMDBPeople = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/search/person?' +
+                  '&query=' + encodeURIComponent(name) +
+                  '&api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBPeople = data;
+        });
+    }
+
+    if(this.context.TMDBPeople)
+    {
+        var data = this.context.TMDBPeople;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return new List(data.results.map(function(person) {
+            return person.id;
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBTitle = function(movie) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovieData)
+    {
+        this.context.gettingTMDBMovieData = true;
+        this.context.TMDBMovieData = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/movie/' + encodeURIComponent(movie) +
+                  '?api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovieData = data;
+        });
+    }
+
+    if(this.context.TMDBMovieData)
+    {
+        var data = this.context.TMDBMovieData;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return data.title;
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBCast = function(movie) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovieCredits)
+    {
+        this.context.gettingTMDBMovieCredits = true;
+        this.context.TMDBMovieCredits = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/movie/' + encodeURIComponent(movie) + '/credits' +
+                  '?api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovieCredits = data;
+        });
+    }
+
+    if(this.context.TMDBMovieCredits)
+    {
+        var data = this.context.TMDBMovieCredits;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return new List(data.cast.map(function(credit) {
+            return new List([credit.id, credit.character]);
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBMoviesByPerson = function(person) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovies)
+    {
+        this.context.gettingTMDBMovies = true;
+        this.context.TMDBMovies = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/person/' + encodeURIComponent(person) + '/movie_credits' +
+                  '?api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovies = data;
+        });
+    }
+
+    if(this.context.TMDBMovies)
+    {
+        var data = this.context.TMDBMovies;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return new List(data.cast.map(function(credit) {
+            return credit.id;
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
+Process.prototype.getTMDBPersonName = function(person) {
+    var myself = this, url, api_key;
+
+    if(!this.context.gettingTMDBMovies)
+    {
+        this.context.gettingTMDBMovies = true;
+        this.context.TMDBMovies = null;
+        api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
+        if(!api_key) {
+            throw new Error("You need to specify a TMDB API key.");
+        }
+        url = 'https://api.themoviedb.org/3/person/' + encodeURIComponent(person) +
+                  '?api_key=' + api_key +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.TMDBMovies = data;
+        });
+    }
+
+    if(this.context.TMDBMovies)
+    {
+        var data = this.context.TMDBMovies;
+        this.popContext();
+        this.pushContext('doYield');
+        if(data.status_code) {
+            throw new Error("TMDB API error: " + data.status_message);
+        }
+
+        return data.name;
     }
 
     this.pushContext('doYield');
@@ -1875,7 +2105,7 @@ SpriteMorph.prototype.convertToGraph = function() {
         loadGraphFromURL: {
             type: 'command',
             category: 'external',
-            spec: 'load graph from URL: %s'
+            spec: 'load graph from URL: %txt'
         },
         topologicalSort: {
             type: 'reporter',
@@ -1910,32 +2140,62 @@ SpriteMorph.prototype.convertToGraph = function() {
         getLastfmFriends: {
             type: 'reporter',
             category: 'external',
-            spec: 'friends of %s'
+            spec: 'friends of %txt'
         },
         getLastfmUserLovedTracks: {
             type: 'reporter',
             category: 'external',
-            spec: 'loved tracks of %s'
+            spec: 'loved tracks of %txt'
         },
         getWordNetNounHypernyms: {
             type: 'reporter',
             category: 'external',
-            spec: 'hypernyms of %s'
+            spec: 'hypernyms of %txt'
         },
         getWordNetNounHyponyms: {
             type: 'reporter',
             category: 'external',
-            spec: 'hyponyms of %s'
+            spec: 'hyponyms of %txt'
         },
         getWordNetSynsets: {
             type: 'reporter',
             category: 'external',
-            spec: 'synsets of %s'
+            spec: 'synsets of %txt'
         },
         getWordNetDefinition: {
             type: 'reporter',
             category: 'external',
-            spec: 'definition of %s'
+            spec: 'definition of %txt'
+        },
+        getTMDBMoviesByTitle: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'movie #s where title has %txt'
+        },
+        getTMDBPeopleByName: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'person #s where name has %txt'
+        },
+        getTMDBTitle: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'title of movie %n'
+        },
+        getTMDBCast: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'cast of movie %n'
+        },
+        getTMDBMoviesByPerson: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'movies with person %n'
+        },
+        getTMDBPersonName: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'name of person %n'
         },
         convertToDigraph: {
             type: 'command',
@@ -2320,6 +2580,36 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getWordNetNounHyponyms'));
             blocks.push(block('getWordNetSynsets'));
             blocks.push(block('getWordNetDefinition'));
+            blocks.push('-');
+            button = new PushButtonMorph(
+                null,
+                function () {
+                    new DialogBoxMorph(
+                        null,
+                        function receiveKey(key) {
+                            if(key) {
+                                myself.parentThatIsA(StageMorph).tmdbAPIkey = key;
+                            } else {
+                                new DialogBoxMorph(null, receiveKey)
+                                .prompt(
+                                    'API key',
+                                    myself.parentThatIsA(StageMorph).tmdbAPIkey || '',
+                                    myself.world());
+                            }
+                        }
+                    ).prompt('API key',
+                        myself.parentThatIsA(StageMorph).tmdbAPIkey || '',
+                        myself.world());
+                },
+                'Authenticate with TMDB'
+            );
+            blocks.push(button);
+            blocks.push(block('getTMDBMoviesByTitle'));
+            blocks.push(block('getTMDBPeopleByName'));
+            blocks.push(block('getTMDBTitle'));
+            blocks.push(block('getTMDBCast'));
+            blocks.push(block('getTMDBMoviesByPerson'));
+            blocks.push(block('getTMDBPersonName'));
         } else if (category === 'looks') {
             blocks.push(block('doSayFor'));
             blocks.push(block('bubble'));
