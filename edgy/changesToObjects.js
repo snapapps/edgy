@@ -23,36 +23,34 @@ var graphEl = d3.select(document.body)
     sliceStart,
     sliceRadius;
 
-// We want to forward mouse events to the Snap! canvas so context menus work.
-function forwardMouseEvent(e, target) {
-    var evtCopy;
-
-    if(target.ownerDocument.createEvent)
-    {
-        // For modern browsers.
-        evtCopy = target.ownerDocument.createEvent('MouseEvents');
-        evtCopy.initMouseEvent(e.type, e.bubbles, e.cancelable, e.view,
-            e.detail, e.pageX || e.layerX, e.pageY || e.layerY, e.clientX,
-            e.clientY, e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, e.button,
-            e.relatedTarget);
-        return !target.dispatchEvent(evtCopy);
+graphEl.on("mousedown", function() {
+    world.hand.processMouseDown(d3.event);
+    var morph = world.hand.morphAtPointer();
+    // If we've started dragging a Snap! element, don't propagate the
+    // mousedown to the graph display. (Elements being dragged are temporarily
+    // borrowed by HandMorph.)
+    //
+    // FIXME: there are some minor edge cases which will cause sudden panning
+    // if dragging a dialog box around the graph display (violently).
+    if(world.hand.children.length || !(morph instanceof StageMorph)) {
+        d3.event.stopPropagation();
+        d3.event.preventDefault();
     }
-    else if (target.ownerDocument.createEventObject) {
-        // For IE.
-        evtCopy = target.ownerDocument.createEventObject(e);
-        return target.fireEvent('on' + e, evtCopy);
+}).on("mousemove", function() {
+    world.hand.processMouseMove(d3.event);
+    var morph = world.hand.morphAtPointer();
+    // Don't pan the graph display if we're dragging something.
+    if(world.hand.children.length || !(morph instanceof StageMorph)) {
+        d3.event.stopPropagation();
+        d3.event.preventDefault();
     }
-}
+}).on("mouseup", function() {
+    world.hand.processMouseUp(d3.event);
+}).on("contextmenu", function() {
+    // Prevent the browser's context menu from coming up.
+    d3.event.preventDefault();
+});
 
-function mouseEventForwarder() {
-    forwardMouseEvent(d3.event, document.getElementById("world"));
-}
-
-graphEl.on("mousedown", mouseEventForwarder);
-graphEl.on("mouseup", mouseEventForwarder);
-graphEl.on("mousemove", mouseEventForwarder);
-// Prevent the browser's context menu from coming up.
-graphEl.on("contextmenu", function() { d3.event.preventDefault(); });
 
 // Monitor for new nodes and edges, and attach event handlers appropriately.
 graphEl.on("DOMNodeInserted", function() {
