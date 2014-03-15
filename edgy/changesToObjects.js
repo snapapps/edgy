@@ -34,7 +34,6 @@ graphEl.on("mousedown", function() {
     // if dragging a dialog box around the graph display (violently).
     if(world.hand.children.length || !(morph instanceof StageMorph)) {
         d3.event.stopPropagation();
-        d3.event.preventDefault();
     }
 }).on("mousemove", function() {
     world.hand.processMouseMove(d3.event);
@@ -42,7 +41,6 @@ graphEl.on("mousedown", function() {
     // Don't pan the graph display if we're dragging something.
     if(world.hand.children.length || !(morph instanceof StageMorph)) {
         d3.event.stopPropagation();
-        d3.event.preventDefault();
     }
 }).on("mouseup", function() {
     world.hand.processMouseUp(d3.event);
