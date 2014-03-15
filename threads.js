@@ -690,7 +690,14 @@ Process.prototype.handleError = function (error, element) {
             txt,
             this.topBlock.fontSize
         ));
-        errorMorph.add(element);
+
+        var img = element.fullImage();
+        var morphToShow = new Morph();
+        morphToShow.silentSetWidth(img.width);
+        morphToShow.silentSetHeight(img.height);
+        morphToShow.image = img;
+        errorMorph.add(morphToShow);
+
         errorMorph.drawNew();
         errorMorph.fixLayout();
         this.topBlock.showBubble(errorMorph);
