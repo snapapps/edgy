@@ -1503,6 +1503,33 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
     return new List(edgesArr.map(function(x) { return new List(x); }));
 };
 
+Process.prototype.doForEach = function(uv, list, body) {
+    if(!list.length() || !body)
+        return;
+
+    if(this.context.loopIdx === undefined) {
+        this.context.upvars = new UpvarReference(this.context.upvars);
+        this.context.loopIdx = 1;
+    } else if(this.context.loopIdx < list.length()) {
+        this.context.loopIdx++;
+    } else {
+        return;
+    }
+
+    this.context.outerContext.variables.addVar(uv, list.at(this.context.loopIdx));
+    this.context.upvars.addReference(
+        list.at(this.context.loopIdx),
+        this.context.inputs[0],
+        this.context.outerContext.variables
+    );
+
+    this.pushContext('doYield');
+    if (body) {
+        this.pushContext(body.blockSequence());
+    }
+    this.pushContext();
+}
+
 Process.prototype.getLastfmFriends = function(username) {
     var myself = this, url, api_key;
 
@@ -2202,6 +2229,12 @@ SpriteMorph.prototype.convertToGraph = function() {
             type: 'command',
             category: 'network',
             spec: 'convert to graph'
+        },
+        doForEach: {
+            type: 'command',
+            category: 'control',
+            spec: 'for each %upvar of %l %c',
+            defaults: ['item']
         }
     };
 
@@ -2623,6 +2656,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                 blocks.push(block('log'));
                 blocks.push(block('alert'));
             }
+        } else if (category === 'control') {
+            blocks = blocks.concat(oldBlockTemplates.call(this, category));
+            blocks.push(block('doForEach'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
