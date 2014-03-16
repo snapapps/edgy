@@ -1530,6 +1530,37 @@ Process.prototype.doForEach = function(uv, list, body) {
     this.pushContext();
 }
 
+Process.prototype.doNumericFor = function(uv, start, end, body) {
+    if(!body)
+        return;
+
+    if(this.context.loopIdx === undefined) {
+        this.context.upvars = new UpvarReference(this.context.upvars);
+        this.context.loopIdx = start;
+    } else if(this.context.loopIdx !== end) {
+        if(start < end) {
+            this.context.loopIdx++;
+        } else {
+            this.context.loopIdx--;
+        }
+    } else {
+        return;
+    }
+
+    this.context.outerContext.variables.addVar(uv, this.context.loopIdx);
+    this.context.upvars.addReference(
+        this.context.loopIdx,
+        this.context.inputs[0],
+        this.context.outerContext.variables
+    );
+
+    this.pushContext('doYield');
+    if (body) {
+        this.pushContext(body.blockSequence());
+    }
+    this.pushContext();
+}
+
 Process.prototype.getLastfmFriends = function(username) {
     var myself = this, url, api_key;
 
@@ -2235,6 +2266,12 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'control',
             spec: 'for each %upvar of %l %c',
             defaults: ['item']
+        },
+        doNumericFor: {
+            type: 'command',
+            category: 'control',
+            spec: 'for %upvar = %n to %n %c',
+            defaults: ['i', 1, 10]
         }
     };
 
@@ -2659,6 +2696,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         } else if (category === 'control') {
             blocks = blocks.concat(oldBlockTemplates.call(this, category));
             blocks.push(block('doForEach'));
+            blocks.push(block('doNumericFor'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
