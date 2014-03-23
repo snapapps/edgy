@@ -148,6 +148,7 @@ ThreadManager.prototype.startProcess = function (block, isThreadSafe) {
     top.addHighlight();
     newProc = new Process(block.topBlock());
     this.processes.push(newProc);
+    clickstream.log("startProcess", {blockId: block.topBlock().blockID});
     return newProc;
 };
 
@@ -158,6 +159,7 @@ ThreadManager.prototype.stopAll = function (excpt) {
             proc.stop();
         }
     });
+    clickstream.log("stopAll");
 };
 
 ThreadManager.prototype.stopAllForReceiver = function (rcvr, excpt) {
@@ -200,6 +202,7 @@ ThreadManager.prototype.resumeAll = function (stage) {
     if (stage) {
         stage.resumeAllActiveSounds();
     }
+    clickstream.log("resumeAll");
 };
 
 ThreadManager.prototype.step = function () {

@@ -4253,6 +4253,7 @@ StageMorph.prototype.fireGreenFlagEvent = function () {
     if (ide) {
         ide.controlBar.pauseButton.refresh();
     }
+    clickstream.log("fireGreenFlag");
     return procs;
 };
 
