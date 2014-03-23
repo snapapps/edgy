@@ -1575,7 +1575,7 @@ Process.prototype.getLastfmFriends = function(username) {
         url = 'http://ws.audioscrobbler.com/2.0/?method=user.getfriends' +
                   '&user=' + encodeURIComponent(username) +
                   '&api_key=' + api_key + '&format=json' +
-                  '&limit=5&callback={callback}';
+                  '&limit=50&callback={callback}';
         d3.jsonp(url, function(data) {
             myself.context.lastfmfriends = data;
         });
@@ -1615,7 +1615,7 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         url = 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks' +
                   '&user=' + encodeURIComponent(username) +
                   '&api_key=' + api_key + '&format=json' +
-                  '&limit=5&callback={callback}';
+                  '&limit=50&callback={callback}';
         d3.jsonp(url, function(data) {
             myself.context.lastfmfriends = data;
         });
