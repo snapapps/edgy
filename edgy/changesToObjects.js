@@ -1997,7 +1997,7 @@ CounterMorph.prototype.init = function (counter, parentCell) {
     var myself = this;
 
     this.counter = counter || new Map();
-    this.counterEntries = [e for(e of counter.entries())];
+    this.counterEntries = [].slice.call(counter.entries());
     this.start = 1;
     this.range = 100;
     this.lastUpdated = Date.now();
