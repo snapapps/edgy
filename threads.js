@@ -1257,6 +1257,14 @@ Process.prototype.doConcatToList = function (l, list) {
     list.contents = list.contents.concat(l.contents);
 };
 
+Process.prototype.getRandomFromList = function (l) {
+    var idx = Math.floor(Math.random() * l.length()) + 1;
+    // Handle any accidental mis-rounding; should be rare: "on the order of one
+    // in 2^62" according to
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random)
+    return l.at(Math.min(idx, l.length()));
+}
+
 Process.prototype.doListJoin = function (a, b) {
     a.becomeArray();
     b.becomeArray();

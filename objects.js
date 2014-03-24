@@ -1077,6 +1077,11 @@ SpriteMorph.prototype.initBlocks = function () {
             spec: 'replace item %idx of %l with %s',
             defaults: [1, null, localize('thing')]
         },
+        getRandomFromList: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'random item from %l'
+        },
 
         // MAP - experimental
         reportMap: {
@@ -1918,6 +1923,8 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push('-');
         blocks.push(block('doConcatToList'));
         blocks.push(block('doListJoin'));
+        blocks.push('-');
+        blocks.push(block('getRandomFromList'));
 
     // for debugging: ///////////////
 
@@ -4642,6 +4649,8 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push('-');
         blocks.push(block('doConcatToList'));
         blocks.push(block('doListJoin'));
+        blocks.push('-');
+        blocks.push(block('getRandomFromList'));
 
 
     // for debugging: ///////////////
