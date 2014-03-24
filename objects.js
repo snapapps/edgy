@@ -1912,11 +1912,12 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportListContainsItem'));
         blocks.push('-');
         blocks.push(block('doAddToList'));
-        blocks.push(block('doConcatToList'));
-        blocks.push(block('doListJoin'));
         blocks.push(block('doDeleteFromList'));
         blocks.push(block('doInsertInList'));
         blocks.push(block('doReplaceInList'));
+        blocks.push('-');
+        blocks.push(block('doConcatToList'));
+        blocks.push(block('doListJoin'));
 
     // for debugging: ///////////////
 
@@ -4635,11 +4636,13 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportListContainsItem'));
         blocks.push('-');
         blocks.push(block('doAddToList'));
-        blocks.push(block('doConcatToList'));
-        blocks.push(block('doListJoin'));
         blocks.push(block('doDeleteFromList'));
         blocks.push(block('doInsertInList'));
         blocks.push(block('doReplaceInList'));
+        blocks.push('-');
+        blocks.push(block('doConcatToList'));
+        blocks.push(block('doListJoin'));
+
 
     // for debugging: ///////////////
 
