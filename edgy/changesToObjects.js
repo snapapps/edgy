@@ -192,6 +192,7 @@ var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
     EDGE_WIDTH_FACTOR = 8,
+    DEFAULT_LINK_DISTANCE = 60,
     LAYOUT_OPTS = {
         layout: function () {
 			return edgyLayoutAlgorithm();  /* See changesToGui.js... change it if you want! */
@@ -204,11 +205,11 @@ var DEFAULT_NODE_COLOR = "white",
 				if (!d)
 				{
 					//WebCOLA does not support different link-distances for different nodes.
-					return 60;
+					return DEFAULT_LINK_DISTANCE;
 				}
                 var sr = d.source.data.scale || 1,
                     tr = d.target.data.scale || 1;
-                return 60 + (sr + tr);
+                return DEFAULT_LINK_DISTANCE + (sr + tr);
             },
             charge: function(d) {
                 var r = (d.data.scale || 1) * 8;
