@@ -1246,6 +1246,20 @@ SpriteMorph.prototype.isCyclic = function() {
     }
 };
 
+SpriteMorph.prototype.getMatrixEntry = function(a, b) {
+    a = parseNode(a);
+    b = parseNode(b);
+    if(this.G.has_edge(a, b)) {
+        if(a === b && !this.G.is_directed()) {
+            return 2;
+        } else {
+            return 1;
+        }
+    } else {
+        return 0;
+    }
+};
+
 SpriteMorph.prototype.isEmpty = function() {
     return this.G.number_of_nodes() === 0;
 };
@@ -2102,6 +2116,11 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'edges',
             spec: 'incoming edges of %s'
         },
+        getMatrixEntry: {
+            type: 'reporter',
+            category: 'network',
+            spec: 'adjacency matrix entry %s , %s'
+        },
         isEmpty: {
             type: 'predicate',
             category: 'network',
@@ -2417,6 +2436,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setActiveGraph'));
             blocks.push(block('showGraphSlice'));
             blocks.push(block('hideActiveGraph'));
+            blocks.push('-');
+            blocks.push(block('getMatrixEntry'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
             blocks.push(block('isCyclic'));
