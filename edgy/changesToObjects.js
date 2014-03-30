@@ -382,7 +382,7 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             myself = this,
             world = this.world();
 
-        if(!currentGraph.parent_graph) {
+        if(!currentGraph.parent_graph && !hiddenCurrentGraph && currentGraphSprite) {
             menu.addItem("add node", function () {
                 new DialogBoxMorph(null, function (name) {
                     currentGraph.add_node(parseNode(name));
