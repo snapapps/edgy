@@ -1544,6 +1544,9 @@ Process.prototype.doNumericFor = function(uv, start, end, body) {
     if(!body)
         return;
 
+    start = parseInt(start, 10);
+    end = parseInt(end, 10);
+
     if(this.context.loopIdx === undefined) {
         this.context.upvars = new UpvarReference(this.context.upvars);
         this.context.loopIdx = start;
