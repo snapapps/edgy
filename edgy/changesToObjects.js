@@ -737,19 +737,11 @@ function parseNode(node) {
 // Graph block bindings
 
 SpriteMorph.prototype.newGraph = function() {
-    var oldGraph = this.G;
-    this.G = jsnx.Graph();
-    if(currentGraph === oldGraph) {
-        this.setActiveGraph();
-    }
+    this.setGraph(jsnx.Graph());
 };
 
 SpriteMorph.prototype.newDiGraph = function() {
-    var oldGraph = this.G;
-    this.G = jsnx.DiGraph();
-    if(currentGraph === oldGraph) {
-        this.setActiveGraph();
-    }
+    this.setGraph(jsnx.DiGraph());
 };
 
 function formatTooManyNodesMessage(n, max) {
