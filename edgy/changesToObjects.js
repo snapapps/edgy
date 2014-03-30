@@ -834,7 +834,7 @@ function justHideGraph() {
 }
 
 SpriteMorph.prototype.isActiveGraph = function() {
-    return currentGraph === this.G || currentGraph.parent_graph === this.G;
+    return currentGraph === this.G || currentGraph.parent_graph === this.G || hiddenCurrentGraph === this.G;
 };
 
 SpriteMorph.prototype.hideActiveGraph = function() {
