@@ -16,7 +16,7 @@ var graphEl = d3.select(document.body)
                 'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
     currentGraphSprite = null,
-    oldCurrentGraph = null, // Last graph hidden.
+    hiddenCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
     costumeIdMap = {},
     numEdgePatterns = 0,
@@ -343,6 +343,9 @@ function setGraphToDisplay (G) {
     if(currentGraph) {
         jsnx.unbind(currentGraph, true);
     }
+    if(hiddenCurrentGraph) {
+        jsnx.unbind(hiddenCurrentGraph, true);
+    }
     if(layout) {
         layout.stop();
     }
@@ -616,16 +619,16 @@ SpriteMorph.prototype.loadCostumesAsPatterns = function() {
 }
 
 StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNodesChanged = function(num) {
-    if(oldCurrentGraph &&
-       num >= oldCurrentGraph.number_of_nodes()) {
+    if(hiddenCurrentGraph &&
+       num >= hiddenCurrentGraph.number_of_nodes()) {
         try {
-            this.setGraphToDisplay2(oldCurrentGraph);
+            this.setGraphToDisplay2(hiddenCurrentGraph);
         } catch(e) {
             this.parentThatIsA(IDE_Morph).showMessage(e.message);
         }
-        oldCurrentGraph = null;
+        hiddenCurrentGraph = null;
     } else if (currentGraph.number_of_nodes() > num) {
-        oldCurrentGraph = currentGraph;
+        hiddenCurrentGraph = currentGraph;
         justHideGraph();
     }
 }
@@ -765,9 +768,9 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
     if(G.number_of_nodes() <= maxVisibleNodes) {
         setGraphToDisplay(G);
         currentGraphSprite = this;
-        oldCurrentGraph = null;
+        hiddenCurrentGraph = null;
     } else {
-        oldCurrentGraph = G;
+        hiddenCurrentGraph = G;
         var msg = formatTooManyNodesMessage(G.number_of_nodes(), maxVisibleNodes);
         if(ide) {
             throw new Error(msg);
@@ -860,7 +863,7 @@ SpriteMorph.prototype.addNode = function(nodes) {
         totalNodes = this.G.number_of_nodes() + nodes.length();
     if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
         // Too many nodes. Hide the graph and throw up a message.
-        oldCurrentGraph = this.G;
+        hiddenCurrentGraph = this.G;
         this.hideActiveGraph();
         ide.showMessage(formatTooManyNodesMessage(totalNodes,
                                                   ide.maxVisibleNodes));
@@ -1296,7 +1299,7 @@ SpriteMorph.prototype.renumberAndAdd = function(other, startNum) {
         totalNodes = this.G.number_of_nodes() + other.number_of_nodes();
     if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
         // Too many nodes. Hide the graph and throw up a message.
-        oldCurrentGraph = this.G;
+        hiddenCurrentGraph = this.G;
         this.hideActiveGraph();
         ide.showMessage(formatTooManyNodesMessage(totalNodes,
                                                   ide.maxVisibleNodes));
