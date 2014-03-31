@@ -1544,6 +1544,13 @@ Process.prototype.doNumericFor = function(uv, start, end, body) {
     if(!body)
         return;
 
+    if(!isNumeric(start)) {
+        throw new Error("start '"+ start.toString() +"' is not a number");
+    }
+    if(!isNumeric(end)) {
+        throw new Error("end '"+ end.toString() +"' is not a number");
+    }
+
     start = parseInt(start, 10);
     end = parseInt(end, 10);
 
