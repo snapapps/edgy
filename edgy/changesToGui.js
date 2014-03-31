@@ -188,4 +188,16 @@ IDE_Morph.prototype.toggleUseWebCola = function () {
     redrawGraph();
 }
 
+IDE_Morph.prototype.toggleUseManualLayout = function () {
+    if(this.useManualLayout) {
+        jsnx.forEach(this.currentSprite.G.nodes_iter(true), function(node) {
+            node[1].__d3datum__.fixed = false;
+        });
+        this.useManualLayout = false;
+        this.currentSprite.resumeLayout();
+    } else {
+        this.useManualLayout = true;
+    }
+}
+
 }());

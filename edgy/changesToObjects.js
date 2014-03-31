@@ -55,10 +55,10 @@ graphEl.on("DOMNodeInserted", function() {
     var node = d3.select(d3.event.relatedNode);
     if(node.classed("node")) {
         node.on("mouseup", function() {
+            var d = node.datum();
             if(d3.event.ctrlKey || d3.event.button === 2)
             {
                 var menu = new MenuMorph(this);
-                var d = node.datum();
 
                 if(!d.G.parent_graph) {
                     menu.addItem('delete', function () {
@@ -88,6 +88,16 @@ graphEl.on("DOMNodeInserted", function() {
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
+            } else {
+                // Layout uses the fixed attribute for other things during
+                // dragging, so it would get overwritten if we tried to set it
+                // immediately. Wait until the layout is done dealing with
+                // the dragging before fixing the node position.
+                if(currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout) {
+                    setTimeout(function() {
+                        d.fixed = true;
+                    }, 0);
+                }
             }
         }).on("dblclick", function() {
             if(d3.event.button === 0) {
@@ -844,6 +854,12 @@ SpriteMorph.prototype.isActiveGraph = function() {
     return currentGraph === this.G || currentGraph.parent_graph === this.G || hiddenCurrentGraph === this.G;
 };
 
+SpriteMorph.prototype.resumeLayout = function() {
+    if(this.isActiveGraph()) {
+        layout.resume();
+    }
+}
+
 SpriteMorph.prototype.hideActiveGraph = function() {
     if(this.isActiveGraph()) {
         justHideGraph();
@@ -1031,6 +1047,7 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
         }
     }
 };
+
 
 SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
     // NB: Due to InputSlotMorph not having support for multiple dropdown

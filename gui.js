@@ -2071,6 +2071,14 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check to use the WebCOLA\ngraph layout algorithm',
         false
     );
+    addPreference(
+        'Use manual layout',
+        'toggleUseManualLayout',
+        this.useManualLayout,
+        'uncheck to lay out all nodes automatically',
+        'check to lock node positions after dragging',
+        false
+    );
     menu.addLine();
     menu.addItem('Language...', 'languageMenu');
     menu.addItem(
