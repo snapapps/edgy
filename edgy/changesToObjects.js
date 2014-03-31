@@ -89,6 +89,21 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.popUpAtHand(world);
             }
+        }).on("dblclick", function() {
+            if(d3.event.button === 0) {
+                var hats = currentGraphSprite.scripts.children.filter(function (morph) {
+                    return morph.selector === 'receiveNodeClick';
+                });
+                hats.forEach(function (block) {
+                    var stage = currentGraphSprite.parentThatIsA(StageMorph);
+                    var proc = stage.threads.startProcess(block, stage.isThreadSafe);
+                    proc.pushContext('doYield');
+                    var uv = block.inputs()[0].evaluate();
+                    // console.log(proc, uv);
+                    proc.context.outerContext.variables.addVar(uv, node.datum().node);
+                });
+                d3.event.stopPropagation();
+            }
         });
     } else if(node.classed("edge")) {
         node.on("mouseup", function() {
@@ -1544,6 +1559,13 @@ Process.prototype.doNumericFor = function(uv, start, end, body) {
     if(!body)
         return;
 
+    if(!isNumeric(start)) {
+        throw new Error("start '"+ start.toString() +"' is not a number");
+    }
+    if(!isNumeric(end)) {
+        throw new Error("end '"+ end.toString() +"' is not a number");
+    }
+
     start = parseInt(start, 10);
     end = parseInt(end, 10);
 
@@ -2290,6 +2312,12 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'control',
             spec: 'for %upvar = %n to %n %c',
             defaults: ['i', 1, 10]
+        },
+        receiveNodeClick: {
+            type: 'hat',
+            category: 'control',
+            spec: 'when node %upvar double-clicked',
+            defaults: ['node']
         }
     };
 
@@ -2717,6 +2745,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks = blocks.concat(oldBlockTemplates.call(this, category));
             blocks.push(block('doForEach'));
             blocks.push(block('doNumericFor'));
+            blocks.push('-');
+            blocks.push(block('receiveNodeClick'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
