@@ -8,20 +8,20 @@ var edgyLayoutAlgorithm = cola.d3adaptor;
 "use strict";
 
 IDE_Morph.prototype.init = (function init (oldInit) {
-	return function(isAutoFill) {
-		var retval = oldInit.call(this, isAutoFill);
-		this.currentCategory = 'network';
-		this.maxVisibleNodes = DEFAULT_MAX_VISIBLE_NODES;
-		return retval;
-	}
+    return function(isAutoFill) {
+        var retval = oldInit.call(this, isAutoFill);
+        this.currentCategory = 'network';
+        this.maxVisibleNodes = DEFAULT_MAX_VISIBLE_NODES;
+        return retval;
+    }
 }(IDE_Morph.prototype.init));
 
 IDE_Morph.prototype.createCorralBar = (function createCorralBar (oldCreateCorralBar) {
-	return function () {
-		var retval = oldCreateCorralBar.call(this);
-		this.corralBar.children[0].hint = "add a new graph"
-		return retval;
-	}
+    return function () {
+        var retval = oldCreateCorralBar.call(this);
+        this.corralBar.children[0].hint = "add a new graph"
+        return retval;
+    }
 }(IDE_Morph.prototype.createCorralBar));
 
 IDE_Morph.prototype.setMaxVisibleNodes = function () {
@@ -177,15 +177,15 @@ IDE_Morph.prototype.exportToZIP = function () {
 }
 
 IDE_Morph.prototype.toggleUseWebCola = function () {
-	if (edgyLayoutAlgorithm == d3.layout.force)
-	{
-		edgyLayoutAlgorithm = cola.d3adaptor;
-	}
-	else
-	{
-		edgyLayoutAlgorithm = d3.layout.force;
-	}
-	redrawGraph();
+    if (edgyLayoutAlgorithm == d3.layout.force)
+    {
+        edgyLayoutAlgorithm = cola.d3adaptor;
+    }
+    else
+    {
+        edgyLayoutAlgorithm = d3.layout.force;
+    }
+    redrawGraph();
 }
 
 }());
