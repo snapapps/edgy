@@ -148,6 +148,7 @@ ThreadManager.prototype.startProcess = function (block, isThreadSafe) {
     top.addHighlight();
     newProc = new Process(block.topBlock());
     this.processes.push(newProc);
+    clickstream.log("startProcess", {blockId: block.topBlock().blockID});
     return newProc;
 };
 
@@ -158,6 +159,7 @@ ThreadManager.prototype.stopAll = function (excpt) {
             proc.stop();
         }
     });
+    clickstream.log("stopAll");
 };
 
 ThreadManager.prototype.stopAllForReceiver = function (rcvr, excpt) {
@@ -200,6 +202,7 @@ ThreadManager.prototype.resumeAll = function (stage) {
     if (stage) {
         stage.resumeAllActiveSounds();
     }
+    clickstream.log("resumeAll");
 };
 
 ThreadManager.prototype.step = function () {
@@ -1253,6 +1256,14 @@ Process.prototype.doConcatToList = function (l, list) {
     l.becomeArray();
     list.contents = list.contents.concat(l.contents);
 };
+
+Process.prototype.getRandomFromList = function (l) {
+    var idx = Math.floor(Math.random() * l.length()) + 1;
+    // Handle any accidental mis-rounding; should be rare: "on the order of one
+    // in 2^62" according to
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random)
+    return l.at(Math.min(idx, l.length()));
+}
 
 Process.prototype.doListJoin = function (a, b) {
     a.becomeArray();

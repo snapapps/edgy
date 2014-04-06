@@ -16,7 +16,7 @@ var graphEl = d3.select(document.body)
                 'user-select': 'none'}),
     currentGraph = null, // The current JSNetworkX graph to display.
     currentGraphSprite = null,
-    oldCurrentGraph = null, // Last graph hidden.
+    hiddenCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
     costumeIdMap = {},
     numEdgePatterns = 0,
@@ -55,10 +55,10 @@ graphEl.on("DOMNodeInserted", function() {
     var node = d3.select(d3.event.relatedNode);
     if(node.classed("node")) {
         node.on("mouseup", function() {
+            var d = node.datum();
             if(d3.event.ctrlKey || d3.event.button === 2)
             {
                 var menu = new MenuMorph(this);
-                var d = node.datum();
 
                 if(!d.G.parent_graph) {
                     menu.addItem('delete', function () {
@@ -88,6 +88,31 @@ graphEl.on("DOMNodeInserted", function() {
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
+            } else {
+                // Layout uses the fixed attribute for other things during
+                // dragging, so it would get overwritten if we tried to set it
+                // immediately. Wait until the layout is done dealing with
+                // the dragging before fixing the node position.
+                if(currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout) {
+                    setTimeout(function() {
+                        d.fixed = true;
+                    }, 0);
+            }
+            }
+        }).on("dblclick", function() {
+            if(d3.event.button === 0) {
+                var hats = currentGraphSprite.scripts.children.filter(function (morph) {
+                    return morph.selector === 'receiveNodeClick';
+        });
+                hats.forEach(function (block) {
+                    var stage = currentGraphSprite.parentThatIsA(StageMorph);
+                    var proc = stage.threads.startProcess(block, stage.isThreadSafe);
+                    proc.pushContext('doYield');
+                    var uv = block.inputs()[0].evaluate();
+                    // console.log(proc, uv);
+                    proc.context.outerContext.variables.addVar(uv, node.datum().node);
+                });
+                d3.event.stopPropagation();
             }
         });
     } else if(node.classed("edge")) {
@@ -192,6 +217,7 @@ var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
     EDGE_WIDTH_FACTOR = 8,
+    DEFAULT_LINK_DISTANCE = 60,
     LAYOUT_OPTS = {
         layout: function () {
 			return edgyLayoutAlgorithm();  /* See changesToGui.js... change it if you want! */
@@ -204,11 +230,11 @@ var DEFAULT_NODE_COLOR = "white",
 				if (!d)
 				{
 					//WebCOLA does not support different link-distances for different nodes.
-					return 60;
+					return DEFAULT_LINK_DISTANCE;
 				}
                 var sr = d.source.data.scale || 1,
                     tr = d.target.data.scale || 1;
-                return 60 + (sr + tr);
+                return DEFAULT_LINK_DISTANCE + (sr + tr);
             },
             charge: function(d) {
                 var r = (d.data.scale || 1) * 8;
@@ -342,6 +368,9 @@ function setGraphToDisplay (G) {
     if(currentGraph) {
         jsnx.unbind(currentGraph, true);
     }
+    if(hiddenCurrentGraph) {
+        jsnx.unbind(hiddenCurrentGraph, true);
+    }
     if(layout) {
         layout.stop();
     }
@@ -378,7 +407,7 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             myself = this,
             world = this.world();
 
-        if(!currentGraph.parent_graph) {
+        if(!currentGraph.parent_graph && !hiddenCurrentGraph && currentGraphSprite) {
             menu.addItem("add node", function () {
                 new DialogBoxMorph(null, function (name) {
                     currentGraph.add_node(parseNode(name));
@@ -615,16 +644,16 @@ SpriteMorph.prototype.loadCostumesAsPatterns = function() {
 }
 
 StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNodesChanged = function(num) {
-    if(oldCurrentGraph &&
-       num >= oldCurrentGraph.number_of_nodes()) {
+    if(hiddenCurrentGraph &&
+       num >= hiddenCurrentGraph.number_of_nodes()) {
         try {
-            this.setGraphToDisplay2(oldCurrentGraph);
+            this.setGraphToDisplay2(hiddenCurrentGraph);
         } catch(e) {
             this.parentThatIsA(IDE_Morph).showMessage(e.message);
         }
-        oldCurrentGraph = null;
+        hiddenCurrentGraph = null;
     } else if (currentGraph.number_of_nodes() > num) {
-        oldCurrentGraph = currentGraph;
+        hiddenCurrentGraph = currentGraph;
         justHideGraph();
     }
 }
@@ -733,19 +762,11 @@ function parseNode(node) {
 // Graph block bindings
 
 SpriteMorph.prototype.newGraph = function() {
-    var oldGraph = this.G;
-    this.G = jsnx.Graph();
-    if(currentGraph === oldGraph) {
-        this.setActiveGraph();
-    }
+    this.setGraph(jsnx.Graph());
 };
 
 SpriteMorph.prototype.newDiGraph = function() {
-    var oldGraph = this.G;
-    this.G = jsnx.DiGraph();
-    if(currentGraph === oldGraph) {
-        this.setActiveGraph();
-    }
+    this.setGraph(jsnx.DiGraph());
 };
 
 function formatTooManyNodesMessage(n, max) {
@@ -764,9 +785,9 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
     if(G.number_of_nodes() <= maxVisibleNodes) {
         setGraphToDisplay(G);
         currentGraphSprite = this;
-        oldCurrentGraph = null;
+        hiddenCurrentGraph = null;
     } else {
-        oldCurrentGraph = G;
+        hiddenCurrentGraph = G;
         var msg = formatTooManyNodesMessage(G.number_of_nodes(), maxVisibleNodes);
         if(ide) {
             throw new Error(msg);
@@ -830,8 +851,14 @@ function justHideGraph() {
 }
 
 SpriteMorph.prototype.isActiveGraph = function() {
-    return currentGraph === this.G || currentGraph.parent_graph === this.G;
+    return currentGraph === this.G || currentGraph.parent_graph === this.G || hiddenCurrentGraph === this.G;
 };
+
+SpriteMorph.prototype.resumeLayout = function() {
+    if(this.isActiveGraph()) {
+        layout.resume();
+    }
+}
 
 SpriteMorph.prototype.hideActiveGraph = function() {
     if(this.isActiveGraph()) {
@@ -859,7 +886,7 @@ SpriteMorph.prototype.addNode = function(nodes) {
         totalNodes = this.G.number_of_nodes() + nodes.length();
     if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
         // Too many nodes. Hide the graph and throw up a message.
-        oldCurrentGraph = this.G;
+        hiddenCurrentGraph = this.G;
         this.hideActiveGraph();
         ide.showMessage(formatTooManyNodesMessage(totalNodes,
                                                   ide.maxVisibleNodes));
@@ -1020,6 +1047,7 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
     }
     }
 };
+
 
 SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
     // NB: Due to InputSlotMorph not having support for multiple dropdown
@@ -1250,6 +1278,20 @@ SpriteMorph.prototype.isCyclic = function() {
     }
 };
 
+SpriteMorph.prototype.getMatrixEntry = function(a, b) {
+    a = parseNode(a);
+    b = parseNode(b);
+    if(this.G.has_edge(a, b)) {
+        if(a === b && !this.G.is_directed()) {
+            return 2;
+        } else {
+            return 1;
+        }
+    } else {
+        return 0;
+    }
+};
+
 SpriteMorph.prototype.isEmpty = function() {
     return this.G.number_of_nodes() === 0;
 };
@@ -1295,7 +1337,7 @@ SpriteMorph.prototype.renumberAndAdd = function(other, startNum) {
         totalNodes = this.G.number_of_nodes() + other.number_of_nodes();
     if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
         // Too many nodes. Hide the graph and throw up a message.
-        oldCurrentGraph = this.G;
+        hiddenCurrentGraph = this.G;
         this.hideActiveGraph();
         ide.showMessage(formatTooManyNodesMessage(totalNodes,
                                                   ide.maxVisibleNodes));
@@ -1534,6 +1576,16 @@ Process.prototype.doNumericFor = function(uv, start, end, body) {
     if(!body)
         return;
 
+    if(!isNumeric(start)) {
+        throw new Error("start '"+ start.toString() +"' is not a number");
+    }
+    if(!isNumeric(end)) {
+        throw new Error("end '"+ end.toString() +"' is not a number");
+    }
+
+    start = parseInt(start, 10);
+    end = parseInt(end, 10);
+
     if(this.context.loopIdx === undefined) {
         this.context.upvars = new UpvarReference(this.context.upvars);
         this.context.loopIdx = start;
@@ -1575,7 +1627,7 @@ Process.prototype.getLastfmFriends = function(username) {
         url = 'http://ws.audioscrobbler.com/2.0/?method=user.getfriends' +
                   '&user=' + encodeURIComponent(username) +
                   '&api_key=' + api_key + '&format=json' +
-                  '&limit=5&callback={callback}';
+                  '&limit=50&callback={callback}';
         d3.jsonp(url, function(data) {
             myself.context.lastfmfriends = data;
         });
@@ -1615,7 +1667,7 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         url = 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks' +
                   '&user=' + encodeURIComponent(username) +
                   '&api_key=' + api_key + '&format=json' +
-                  '&limit=5&callback={callback}';
+                  '&limit=50&callback={callback}';
         d3.jsonp(url, function(data) {
             myself.context.lastfmfriends = data;
         });
@@ -2542,6 +2594,11 @@ User Menu
             category: 'edges',
             spec: 'incoming edges of %s'
         },
+        getMatrixEntry: {
+            type: 'reporter',
+            category: 'network',
+            spec: 'adjacency matrix entry %s , %s'
+        },
         isEmpty: {
             type: 'predicate',
             category: 'network',
@@ -2708,6 +2765,12 @@ User Menu
             category: 'control',
             spec: 'for %upvar = %n to %n %c',
             defaults: ['i', 1, 10]
+        },
+        receiveNodeClick: {
+            type: 'hat',
+            category: 'control',
+            spec: 'when node %upvar double-clicked',
+            defaults: ['node']
         }
     };
 
@@ -2888,6 +2951,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setActiveGraph'));
             blocks.push(block('showGraphSlice'));
             blocks.push(block('hideActiveGraph'));
+            blocks.push('-');
+            blocks.push(block('getMatrixEntry'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
             blocks.push(block('isCyclic'));
@@ -3164,6 +3229,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks = blocks.concat(oldBlockTemplates.call(this, category));
             blocks.push(block('doForEach'));
             blocks.push(block('doNumericFor'));
+            blocks.push('-');
+            blocks.push(block('receiveNodeClick'));
         } else if (category === 'counter') {
             blocks.push(block('reportNewCounter'));
             blocks.push(block('reportCounterCount'));

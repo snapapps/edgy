@@ -1077,6 +1077,11 @@ SpriteMorph.prototype.initBlocks = function () {
             spec: 'replace item %idx of %l with %s',
             defaults: [1, null, localize('thing')]
         },
+        getRandomFromList: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'random item from %l'
+        },
 
         // MAP - experimental
         reportMap: {
@@ -1912,11 +1917,14 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportListContainsItem'));
         blocks.push('-');
         blocks.push(block('doAddToList'));
-        blocks.push(block('doConcatToList'));
-        blocks.push(block('doListJoin'));
         blocks.push(block('doDeleteFromList'));
         blocks.push(block('doInsertInList'));
         blocks.push(block('doReplaceInList'));
+        blocks.push('-');
+        blocks.push(block('doConcatToList'));
+        blocks.push(block('doListJoin'));
+        blocks.push('-');
+        blocks.push(block('getRandomFromList'));
 
     // for debugging: ///////////////
 
@@ -4253,6 +4261,7 @@ StageMorph.prototype.fireGreenFlagEvent = function () {
     if (ide) {
         ide.controlBar.pauseButton.refresh();
     }
+    clickstream.log("fireGreenFlag");
     return procs;
 };
 
@@ -4634,11 +4643,15 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportListContainsItem'));
         blocks.push('-');
         blocks.push(block('doAddToList'));
-        blocks.push(block('doConcatToList'));
-        blocks.push(block('doListJoin'));
         blocks.push(block('doDeleteFromList'));
         blocks.push(block('doInsertInList'));
         blocks.push(block('doReplaceInList'));
+        blocks.push('-');
+        blocks.push(block('doConcatToList'));
+        blocks.push(block('doListJoin'));
+        blocks.push('-');
+        blocks.push(block('getRandomFromList'));
+
 
     // for debugging: ///////////////
 
