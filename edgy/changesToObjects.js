@@ -1282,11 +1282,7 @@ SpriteMorph.prototype.getMatrixEntry = function(a, b) {
     a = parseNode(a);
     b = parseNode(b);
     if(this.G.has_edge(a, b)) {
-        if(a === b && !this.G.is_directed()) {
-            return 2;
-        } else {
-            return 1;
-        }
+        return 1;
     } else {
         return 0;
     }
