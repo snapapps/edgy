@@ -1288,6 +1288,17 @@ SpriteMorph.prototype.getMatrixEntry = function(a, b) {
     }
 };
 
+SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
+    var edge = new List([a, b]);
+    a = parseNode(a);
+    b = parseNode(b);
+    if(this.G.has_edge(a, b)) {
+        return this.getEdgeAttrib(weightKey, edge);
+    } else {
+        return Infinity;
+    }
+};
+
 SpriteMorph.prototype.isEmpty = function() {
     return this.G.number_of_nodes() === 0;
 };
@@ -2159,6 +2170,11 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'network',
             spec: 'adj %s , %s'
         },
+        getMatrixEntryWeighted: {
+            type: 'reporter',
+            category: 'network',
+            spec: 'adj %s , %s %edgeAttr'
+        },
         isEmpty: {
             type: 'predicate',
             category: 'network',
@@ -2482,6 +2498,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('hideActiveGraph'));
             blocks.push('-');
             blocks.push(block('getMatrixEntry'));
+            blocks.push(block('getMatrixEntryWeighted'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
             blocks.push(block('isCyclic'));
