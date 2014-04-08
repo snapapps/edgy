@@ -2157,7 +2157,7 @@ SpriteMorph.prototype.convertToGraph = function() {
         getMatrixEntry: {
             type: 'reporter',
             category: 'network',
-            spec: 'adjacency matrix entry %s , %s'
+            spec: 'adj %s , %s'
         },
         isEmpty: {
             type: 'predicate',
