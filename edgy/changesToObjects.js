@@ -1288,6 +1288,15 @@ SpriteMorph.prototype.getMatrixEntry = function(a, b) {
     }
 };
 
+SpriteMorph.prototype.setMatrixEntry = function(a, b, val) {
+    var edge = new List([a, b]);
+    if(val) {
+        this.addEdge(new List([edge]));
+    } else {
+        this.removeEdge(edge);
+    }
+};
+
 SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
     var edge = new List([a, b]);
     a = parseNode(a);
@@ -1296,6 +1305,16 @@ SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
         return this.getEdgeAttrib(weightKey, edge);
     } else {
         return Infinity;
+    }
+};
+
+SpriteMorph.prototype.setMatrixEntryWeighted = function(a, b, weightKey, val) {
+    var edge = new List([a, b]);
+    if(isFinite(val)) {
+        this.addEdge(new List([edge]));
+        this.setEdgeAttrib(weightKey, edge, val);
+    } else {
+        this.removeEdge(edge);
     }
 };
 
@@ -2170,10 +2189,20 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'network',
             spec: 'adj %s , %s'
         },
+        setMatrixEntry: {
+            type: 'command',
+            category: 'network',
+            spec: 'set adj %s , %s to %n'
+        },
         getMatrixEntryWeighted: {
             type: 'reporter',
             category: 'network',
             spec: 'adj %s , %s %edgeAttr'
+        },
+        setMatrixEntryWeighted: {
+            type: 'command',
+            category: 'network',
+            spec: 'set adj %s , %s %edgeAttr to %n'
         },
         isEmpty: {
             type: 'predicate',
@@ -2498,7 +2527,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('hideActiveGraph'));
             blocks.push('-');
             blocks.push(block('getMatrixEntry'));
+            blocks.push(block('setMatrixEntry'));
             blocks.push(block('getMatrixEntryWeighted'));
+            blocks.push(block('setMatrixEntryWeighted'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
             blocks.push(block('isCyclic'));
