@@ -200,4 +200,9 @@ IDE_Morph.prototype.toggleUseManualLayout = function () {
     }
 }
 
+IDE_Morph.prototype.toggleWebColaDownwardEdgeConstraint = function () {
+    this.useDownwardEdgeConstraint = !this.useDownwardEdgeConstraint;
+    redrawGraph();
+}
+
 }());
