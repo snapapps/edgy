@@ -4,6 +4,7 @@
 window.ClickstreamLogger = Class.extend({
 	init: function(user) {
 		this.user = user;
+		this.logVersion = "0.1";
 		this.events = [];
 		this.timeBase = new Date().getTime();
 
