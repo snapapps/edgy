@@ -530,7 +530,7 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
 }());
 
 /**
-Stack, head is the first entry of the list.
+Stack, head is the first entry of the list, as in usual stack implementations.
 */
 
 SpriteMorph.prototype.reportNewStack = function(elements) {
@@ -601,6 +601,77 @@ SpriteMorph.prototype.isStackEmpty = function (list) {
 }());
 
 /**
+Queue, head is the first entry of the list.
+*/
+
+SpriteMorph.prototype.reportNewQueue = function(elements) {
+    return elements;
+};
+
+SpriteMorph.prototype.reportQueueTop = function(list) {
+    return list.at(1);
+};
+
+SpriteMorph.prototype.reportQueueLength = function (list) {
+    return list.length();
+};
+
+SpriteMorph.prototype.pushQueue = function (element, list) {
+    list.add(element);
+};
+
+SpriteMorph.prototype.popQueue = function (list) {
+    // Don't return anything, as snap does not support reporting and returning at the same time.
+    list.remove(1);
+};
+
+SpriteMorph.prototype.isQueueEmpty = function (list) {
+    return list.length() === 0;
+};
+
+(function() {
+    var blocks = {
+        reportNewQueue: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'queue %exp',
+        },
+        reportQueueTop: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'top of queue %l',
+        },
+        reportQueueLength: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'length of queue %l',
+        },
+        pushQueue: {
+            type: 'command',
+            category: 'lists',
+            spec: 'push %s to queue %l',
+        },
+        popQueue: {
+            type: 'command',
+            category: 'lists',
+            spec: 'pop from queue %l',
+        },
+        isQueueEmpty: {
+            type: 'predicate',
+            category: 'lists',
+            spec: 'is queue %l empty',
+        },
+    };
+
+    // Add the new blocks.
+    for (var blockName in blocks) {
+        if(blocks.hasOwnProperty(blockName)) {
+            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+        }
+    }
+}());
+
+/**
 Add the collection categories.
 */
 
@@ -638,6 +709,13 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('pushStack'));
             blocks.push(block('popStack'));
             blocks.push(block('isStackEmpty'));
+            blocks.push('-');
+            blocks.push(block('reportNewQueue'));
+            blocks.push(block('reportQueueTop'));
+            blocks.push(block('reportQueueLength'));
+            blocks.push(block('pushQueue'));
+            blocks.push(block('popQueue'));
+            blocks.push(block('isQueueEmpty'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
