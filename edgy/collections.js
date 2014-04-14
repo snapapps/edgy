@@ -4,7 +4,10 @@ SyntaxElementMorph, CellMorph, ScrollFrameMorph, localize, MorphicPreferences,
 Color, Point, HandleMorph, ArrowMorph, PushButtonMorph, PushButtonMorph,
 MenuMorph, Morph, WatcherMorph, ArgMorph, StageMorph */
 
-// Menu element.
+/**
+MultiArgPairsMorph, a morph representing a Map input element.
+*/
+
 function MultiArgPairsMorph(
     slotSpec,
     labelTxt,
@@ -49,8 +52,8 @@ MultiArgPairsMorph.prototype.removeInput = function(contents) {
     }
 };
 
-/*
-MapMorph, a morph representing a map output.
+/**
+MapMorph, a morph representing Map object outputs.
 */
 
 MapMorph.prototype = new BoxMorph();
