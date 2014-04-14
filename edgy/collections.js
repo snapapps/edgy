@@ -392,6 +392,7 @@ SyntaxElementMorph.prototype.labelPart = (function(){
                     part.canBeEmpty = false;
                     return part;
                 case '%counter':
+                    // Draw a 'list' icon to accept variables, this only has an effect on the icon.
                     part = new ArgMorph('list');
                     return part;
             }
@@ -400,6 +401,10 @@ SyntaxElementMorph.prototype.labelPart = (function(){
         }
     };
 })();
+
+/**
+Counter
+*/
 
 // Snap's counter methods.
 SpriteMorph.prototype.reportNewCounter = function(elements) {
@@ -431,8 +436,8 @@ CellMorph.prototype.drawNew = (function() {
 })();
 
 (function() {
-    SpriteMorph.prototype.categories.push('counter');
-    SpriteMorph.prototype.blockColor.counter = new Color(74, 108, 212);
+    SpriteMorph.prototype.categories.push('collections');
+    SpriteMorph.prototype.blockColor.collections = new Color(74, 108, 212);
 
     // Add counter blocks.
     var blockName, counterBlocks = {
