@@ -698,6 +698,12 @@ var BinaryHeap = {
         return result;
     },
 
+    heapify: function(heap) {
+        for(var i=Math.floor(heap.length/2);i>=0;i--){
+            BinaryHeap.sinkDown(i);
+        }
+    },
+
     remove: function(heap, node) {
         var length = heap.length;
         // Find node by searching through the array.
