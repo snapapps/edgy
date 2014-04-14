@@ -433,15 +433,6 @@ CellMorph.prototype.drawNew = (function() {
 })();
 
 /**
-Collections category
-*/
-
-(function() {
-    SpriteMorph.prototype.categories.push('collections');
-    SpriteMorph.prototype.blockColor.collections = new Color(74, 108, 212);
-}());
-
-/**
 Counter
 */
 
@@ -483,7 +474,7 @@ SpriteMorph.prototype.reportCounterCount = function(key, counter) {
 Dict
 */
 
-SpriteMorph.prototype.newDict = function(elements) {
+SpriteMorph.prototype.reportNewDict = function(elements) {
     var res = new Map();
     for(var i=0;i<elements.contents.length;i+=2){
         res.set(elements.contents[i], parseInt(elements.contents[i+1]));
@@ -499,9 +490,13 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
     return dict.set(key, val);
 };
 
+SpriteMorph.prototype.reportDictLength = function(dict) {
+    return dict.size;
+};
+
 (function() {
     var blocks = {
-        newDict: {
+        reportNewDict: {
             type: 'reporter',
             category: 'lists',
             spec: 'dict %exppairs',
@@ -516,6 +511,11 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
             category: 'operators',
             spec: 'set %s in %map to %s',
         },
+        reportDictLength: {
+            type: 'reporter',
+            category: 'operators',
+            spec: 'length of %map',
+        },
     };
 
     // Add the new blocks.
@@ -527,8 +527,13 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
 }());
 
 /**
-Block categories
+Add the collection categories.
 */
+
+(function() {
+    SpriteMorph.prototype.categories.push('collections');
+    SpriteMorph.prototype.blockColor.collections = new Color(74, 108, 212);
+}());
 
 SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplates) {
     return function (category) {
@@ -547,10 +552,11 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks = blocks.concat(oldBlockTemplates.call(this, category));
             blocks.push(block('reportNewCounter'));
             blocks.push(block('reportCounterCount'));
-
-            blocks.push(block('newDict'));
+            blocks.push('-');
+            blocks.push(block('reportNewDict'));
             blocks.push(block('getDict'));
             blocks.push(block('setDict'));
+            blocks.push(block('reportDictLength'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
