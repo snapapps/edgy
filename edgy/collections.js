@@ -460,7 +460,7 @@ SpriteMorph.prototype.reportCounterCount = function(key, counter) {
         },
         reportCounterCount: {
             type: 'reporter',
-            category: 'operators',
+            category: 'lists',
             spec: 'count %s in %map',
         },
     };
@@ -485,16 +485,16 @@ SpriteMorph.prototype.reportNewDict = function(elements) {
     return res;
 };
 
+SpriteMorph.prototype.reportDictLength = function(dict) {
+    return dict.size;
+};
+
 SpriteMorph.prototype.getDict = function(key, dict) {
     return dict.get(key);
 };
 
 SpriteMorph.prototype.setDict = function(key, dict, val) {
     return dict.set(key, val);
-};
-
-SpriteMorph.prototype.reportDictLength = function(dict) {
-    return dict.size;
 };
 
 (function() {
@@ -506,18 +506,80 @@ SpriteMorph.prototype.reportDictLength = function(dict) {
         },
         getDict: {
             type: 'reporter',
-            category: 'operators',
+            category: 'lists',
             spec: 'get %s in %map',
         },
         setDict: {
             type: 'command',
-            category: 'operators',
+            category: 'lists',
             spec: 'set %s in %map to %s',
         },
         reportDictLength: {
             type: 'reporter',
-            category: 'operators',
+            category: 'lists',
             spec: 'length of %map',
+        },
+    };
+
+    // Add the new blocks.
+    for (var blockName in blocks) {
+        if(blocks.hasOwnProperty(blockName)) {
+            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+        }
+    }
+}());
+
+/**
+Stack, head is the first entry of the list.
+*/
+
+SpriteMorph.prototype.reportNewStack = function(elements) {
+    return elements;
+};
+
+SpriteMorph.prototype.reportStackTop = function(list) {
+    return list.at(1);
+};
+
+SpriteMorph.prototype.reportStackLength = function (list) {
+    return list.length();
+};
+
+SpriteMorph.prototype.pushStack = function (element, list) {
+    list.add(element, 1);
+};
+
+SpriteMorph.prototype.popStack = function (list) {
+    // Don't return anything, as snap does not support reporting and returning at the same time.
+    list.remove(1);
+};
+
+(function() {
+    var blocks = {
+        reportNewStack: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'stack %exp',
+        },
+        reportStackTop: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'top of stack %l',
+        },
+        reportStackLength: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'length of stack %l',
+        },
+        pushStack: {
+            type: 'command',
+            category: 'lists',
+            spec: 'push %s to stack %l',
+        },
+        popStack: {
+            type: 'command',
+            category: 'lists',
+            spec: 'pop from stack %l',
         },
     };
 
@@ -560,6 +622,12 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getDict'));
             blocks.push(block('setDict'));
             blocks.push(block('reportDictLength'));
+            blocks.push('-');
+            blocks.push(block('reportNewStack'));
+            blocks.push(block('reportStackTop'));
+            blocks.push(block('reportStackLength'));
+            blocks.push(block('pushStack'));
+            blocks.push(block('popStack'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
