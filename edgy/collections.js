@@ -554,6 +554,10 @@ SpriteMorph.prototype.popStack = function (list) {
     list.remove(1);
 };
 
+SpriteMorph.prototype.isStackEmpty = function (list) {
+    return list.length() === 0;
+};
+
 (function() {
     var blocks = {
         reportNewStack: {
@@ -580,6 +584,11 @@ SpriteMorph.prototype.popStack = function (list) {
             type: 'command',
             category: 'lists',
             spec: 'pop from stack %l',
+        },
+        isStackEmpty: {
+            type: 'predicate',
+            category: 'lists',
+            spec: 'is stack %l empty',
         },
     };
 
@@ -628,6 +637,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('reportStackLength'));
             blocks.push(block('pushStack'));
             blocks.push(block('popStack'));
+            blocks.push(block('isStackEmpty'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
