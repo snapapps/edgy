@@ -3,6 +3,11 @@
 Counter
 */
 
+/* global MultiArgMorph, BoxMorph, SpriteMorph, StringMorph,
+SyntaxElementMorph, CellMorph, ScrollFrameMorph, localize, MorphicPreferences,
+Color, Point, HandleMorph, ArrowMorph, PushButtonMorph, PushButtonMorph,
+MenuMorph, Morph, WatcherMorph, ArgMorph */
+
 // Menu element.
 function MultiArgPairsMorph(
     slotSpec,
@@ -38,7 +43,7 @@ MultiArgPairsMorph.prototype.addInput = function(contents) {
     }
     MultiArgMorph.prototype.addInput.call(this, contents);
     MultiArgMorph.prototype.addInput.call(this, contents);
-}
+};
 MultiArgPairsMorph.prototype.removeInput = function(contents) {
     MultiArgMorph.prototype.removeInput.call(this, contents);
     MultiArgMorph.prototype.removeInput.call(this, contents);
@@ -46,7 +51,7 @@ MultiArgPairsMorph.prototype.removeInput = function(contents) {
         var oldPart = this.children[this.children.length - 2];
         this.removeChild(oldPart);
     }
-}
+};
 
 /*
 CounterMorph
@@ -152,8 +157,7 @@ CounterMorph.prototype.update = function (anyway) {
 
     this.frame.contents.children.forEach(function (m) {
 
-        if (m instanceof CellMorph
-                && m.contentsMorph instanceof CounterMorph) {
+        if (m instanceof CellMorph && m.contentsMorph instanceof CounterMorph) {
             m.contentsMorph.update();
         }
     });
@@ -399,7 +403,7 @@ SyntaxElementMorph.prototype.labelPart = (function(){
         }else{
             return part;
         }
-    }
+    };
 })();
 
 // Snap's counter methods.
