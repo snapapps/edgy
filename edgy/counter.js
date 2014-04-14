@@ -151,7 +151,7 @@ CounterMorph.prototype.init = function (counter, parentCell) {
     this.fixLayout();
 };
 
-CounterMorph.prototype.update = function (anyway) {
+CounterMorph.prototype.update = function () {
     var i, idx, ceil, morphs, cell, cnts, label, button, max,
         starttime, maxtime = 1000;
 
@@ -168,8 +168,7 @@ CounterMorph.prototype.update = function (anyway) {
     this.start = Math.max(
         Math.min(
             this.start,
-            Math.floor((this.counter.size - 1) / this.range)
-                * this.range + 1
+            Math.floor((this.counter.size - 1) / this.range) * this.range + 1
         ),
         1
     );
