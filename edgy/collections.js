@@ -2,7 +2,7 @@
 /* global MultiArgMorph, BoxMorph, SpriteMorph, StringMorph,
 SyntaxElementMorph, CellMorph, ScrollFrameMorph, localize, MorphicPreferences,
 Color, Point, HandleMorph, ArrowMorph, PushButtonMorph, PushButtonMorph,
-MenuMorph, Morph, WatcherMorph, ArgMorph */
+MenuMorph, Morph, WatcherMorph, ArgMorph, StageMorph */
 
 // Menu element.
 function MultiArgPairsMorph(
@@ -403,7 +403,7 @@ SyntaxElementMorph.prototype.labelPart = (function(){
                     part.isStatic = true;
                     part.canBeEmpty = false;
                     return part;
-                case '%counter':
+                case '%map':
                     // Draw a 'list' icon to accept variables, this only has an effect on the icon.
                     part = new ArgMorph('list');
                     return part;
@@ -433,6 +433,15 @@ CellMorph.prototype.drawNew = (function() {
 })();
 
 /**
+Collections category
+*/
+
+(function() {
+    SpriteMorph.prototype.categories.push('collections');
+    SpriteMorph.prototype.blockColor.collections = new Color(74, 108, 212);
+}());
+
+/**
 Counter
 */
 
@@ -449,12 +458,7 @@ SpriteMorph.prototype.reportCounterCount = function(key, counter) {
 };
 
 (function() {
-    SpriteMorph.prototype.categories.push('collections');
-    SpriteMorph.prototype.blockColor.collections = new Color(74, 108, 212);
-
-    // Add counter blocks.
-    var blockName, counterBlocks = {
-        // Counter
+    var blocks = {
         reportNewCounter: {
             type: 'reporter',
             category: 'lists',
@@ -463,14 +467,93 @@ SpriteMorph.prototype.reportCounterCount = function(key, counter) {
         reportCounterCount: {
             type: 'reporter',
             category: 'operators',
-            spec: 'count %s in %counter',
+            spec: 'count %s in %map',
         },
     };
 
     // Add the new blocks.
-    for (blockName in counterBlocks) {
-        if(counterBlocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = counterBlocks[blockName];
+    for (var blockName in blocks) {
+        if(blocks.hasOwnProperty(blockName)) {
+            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
         }
     }
 }());
+
+/**
+Dict
+*/
+
+SpriteMorph.prototype.newDict = function(elements) {
+    var res = new Map();
+    for(var i=0;i<elements.contents.length;i+=2){
+        res.set(elements.contents[i], parseInt(elements.contents[i+1]));
+    }
+    return res;
+};
+
+SpriteMorph.prototype.getDict = function(key, dict) {
+    return dict.get(key);
+};
+
+SpriteMorph.prototype.setDict = function(key, dict, val) {
+    return dict.set(key, val);
+};
+
+(function() {
+    var blocks = {
+        newDict: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'dict %exppairs',
+        },
+        getDict: {
+            type: 'reporter',
+            category: 'operators',
+            spec: 'get %s in %map',
+        },
+        setDict: {
+            type: 'command',
+            category: 'operators',
+            spec: 'set %s in %map to %s',
+        },
+    };
+
+    // Add the new blocks.
+    for (var blockName in blocks) {
+        if(blocks.hasOwnProperty(blockName)) {
+            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+        }
+    }
+}());
+
+/**
+Block categories
+*/
+
+SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplates) {
+    return function (category) {
+        // block() was copied from objects.js
+        function block(selector) {
+            if (StageMorph.prototype.hiddenPrimitives[selector]) {
+                return null;
+            }
+            var newBlock = SpriteMorph.prototype.blockForSelector(selector, true);
+            newBlock.isTemplate = true;
+            return newBlock;
+        }
+
+        var blocks = [];
+        if (category === 'collections') {
+            blocks = blocks.concat(oldBlockTemplates.call(this, category));
+            blocks.push(block('reportNewCounter'));
+            blocks.push(block('reportCounterCount'));
+
+            blocks.push(block('newDict'));
+            blocks.push(block('getDict'));
+            blocks.push(block('setDict'));
+        } else {
+            return blocks.concat(oldBlockTemplates.call(this, category));
+        }
+        return blocks;
+    };
+}(SpriteMorph.prototype.blockTemplates));

@@ -2820,9 +2820,6 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('doNumericFor'));
             blocks.push('-');
             blocks.push(block('receiveNodeClick'));
-        } else if (category === 'collections') {
-            blocks.push(block('reportNewCounter'));
-            blocks.push(block('reportCounterCount'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
