@@ -50,7 +50,7 @@ MultiArgPairsMorph.prototype.removeInput = function(contents) {
 };
 
 /*
-MapMorph, a morph representing maps.
+MapMorph, a morph representing a map output.
 */
 
 MapMorph.prototype = new BoxMorph();
@@ -71,7 +71,19 @@ MapMorph.prototype.init = function (map, parentCell) {
     var myself = this;
 
     this.map = map || new Map();
-    this.mapEntries = [].slice.call(map.entries());
+    this.mapEntries = map.entries();
+    if(!(this.mapEntries instanceof Array)){
+        // convert iterator to array ([].slice.call doesn't work for firefox)
+        var mapEntries = [];
+        var iter = this.mapEntries;
+        while(true){
+            var nextValue = iter.next();
+            if(nextValue.done)
+                break;
+            mapEntries.push(nextValue.value);
+        }
+        this.mapEntries = mapEntries;
+    }
     this.start = 1;
     this.range = 100;
     this.lastUpdated = Date.now();
@@ -402,22 +414,7 @@ SyntaxElementMorph.prototype.labelPart = (function(){
     };
 })();
 
-/**
-Counter
-*/
-
-// Snap's counter methods.
-SpriteMorph.prototype.reportNewCounter = function(elements) {
-    var res = new Map();
-    for(var i=0;i<elements.contents.length;i+=2){
-        res.set(elements.contents[i], parseInt(elements.contents[i+1]));
-    }
-    return res;
-};
-
-SpriteMorph.prototype.reportCounterCount = function(key, counter) {
-    return counter.get(key);
-};
+// Show the result of maps in the output box.
 
 CellMorph.prototype.drawNew = (function() {
     // Draw snap's results.
@@ -434,6 +431,22 @@ CellMorph.prototype.drawNew = (function() {
         }
     };
 })();
+
+/**
+Counter
+*/
+
+SpriteMorph.prototype.reportNewCounter = function(elements) {
+    var res = new Map();
+    for(var i=0;i<elements.contents.length;i+=2){
+        res.set(elements.contents[i], parseInt(elements.contents[i+1]));
+    }
+    return res;
+};
+
+SpriteMorph.prototype.reportCounterCount = function(key, counter) {
+    return counter.get(key);
+};
 
 (function() {
     SpriteMorph.prototype.categories.push('collections');
