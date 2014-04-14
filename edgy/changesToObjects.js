@@ -350,6 +350,11 @@ redrawGraph = function() {
     // console.log("redrawing graph")
     layout = jsnx.draw(currentGraph, LAYOUT_OPTS, true);
 
+    if(layout.flowLayout && window.ide_ && window.ide_.useDownwardEdgeConstraint) {
+        layout.flowLayout("y", DEFAULT_LINK_DISTANCE);
+        layout.start(10, 15, 20);
+    }
+
     // Calling jsnx.draw() will purge the graph container element, so we need
     // to re-add the edge patterns regardless of whether they have changed.
     for(var costumeId in costumeIdMap) {
@@ -1282,13 +1287,39 @@ SpriteMorph.prototype.getMatrixEntry = function(a, b) {
     a = parseNode(a);
     b = parseNode(b);
     if(this.G.has_edge(a, b)) {
-        if(a === b && !this.G.is_directed()) {
-            return 2;
-        } else {
-            return 1;
-        }
+        return 1;
     } else {
         return 0;
+    }
+};
+
+SpriteMorph.prototype.setMatrixEntry = function(a, b, val) {
+    var edge = new List([a, b]);
+    if(val) {
+        this.addEdge(new List([edge]));
+    } else {
+        this.removeEdge(edge);
+    }
+};
+
+SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
+    var edge = new List([a, b]);
+    a = parseNode(a);
+    b = parseNode(b);
+    if(this.G.has_edge(a, b)) {
+        return this.getEdgeAttrib(weightKey, edge);
+    } else {
+        return Infinity;
+    }
+};
+
+SpriteMorph.prototype.setMatrixEntryWeighted = function(a, b, weightKey, val) {
+    var edge = new List([a, b]);
+    if(isFinite(val)) {
+        this.addEdge(new List([edge]));
+        this.setEdgeAttrib(weightKey, edge, val);
+    } else {
+        this.removeEdge(edge);
     }
 };
 
@@ -2597,7 +2628,22 @@ User Menu
         getMatrixEntry: {
             type: 'reporter',
             category: 'network',
-            spec: 'adjacency matrix entry %s , %s'
+            spec: 'adj %s , %s'
+        },
+        setMatrixEntry: {
+            type: 'command',
+            category: 'network',
+            spec: 'set adj %s , %s to %n'
+        },
+        getMatrixEntryWeighted: {
+            type: 'reporter',
+            category: 'network',
+            spec: 'adj %s , %s %edgeAttr'
+        },
+        setMatrixEntryWeighted: {
+            type: 'command',
+            category: 'network',
+            spec: 'set adj %s , %s %edgeAttr to %n'
         },
         isEmpty: {
             type: 'predicate',
@@ -2953,6 +2999,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('hideActiveGraph'));
             blocks.push('-');
             blocks.push(block('getMatrixEntry'));
+            blocks.push(block('setMatrixEntry'));
+            blocks.push(block('getMatrixEntryWeighted'));
+            blocks.push(block('setMatrixEntryWeighted'));
             blocks.push('-');
             blocks.push(block('isEmpty'));
             blocks.push(block('isCyclic'));
