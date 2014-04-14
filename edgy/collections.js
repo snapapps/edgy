@@ -672,6 +672,185 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
 }());
 
 /**
+Integer priority queue implemented by a binary min-heap inside an array, head is the first element of the array.
+*/
+
+// modified from http://eloquentjavascript.net/appendix2.html
+
+var BinaryHeap = {
+    push: function(heap, element) {
+        heap.push(element);
+        // bubble up element
+        BinaryHeap.bubbleUp(heap, heap.length - 1);
+    },
+
+    pop: function(heap) {
+        // Store the first element so we can return it later.
+        var result = heap[0];
+        // Get the element at the end of the array.
+        var end = heap.pop();
+        // If there are any elements left, put the end element at the
+        // start, and let it sink down.
+        if (heap.length > 0) {
+            heap[0] = end;
+            BinaryHeap.sinkDown(0);
+        }
+        return result;
+    },
+
+    remove: function(heap, node) {
+        var length = heap.length;
+        // Find node by searching through the array.
+        var i = heap.indexOf(node);
+        if ( i == -1)
+            return;
+        // Use the last element to fill up the hole.
+        var end = heap.pop();
+        // If the element we popped was the one we needed to remove,
+        // we're done.
+        if (i == length - 1)
+            return;
+        // Otherwise, we replace the removed element with the popped
+        // one, and allow it to float up or sink down as appropriate.
+        heap[i] = end;
+        BinaryHeap.bubbleUp(i);
+        BinaryHeap.sinkDown(i);
+    },
+
+    modifyKey: function(heap, node1, node2){
+        if (node1 == node2)
+            return;
+        // Find node by searching through the array.
+        var i = heap.indexOf(node1);
+        if ( i == -1)
+            return;
+        heap[i] = node2;
+        // Float up or sink down as appropriate.
+        BinaryHeap.bubbleUp(i);
+        BinaryHeap.sinkDown(i);
+    },
+
+    bubbleUp: function(heap, n) {
+        var element = heap[n];
+        // When at 0, an element can not go up any further.
+        while (n > 0) {
+            // Compute the parent element's index, and fetch it.
+            var parentN = Math.floor((n + 1) / 2) - 1,
+            parent = heap[parentN];
+            // If the parent has a lesser score, things are in order and we
+            // are done.
+            if (element >= parent)
+                break;
+
+            // Otherwise, swap the parent with the current element and
+            // continue.
+            heap[parentN] = element;
+            heap[n] = parent;
+            n = parentN;
+        }
+    },
+
+    sinkDown: function(heap, n) {
+        // Look up the target element and its score.
+        var length = heap.length, element = heap[n];
+
+        while(true) {
+            // Compute the indices of the child elements.
+            var child2N = (n + 1) * 2, child1N = child2N - 1;
+            // New position of element, if any.
+            var swap = null;
+            var child1, child2;
+            if (child1N < length) {
+                child1 = heap[child1N];
+                if (child1 < element)
+                    swap = child1N;
+            }
+            if (child2N < length) {
+                child2 = heap[child2N];
+                if (child2 < (swap === null ? element : child1))
+                    swap = child2N;
+            }
+
+            // No need to swap further, we are done.
+            if (swap === null)
+                break;
+
+            // Otherwise, swap and continue.
+            heap[n] = heap[swap];
+            heap[swap] = element;
+            n = swap;
+        }
+    }
+};
+
+SpriteMorph.prototype.reportNewPQueue = function(elements) {
+    return elements;
+};
+
+SpriteMorph.prototype.reportPQueueTop = function(list) {
+    return list.at(1);
+};
+
+SpriteMorph.prototype.reportPQueueLength = function (list) {
+    return list.length();
+};
+
+SpriteMorph.prototype.pushPQueue = function (element, list) {
+    list.add(element);
+};
+
+SpriteMorph.prototype.popPQueue = function (list) {
+    // Don't return anything, as snap does not support reporting and returning at the same time.
+    list.remove(1);
+};
+
+SpriteMorph.prototype.isPQueueEmpty = function (list) {
+    return list.length() === 0;
+};
+
+(function() {
+    var blocks = {
+        reportNewQueue: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'queue %exp',
+        },
+        reportQueueTop: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'top of queue %l',
+        },
+        reportQueueLength: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'length of queue %l',
+        },
+        pushQueue: {
+            type: 'command',
+            category: 'lists',
+            spec: 'push %s to queue %l',
+        },
+        popQueue: {
+            type: 'command',
+            category: 'lists',
+            spec: 'pop from queue %l',
+        },
+        isQueueEmpty: {
+            type: 'predicate',
+            category: 'lists',
+            spec: 'is queue %l empty',
+        },
+    };
+
+    // Add the new blocks.
+    for (var blockName in blocks) {
+        if(blocks.hasOwnProperty(blockName)) {
+            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+        }
+    }
+}());
+
+/**
 Add the collection categories.
 */
 
