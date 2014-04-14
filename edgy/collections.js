@@ -1,8 +1,4 @@
 
-/*
-Counter
-*/
-
 /* global MultiArgMorph, BoxMorph, SpriteMorph, StringMorph,
 SyntaxElementMorph, CellMorph, ScrollFrameMorph, localize, MorphicPreferences,
 Color, Point, HandleMorph, ArrowMorph, PushButtonMorph, PushButtonMorph,
@@ -54,28 +50,28 @@ MultiArgPairsMorph.prototype.removeInput = function(contents) {
 };
 
 /*
-CounterMorph
+MapMorph, a morph representing maps.
 */
 
-CounterMorph.prototype = new BoxMorph();
-CounterMorph.prototype.constructor = CounterMorph;
-CounterMorph.uber = BoxMorph.prototype;
+MapMorph.prototype = new BoxMorph();
+MapMorph.prototype.constructor = MapMorph;
+MapMorph.uber = BoxMorph.prototype;
 
-// CounterMorph default settings
+// MapMorph default settings
 
-CounterMorph.prototype.cellColor =
+MapMorph.prototype.cellColor =
     SpriteMorph.prototype.blockColor.lists;
 
 // Result element.
-function CounterMorph(counter, parentCell) {
-    this.init(counter, parentCell);
+function MapMorph(map, parentCell) {
+    this.init(map, parentCell);
 }
 
-CounterMorph.prototype.init = function (counter, parentCell) {
+MapMorph.prototype.init = function (map, parentCell) {
     var myself = this;
 
-    this.counter = counter || new Map();
-    this.counterEntries = [].slice.call(counter.entries());
+    this.map = map || new Map();
+    this.mapEntries = [].slice.call(map.entries());
     this.start = 1;
     this.range = 100;
     this.lastUpdated = Date.now();
@@ -84,7 +80,7 @@ CounterMorph.prototype.init = function (counter, parentCell) {
 
     // elements declarations
     this.label = new StringMorph(
-        localize('size: ') + this.counter.size,
+        localize('size: ') + this.map.size,
         SyntaxElementMorph.prototype.fontSize,
         null,
         false,
@@ -120,7 +116,7 @@ CounterMorph.prototype.init = function (counter, parentCell) {
     this.handle.add(this.arrow);
 
     this.plusButton = new PushButtonMorph(
-        this.counter,
+        this.map,
         'add',
         '+'
     );
@@ -130,7 +126,7 @@ CounterMorph.prototype.init = function (counter, parentCell) {
     this.plusButton.drawNew();
     this.plusButton.fixLayout();
 
-    CounterMorph.uber.init.call(
+    MapMorph.uber.init.call(
         this,
         SyntaxElementMorph.prototype.rounding,
         1.000001, // shadow bug in Chrome,
@@ -151,24 +147,24 @@ CounterMorph.prototype.init = function (counter, parentCell) {
     this.fixLayout();
 };
 
-CounterMorph.prototype.update = function () {
+MapMorph.prototype.update = function () {
     var i, idx, ceil, morphs, cell, cnts, label, button, max,
         starttime, maxtime = 1000;
 
     this.frame.contents.children.forEach(function (m) {
 
-        if (m instanceof CellMorph && m.contentsMorph instanceof CounterMorph) {
+        if (m instanceof CellMorph && m.contentsMorph instanceof MapMorph) {
             m.contentsMorph.update();
         }
     });
 
     this.updateLength(true);
 
-    // adjust start index to current counterEntries length
+    // adjust start index to current mapEntries length
     this.start = Math.max(
         Math.min(
             this.start,
-            Math.floor((this.counter.size - 1) / this.range) * this.range + 1
+            Math.floor((this.map.size - 1) / this.range) * this.range + 1
         ),
         1
     );
@@ -177,7 +173,7 @@ CounterMorph.prototype.update = function () {
     // highest index shown:
     max = Math.min(
         this.start + this.range - 1,
-        this.counter.size
+        this.map.size
     );
 
     // number of morphs available for refreshing
@@ -192,7 +188,7 @@ CounterMorph.prototype.update = function () {
         cell = this.frame.contents.children[i];
         label = this.frame.contents.children[i + 1];
         button = this.frame.contents.children[i + 2];
-        cnts = this.counterEntries[idx];
+        cnts = this.mapEntries[idx];
 
         if (cell.contents !== cnts) {
             cell.contents = cnts;
@@ -244,16 +240,16 @@ CounterMorph.prototype.update = function () {
                 new Color(255, 255, 255)
             );
             cell = new CellMorph(
-                this.counterEntries[idx-1],
+                this.mapEntries[idx-1],
                 this.cellColor,
                 idx,
                 this.parentCell
             );
             button = new PushButtonMorph(
-                this.counterEntries.remove,
+                this.mapEntries.remove,
                 idx-1,
                 '-',
-                this.counterEntries
+                this.mapEntries
             );
             button.padding = 1;
             button.edge = 0;
@@ -283,8 +279,8 @@ CounterMorph.prototype.update = function () {
     this.updateLength();
 };
 
-CounterMorph.prototype.updateLength = function (notDone) {
-    this.label.text = localize('length: ') + this.counter.size;
+MapMorph.prototype.updateLength = function (notDone) {
+    this.label.text = localize('length: ') + this.map.size;
     if (notDone) {
         this.label.color = new Color(0, 0, 100);
     } else {
@@ -295,11 +291,11 @@ CounterMorph.prototype.updateLength = function (notDone) {
     this.label.setBottom(this.bottom() - 3);
 };
 
-CounterMorph.prototype.startIndexMenu = function () {
+MapMorph.prototype.startIndexMenu = function () {
     var i,
         range,
         myself = this,
-        items = Math.ceil(this.counter.size / this.range),
+        items = Math.ceil(this.map.size / this.range),
         menu = new MenuMorph(
             function (idx) {myself.setStartIndex(idx); },
             null,
@@ -313,11 +309,11 @@ CounterMorph.prototype.startIndexMenu = function () {
     menu.popUpAtHand(this.world());
 };
 
-CounterMorph.prototype.setStartIndex = function (index) {
+MapMorph.prototype.setStartIndex = function (index) {
     this.start = index;
 };
 
-CounterMorph.prototype.fixLayout = function () {
+MapMorph.prototype.fixLayout = function () {
     Morph.prototype.trackChanges = false;
     if (this.frame) {
         this.arrangeCells();
@@ -343,7 +339,7 @@ CounterMorph.prototype.fixLayout = function () {
     }
 };
 
-CounterMorph.prototype.arrangeCells = function () {
+MapMorph.prototype.arrangeCells = function () {
     var i, cell, label, button, lastCell,
         end = this.frame.contents.children.length;
     for (i = 0; i < end; i += 3) {
@@ -366,16 +362,16 @@ CounterMorph.prototype.arrangeCells = function () {
     this.frame.contents.adjustBounds();
 };
 
-// CounterMorph hiding/showing:
+// MapMorph hiding/showing:
 
-CounterMorph.prototype.show = function () {
-    CounterMorph.uber.show.call(this);
+MapMorph.prototype.show = function () {
+    MapMorph.uber.show.call(this);
     this.frame.contents.adjustBounds();
 };
 
-// CounterMorph drawing:
+// MapMorph drawing:
 
-CounterMorph.prototype.drawNew = function () {
+MapMorph.prototype.drawNew = function () {
     WatcherMorph.prototype.drawNew.call(this);
     this.fixLayout();
 };
@@ -424,7 +420,7 @@ CellMorph.prototype.drawNew = (function() {
 
     return function () {
         if (this.contents instanceof Map) {
-            this.contentsMorph = new CounterMorph(this.contents, this);
+            this.contentsMorph = new MapMorph(this.contents, this);
             this.contentsMorph.isDraggable = false;
             this.contents = this.contentsMorph;
             oldDrawNew.call(this);
