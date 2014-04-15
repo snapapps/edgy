@@ -507,17 +507,17 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
         getDict: {
             type: 'reporter',
             category: 'lists',
-            spec: 'get %s in %map',
+            spec: 'get %s in dict %map',
         },
         setDict: {
             type: 'command',
             category: 'lists',
-            spec: 'set %s in %map to %s',
+            spec: 'set %s in dict %map to %s',
         },
         reportDictLength: {
             type: 'reporter',
             category: 'lists',
-            spec: 'length of %map',
+            spec: 'length of dict %map',
         },
     };
 
