@@ -793,6 +793,10 @@ SpriteMorph.prototype.reportNewPQueue = function(list) {
     //create new list otherwise we'll end up in an infinite loop
     var res = new List();
     var elements = list.asArray();
+    //convert all to ints
+    for(var i=0;i<elements.length;i++){
+        elements[i] = parseInt(elements[i]);
+    }
     BinaryHeap.heapify(elements);
     res.contents = elements;
     res.changed();
@@ -808,6 +812,7 @@ SpriteMorph.prototype.reportPQueueLength = function (list) {
 };
 
 SpriteMorph.prototype.pushPQueue = function (element, list) {
+    element = parseInt(element);
     var elements = list.asArray();
     BinaryHeap.push(elements, element);
     list.contents = elements;
@@ -824,6 +829,8 @@ SpriteMorph.prototype.popPQueue = function (list) {
 };
 
 SpriteMorph.prototype.replacePQueue = function (element1, element2, list) {
+    element1 = parseInt(element1);
+    element2 = parseInt(element2);
     var elements = list.asArray();
     BinaryHeap.replace(elements, element1, element2);
     list.contents = elements;
