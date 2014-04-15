@@ -2,7 +2,7 @@
 /* global MultiArgMorph, BoxMorph, SpriteMorph, StringMorph,
 SyntaxElementMorph, CellMorph, ScrollFrameMorph, localize, MorphicPreferences,
 Color, Point, HandleMorph, ArrowMorph, PushButtonMorph, PushButtonMorph,
-MenuMorph, Morph, WatcherMorph, ArgMorph, StageMorph */
+MenuMorph, Morph, WatcherMorph, ArgMorph, StageMorph, List */
 
 /**
 MultiArgPairsMorph, a morph representing a Map input element.
@@ -693,14 +693,14 @@ var BinaryHeap = {
         // start, and let it sink down.
         if (heap.length > 0) {
             heap[0] = end;
-            BinaryHeap.sinkDown(0);
+            BinaryHeap.sinkDown(heap, 0);
         }
         return result;
     },
 
     heapify: function(heap) {
         for(var i=Math.floor(heap.length/2);i>=0;i--){
-            BinaryHeap.sinkDown(i);
+            BinaryHeap.sinkDown(heap, i);
         }
     },
 
@@ -719,8 +719,8 @@ var BinaryHeap = {
         // Otherwise, we replace the removed element with the popped
         // one, and allow it to float up or sink down as appropriate.
         heap[i] = end;
-        BinaryHeap.bubbleUp(i);
-        BinaryHeap.sinkDown(i);
+        BinaryHeap.bubbleUp(heap, i);
+        BinaryHeap.sinkDown(heap, i);
     },
 
     replaceKey: function(heap, node1, node2){
@@ -732,8 +732,8 @@ var BinaryHeap = {
             return;
         heap[i] = node2;
         // Float up or sink down as appropriate.
-        BinaryHeap.bubbleUp(i);
-        BinaryHeap.sinkDown(i);
+        BinaryHeap.bubbleUp(heap, i);
+        BinaryHeap.sinkDown(heap, i);
     },
 
     bubbleUp: function(heap, n) {
@@ -790,11 +790,13 @@ var BinaryHeap = {
 };
 
 SpriteMorph.prototype.reportNewPQueue = function(list) {
+    //create new list otherwise we'll end up in an infinite loop
+    var res = new List();
     var elements = list.asArray();
     BinaryHeap.heapify(elements);
-    list.contents = elements;
-    list.isLinked = false;
-    list.changed();
+    res.contents = elements;
+    res.changed();
+    return res;
 };
 
 SpriteMorph.prototype.reportPQueueTop = function(list) {
