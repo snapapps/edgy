@@ -533,8 +533,8 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
 Stack, head is the first entry of the list, as in usual stack implementations.
 */
 
-SpriteMorph.prototype.reportNewStack = function(elements) {
-    return elements;
+SpriteMorph.prototype.reportNewStack = function(list) {
+    return list;
 };
 
 SpriteMorph.prototype.reportStackTop = function(list) {
@@ -604,8 +604,8 @@ SpriteMorph.prototype.isStackEmpty = function (list) {
 Queue, head is the first entry of the list.
 */
 
-SpriteMorph.prototype.reportNewQueue = function(elements) {
-    return elements;
+SpriteMorph.prototype.reportNewQueue = function(list) {
+    return list;
 };
 
 SpriteMorph.prototype.reportQueueTop = function(list) {
@@ -789,8 +789,12 @@ var BinaryHeap = {
     }
 };
 
-SpriteMorph.prototype.reportNewPQueue = function(elements) {
-    return BinaryHeap.heapify(elements);
+SpriteMorph.prototype.reportNewPQueue = function(list) {
+    var elements = list.asArray();
+    BinaryHeap.heapify(elements);
+    list.contents = elements;
+    list.isLinked = false;
+    list.changed();
 };
 
 SpriteMorph.prototype.reportPQueueTop = function(list) {
