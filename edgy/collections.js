@@ -723,7 +723,7 @@ var BinaryHeap = {
         BinaryHeap.sinkDown(heap, i);
     },
 
-    replaceKey: function(heap, node1, node2){
+    replace: function(heap, node1, node2){
         if (node1 == node2)
             return;
         // Find node by searching through the array.
