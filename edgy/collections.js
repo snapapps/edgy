@@ -723,7 +723,7 @@ var BinaryHeap = {
         BinaryHeap.sinkDown(i);
     },
 
-    modifyKey: function(heap, node1, node2){
+    replaceKey: function(heap, node1, node2){
         if (node1 == node2)
             return;
         // Find node by searching through the array.
@@ -790,7 +790,7 @@ var BinaryHeap = {
 };
 
 SpriteMorph.prototype.reportNewPQueue = function(elements) {
-    return elements;
+    return BinaryHeap.heapify(elements);
 };
 
 SpriteMorph.prototype.reportPQueueTop = function(list) {
@@ -802,12 +802,27 @@ SpriteMorph.prototype.reportPQueueLength = function (list) {
 };
 
 SpriteMorph.prototype.pushPQueue = function (element, list) {
-    list.add(element);
+    var elements = list.asArray();
+    BinaryHeap.push(elements, element);
+    list.contents = elements;
+    list.isLinked = false;
+    list.changed();
 };
 
 SpriteMorph.prototype.popPQueue = function (list) {
-    // Don't return anything, as snap does not support reporting and returning at the same time.
-    list.remove(1);
+    var elements = list.asArray();
+    BinaryHeap.pop(elements);
+    list.contents = elements;
+    list.isLinked = false;
+    list.changed();
+};
+
+SpriteMorph.prototype.replacePQueue = function (element1, element2, list) {
+    var elements = list.asArray();
+    BinaryHeap.replace(elements, element1, element2);
+    list.contents = elements;
+    list.isLinked = false;
+    list.changed();
 };
 
 SpriteMorph.prototype.isPQueueEmpty = function (list) {
@@ -816,35 +831,40 @@ SpriteMorph.prototype.isPQueueEmpty = function (list) {
 
 (function() {
     var blocks = {
-        reportNewQueue: {
+        reportNewPQueue: {
             type: 'reporter',
             category: 'lists',
-            spec: 'queue %exp',
+            spec: 'pqueue %exp',
         },
-        reportQueueTop: {
+        reportPQueueTop: {
             type: 'reporter',
             category: 'lists',
-            spec: 'top of queue %l',
+            spec: 'top of pqueue %l',
         },
-        reportQueueLength: {
+        reportPQueueLength: {
             type: 'reporter',
             category: 'lists',
-            spec: 'length of queue %l',
+            spec: 'length of pqueue %l',
         },
-        pushQueue: {
+        pushPQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'push %s to queue %l',
+            spec: 'push %s to pqueue %l',
         },
-        popQueue: {
+        popPQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'pop from queue %l',
+            spec: 'pop from pqueue %l',
         },
-        isQueueEmpty: {
+        replacePQueue: {
+            type: 'command',
+            category: 'lists',
+            spec: 'replace %s to %s in pqueue %l',
+        },
+        isPQueueEmpty: {
             type: 'predicate',
             category: 'lists',
-            spec: 'is queue %l empty',
+            spec: 'is pqueue %l empty',
         },
     };
 
@@ -901,6 +921,14 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('pushQueue'));
             blocks.push(block('popQueue'));
             blocks.push(block('isQueueEmpty'));
+            blocks.push('-');
+            blocks.push(block('reportNewPQueue'));
+            blocks.push(block('reportPQueueTop'));
+            blocks.push(block('reportPQueueLength'));
+            blocks.push(block('pushPQueue'));
+            blocks.push(block('popPQueue'));
+            blocks.push(block('replacePQueue'));
+            blocks.push(block('isPQueueEmpty'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
