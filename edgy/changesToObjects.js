@@ -1348,18 +1348,8 @@ function addGraph(G, other) {
     if(!areDisjoint(G, other)) {
         throw new NotDisjointError("The graphs are not disjoint.");
     }
-    // HACK: for some reason, JSNetworkX throws an exception if I try adding
-    // the nodes along with their attributes in a single pass using
-    // add_nodes_from. This also works around a bug where costume images would
-    // not be set since the attribute-less nodes would be inserted before the
-    // attributes thus not triggering layout properly.
-    jsnx.forEach(other.nodes_iter(true), function(el) {
-        if(el[1]) {
-            G.add_node(el[0], el[1]);
-        } else {
-            G.add_node(el[0]);
-        }
-    });
+    // FIXME: JSNetworkX throws an exception if iterators are used here.
+    G.add_nodes_from(other.nodes(true));
     G.add_edges_from(other.edges(null, true));
 }
 
