@@ -3,6 +3,7 @@ Critical path algorithm
 K7
 MCST
 Shortening
+Sierpinski
 Topological sort
 Most popular
 Slow max-flow
