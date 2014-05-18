@@ -49,6 +49,16 @@ graphEl.on("mousedown", function() {
     d3.event.preventDefault();
 });
 
+function graphDisplayCostumesMenu() {
+    var rcvr = currentGraphSprite,
+        dict = {};
+    dict["default"] = "default";
+    dict["~"] = null;
+    rcvr.costumes.asArray().forEach(function (costume) {
+        dict[costume.name] = costume.name;
+    });
+    return dict;
+};
 
 // Monitor for new nodes and edges, and attach event handlers appropriately.
 graphEl.on("DOMNodeInserted", function() {
@@ -85,6 +95,17 @@ graphEl.on("DOMNodeInserted", function() {
                         d.data.scale = autoNumericize(scale);
                         updateNodeDimensionsAndCostume(node);
                     }).prompt('Node scale', (d.data.scale || 1).toString(), world);
+                    world.worldCanvas.focus();
+                });
+                menu.addItem('set costume', function () {
+                    new DialogBoxMorph(null, function (costumename) {
+                        currentGraphSprite.setNodeCostume(d.node, costumename);
+                    }).prompt('Node costume',
+                              d.data.__costume__ ? d.data.__costume__.name : "",
+                              world,
+                              null,
+                              graphDisplayCostumesMenu,
+                              true);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
@@ -145,6 +166,17 @@ graphEl.on("DOMNodeInserted", function() {
                     new DialogBoxMorph(null, function (width) {
                         d.G.add_edge(d.edge[0], d.edge[1], {width: parseFloat(width)});
                     }).prompt('Edge width', (d.data.width || 1).toString(), world);
+                    world.worldCanvas.focus();
+                });
+                menu.addItem('set costume', function () {
+                    new DialogBoxMorph(null, function (costumename) {
+                        currentGraphSprite.setEdgeCostume(new List(d.edge), costumename);
+                    }).prompt('Edge costume',
+                              d.data.__costume__ ? d.data.__costume__.name : "",
+                              world,
+                              null,
+                              graphDisplayCostumesMenu,
+                              true);
                     world.worldCanvas.focus();
                 });
                 menu.popUpAtHand(world);
