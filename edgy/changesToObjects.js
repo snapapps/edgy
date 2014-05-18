@@ -97,13 +97,13 @@ graphEl.on("DOMNodeInserted", function() {
                     setTimeout(function() {
                         d.fixed = true;
                     }, 0);
-            }
+                }
             }
         }).on("dblclick", function() {
             if(d3.event.button === 0) {
                 var hats = currentGraphSprite.scripts.children.filter(function (morph) {
                     return morph.selector === 'receiveNodeClick';
-        });
+                });
                 hats.forEach(function (block) {
                     var stage = currentGraphSprite.parentThatIsA(StageMorph);
                     var proc = stage.threads.startProcess(block, stage.isThreadSafe);
@@ -157,8 +157,8 @@ graphEl.on("DOMNodeInserted", function() {
             if(d3.event.ctrlKey || d3.event.button === 2)
             {
                 d3.event.stopPropagation();
-    }
-});
+            }
+        });
     }
 });
 
@@ -239,7 +239,7 @@ var DEFAULT_NODE_COLOR = "white",
             charge: function(d) {
                 var r = (d.data.scale || 1) * 8;
                 return -r*r;
-        },
+            },
 			avoidOverlaps: true
         },
         node_shape: function(d) {
@@ -263,7 +263,7 @@ var DEFAULT_NODE_COLOR = "white",
 				var dim = svgTextDimensions(d.data.label || d.node);
 				d.width = dim.width + 16;
 				return dim.width + 8;
-            },
+			},
 			height: function(d) {
                 if (d.data.__costume__)
                     return undefined;
@@ -271,7 +271,7 @@ var DEFAULT_NODE_COLOR = "white",
 				d.height = dim.height + 16;
 				return dim.height + 8;
 			},
-            transform: function(d) {
+			transform: function(d) {
 				var dim = svgTextDimensions(d.data.label || d.node);
 				var scale = (d.data.scale || 1);
                 var transform = ['scale(', scale, ')'];
@@ -280,7 +280,7 @@ var DEFAULT_NODE_COLOR = "white",
                     transform = transform.concat(['translate(', (-(dim.width + 8) / 2), ',', (-(dim.height + 8) / 2), ')']);
                 }
                 return transform.join('');
-            },
+			},
             "xlink:href": function(d) {
                 if(d.data.__costume__) {
                     // Display costume if one is set.
@@ -581,10 +581,10 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                     frd.onloadend = function(e) {
                         // console.log(e);
                         try {
-                        s.loadGraphFromString(e.target.result);
+                            s.loadGraphFromString(e.target.result);
                         } catch(e) {
                             ide.showMessage("Error loading file: " + e.message);
-                    }
+                        }
                     }
                     // console.log(inp.files);
                     for (var i = 0; i < inp.files.length; i += 1) {
@@ -936,12 +936,12 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
     if(this.G.has_node(node)) {
         if(attrib === "color" || attrib === "label" || attrib === "scale") {
-        var data = {};
-        data[attrib] = autoNumericize(val);
-        this.G.add_node(node, data);
-        if(this.G === currentGraph.parent_graph) {
-            currentGraph.add_node(node, data);
-        }
+            var data = {};
+            data[attrib] = autoNumericize(val);
+            this.G.add_node(node, data);
+            if(this.G === currentGraph.parent_graph) {
+                currentGraph.add_node(node, data);
+            }
         } else {
             this.G.node.get(node)[attrib] = autoNumericize(val);
         }
@@ -984,12 +984,12 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(this.G.has_edge(a, b)) {
         if(attrib === "color" || attrib === "label" || attrib === "scale") {
-        var data = {};
-        data[attrib] = autoNumericize(val);
-        this.G.add_edge(a, b, data);
-        if(this.G === currentGraph.parent_graph) {
-            currentGraph.add_edge(a, b, data);
-        }
+            var data = {};
+            data[attrib] = autoNumericize(val);
+            this.G.add_edge(a, b, data);
+            if(this.G === currentGraph.parent_graph) {
+                currentGraph.add_edge(a, b, data);
+            }
         } else {
             this.G.edge.get(a).get(b)[attrib] = autoNumericize(val);
         }
@@ -1047,9 +1047,9 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
             nodes.each(function(d, i) {
                 if(d.node === node) {
                     updateNodeDimensionsAndCostume(d3.select(nodes[0][i]));
-        }
+                }
             });
-    }
+        }
     }
 };
 
@@ -1497,14 +1497,14 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
         }
     }
 
-            var data = CSV.csvToArray(string);
-            if(data[0][0] === '' || data[0][0] === null) {
-                // Try parsing as adjacency matrix.
+    var data = CSV.csvToArray(string);
+    if(data[0][0] === '' || data[0][0] === null) {
+        // Try parsing as adjacency matrix.
         this.importGraph(parseAdjacencyMatrix(data), true);
-            } else {
-                // Try parsing as adjacency list.
+    } else {
+        // Try parsing as adjacency list.
         this.importGraph(parseAdjacencyList(data), true);
-            }
+    }
 };
 
 SpriteMorph.prototype.loadGraphFromURL = function(url) {
@@ -2008,9 +2008,6 @@ SpriteMorph.prototype.convertToGraph = function() {
     }
 };
 
-/*
-User Menu
-*/
 
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
@@ -2394,10 +2391,6 @@ User Menu
         }
     }
 }());
-
-/*
-Attributes
-*/
 
 function allNodeAttributes(morph) {
     return morph.parentThatIsA(StageMorph).nodeAttributes.concat(morph.nodeAttributes);
@@ -2979,7 +2972,7 @@ function graphToObject(G) {
             var name = d.__costume__.name;
             if(!costumes.hasOwnProperty(name)) {
                 costumes[name] = d.__costume__.contents.toDataURL();
-        }
+            }
             d.__costume__ = name;
         }
         data.nodes.push(d);
@@ -3007,7 +3000,7 @@ function graphToObject(G) {
                 if(!costumes.hasOwnProperty(name)) {
                     costumes[name] = link.__costume__.contents.toDataURL();
 
-            }
+                }
                 link.__costume__ = name;
             }
             data.links.push(link);
