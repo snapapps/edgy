@@ -24,6 +24,14 @@ IDE_Morph.prototype.createCorralBar = (function createCorralBar (oldCreateCorral
     }
 }(IDE_Morph.prototype.createCorralBar));
 
+IDE_Morph.prototype.createStage = (function createStage (oldCreateStage) {
+    return function () {
+        var retval = oldCreateStage.call(this);
+        this.emptyStageString = this.serializer.serialize(this.stage);
+        return retval;
+    }
+}(IDE_Morph.prototype.createStage));
+
 IDE_Morph.prototype.setMaxVisibleNodes = function () {
     var myself = this;
 
