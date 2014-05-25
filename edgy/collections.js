@@ -480,7 +480,7 @@ Dict
 SpriteMorph.prototype.reportNewDict = function(elements) {
     var res = new Map();
     for(var i=0;i<elements.contents.length;i+=2){
-        res.set(elements.contents[i], parseInt(elements.contents[i+1]));
+        res.set(elements.contents[i], elements.contents[i+1]);
     }
     return res;
 };
