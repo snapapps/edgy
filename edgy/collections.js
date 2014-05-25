@@ -879,7 +879,7 @@ SpriteMorph.prototype.isPQueueEmpty = function (list) {
         replacePQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'replace %s to %s in pqueue %l',
+            spec: 'replace %n to %n in pqueue %l',
         },
         isPQueueEmpty: {
             type: 'predicate',
