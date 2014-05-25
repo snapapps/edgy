@@ -1,7 +1,7 @@
 
-/* global MultiArgMorph, BoxMorph, SpriteMorph, StringMorph,
-SyntaxElementMorph, CellMorph, ScrollFrameMorph, localize, MorphicPreferences,
-Color, Point, HandleMorph, ArrowMorph, PushButtonMorph, PushButtonMorph,
+/* global MultiArgMorph, BoxMorph, SpriteMorph, StringMorph, SyntaxElementMorph,
+CellMorph, ScrollFrameMorph, localize, MorphicPreferences, Color, Point,
+HandleMorph, ArrowMorph, PushButtonMorph, PushButtonMorph, SpeechBubbleMorph,
 MenuMorph, Morph, WatcherMorph, ArgMorph, StageMorph, List */
 
 /**
@@ -421,6 +421,41 @@ SyntaxElementMorph.prototype.labelPart = (function(){
         }else{
             return part;
         }
+    };
+})();
+
+// Show bubble containing output when the MultiArgPairsMorph input is clicked.
+
+SyntaxElementMorph.prototype.showBubble = (function(){
+    var oldShowBubble = SyntaxElementMorph.prototype.showBubble;
+
+    return function (value) {
+        var bubble,
+            morphToShow,
+            isClickable = false,
+            wrrld = this.world();
+
+        if ((value === undefined) || !wrrld) {
+            return null;
+        }
+        if (value instanceof Map) {
+            morphToShow = new MapMorph(value);
+            morphToShow.isDraggable = false;
+            isClickable = true;
+        } else {
+            return oldShowBubble.call(this, value);
+        }
+        bubble = new SpeechBubbleMorph(
+            morphToShow,
+            null,
+            Math.max(this.rounding - 2, 6),
+            0
+        );
+        bubble.popUp(
+            wrrld,
+            this.rightCenter().add(new Point(2, 0)),
+            isClickable
+        );
     };
 })();
 
