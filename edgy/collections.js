@@ -405,12 +405,19 @@ SyntaxElementMorph.prototype.labelPart = (function(){
                     part.addInput();
                     part.isStatic = true;
                     part.canBeEmpty = false;
-                    return part;
+                    break;
+                case '%expN':
+                    part = new MultiArgMorph('%n', null, 0);
+                    part.addInput();
+                    part.isStatic = true;
+                    part.canBeEmpty = false;
+                    break;
                 case '%map':
                     // Draw a 'list' icon to accept variables, this only has an effect on the icon.
                     part = new ArgMorph('list');
-                    return part;
+                    break;
             }
+            return part;
         }else{
             return part;
         }
@@ -847,7 +854,7 @@ SpriteMorph.prototype.isPQueueEmpty = function (list) {
         reportNewPQueue: {
             type: 'reporter',
             category: 'lists',
-            spec: 'pqueue %exp',
+            spec: 'pqueue %expN',
         },
         reportPQueueTop: {
             type: 'reporter',
@@ -862,7 +869,7 @@ SpriteMorph.prototype.isPQueueEmpty = function (list) {
         pushPQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'push %s to pqueue %l',
+            spec: 'push %n to pqueue %l',
         },
         popPQueue: {
             type: 'command',
