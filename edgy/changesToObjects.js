@@ -1034,6 +1034,14 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     }
 };
 
+SpriteMorph.prototype.getNodeAttribDict = function(node) {
+    var myself = this;
+    var attribs = allNodeAttributes(this).concat(["color", "label", "scale"]);
+    return new Map(attribs.map(function(attr) {
+        return [attr, myself.getNodeAttrib(attr, node)];
+    }));
+};
+
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(this.G.has_edge(a, b)) {
@@ -2143,6 +2151,11 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'nodes',
             spec: '%nodeAttr of node %s'
         },
+        getNodeAttribDict: {
+            type: 'reporter',
+            category: 'nodes',
+            spec: 'all attributes of %s'
+        },
         setEdgeAttrib: {
             type: 'command',
             category: 'edges',
@@ -2657,6 +2670,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push('-');
             blocks.push(block('setNodeAttrib'));
             blocks.push(block('getNodeAttrib'));
+            blocks.push(block('getNodeAttribDict'));
             blocks.push(block('setNodeCostume'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('sortNodes'));
