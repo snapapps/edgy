@@ -21,12 +21,12 @@ SnapSerializer.prototype.loadObject = (function loadObject (oldLoadObject) {
             }
             if (child.tag == 'nodeattrs') {
                 child.children.forEach(function (attr) {
-                    object.nodeAttributes.push(attr.attributes.name);
+                    object.addNodeAttribute(attr.attributes.name);
                 });
             }
             if (child.tag == 'edgeattrs') {
                 child.children.forEach(function (attr) {
-                    object.edgeAttributes.push(attr.attributes.name);
+                    object.addEdgeAttribute(attr.attributes.name);
                 });
             }
         });

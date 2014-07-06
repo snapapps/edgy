@@ -109,7 +109,7 @@ graphEl.on("DOMNodeInserted", function() {
                     world.worldCanvas.focus();
                 });
                 menu.addLine();
-                allNodeAttributes(currentGraphSprite).forEach(function(attr) {
+                currentGraphSprite.allNodeAttributes().forEach(function(attr) {
                     menu.addItem('set "' + attr + '"', function () {
                         new DialogBoxMorph(null, function (value) {
                             currentGraphSprite.setNodeAttrib(attr, d.node, value)
@@ -191,7 +191,7 @@ graphEl.on("DOMNodeInserted", function() {
                     world.worldCanvas.focus();
                 });
                 menu.addLine();
-                allEdgeAttributes(currentGraphSprite).forEach(function(attr) {
+               currentGraphSprite.allEdgeAttributes().forEach(function(attr) {
                     menu.addItem('set "' + attr + '"', function () {
                         new DialogBoxMorph(null, function (value) {
                             currentGraphSprite.setEdgeAttrib(attr, new List(d.edge), value)
@@ -1036,7 +1036,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
 
 SpriteMorph.prototype.getNodeAttribDict = function(node) {
     var myself = this;
-    var attribs = allNodeAttributes(this).concat(["color", "label", "scale"]);
+    var attribs = this.allNodeAttributes().concat(["color", "label", "scale"]);
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getNodeAttrib(attr, node)];
     }));
@@ -1091,7 +1091,7 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
 
 SpriteMorph.prototype.getEdgeAttribDict = function(node) {
     var myself = this;
-    var attribs = allEdgeAttributes(this).concat(["color", "label", "width"]);
+    var attribs = this.allEdgeAttributes().concat(["color", "label", "width"]);
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getEdgeAttrib(attr, node)];
     }));
@@ -1483,10 +1483,10 @@ SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
         });
     });
     Object.keys(nodeattrset).forEach(function(attr) {
-        addNodeAttribute(myself, attr, false);
+        myself.addNodeAttribute(attr, false);
     });
     Object.keys(edgeattrset).forEach(function(attr) {
-        addEdgeAttribute(myself, attr, false);
+        myself.addEdgeAttribute(attr, false);
     });
 }
 
@@ -2462,19 +2462,24 @@ SpriteMorph.prototype.convertToGraph = function() {
     }
 }());
 
-function allNodeAttributes(morph) {
-    return morph.parentThatIsA(StageMorph).nodeAttributes.concat(morph.nodeAttributes);
+StageMorph.prototype.allNodeAttributes = SpriteMorph.prototype.allNodeAttributes = function() {
+    return this.parentThatIsA(StageMorph).nodeAttributes.concat(this.nodeAttributes);
 }
 
-function addNodeAttribute(morph, name, global) {
+StageMorph.prototype.isNodeAttrAvailable = SpriteMorph.prototype.isNodeAttrAvailable = function(name) {
+    var attrs = this.allNodeAttributes().concat(["label", "color", "scale"]);
+    return attrs.indexOf(name) === -1;
+}
+
+StageMorph.prototype.addNodeAttribute = SpriteMorph.prototype.addNodeAttribute = function(name, global) {
     var attrs;
     if(global) {
-        attrs = morph.parentThatIsA(StageMorph).nodeAttributes
+        attrs = this.parentThatIsA(StageMorph).nodeAttributes;
     } else {
-        attrs = morph.nodeAttributes;
+        attrs = this.nodeAttributes;
     }
 
-    if(allNodeAttributes(morph).indexOf(name) === -1) {
+    if(this.isNodeAttrAvailable(name)) {
         attrs.push(name);
         return true;
     }
@@ -2482,15 +2487,15 @@ function addNodeAttribute(morph, name, global) {
     return false;
 }
 
-function deleteNodeAttribute(morph, name) {
-    var idx = morph.parentThatIsA(StageMorph).nodeAttributes.indexOf(name);
+StageMorph.prototype.deleteNodeAttribute = SpriteMorph.prototype.deleteNodeAttribute = function(name) {
+    var idx = this.parentThatIsA(StageMorph).nodeAttributes.indexOf(name);
     if(idx > -1) {
-        morph.parentThatIsA(StageMorph).nodeAttributes.splice(idx, 1);
+        this.parentThatIsA(StageMorph).nodeAttributes.splice(idx, 1);
         return true;
     }
-    idx = morph.nodeAttributes.indexOf(name);
+    idx = this.nodeAttributes.indexOf(name);
     if(idx > -1) {
-        morph.nodeAttributes.splice(idx, 1)
+        this.nodeAttributes.splice(idx, 1)
         return true;
     }
     return false;
@@ -2506,26 +2511,32 @@ InputSlotMorph.prototype.getNodeAttrsDict = function () {
     }
     sprite = block.receiver();
 
-    allNodeAttributes(sprite).forEach(function (name) {
+    sprite.allNodeAttributes().forEach(function (name) {
         dict[name] = name;
     });
 
     return dict;
 };
 
-function allEdgeAttributes(morph) {
-    return morph.parentThatIsA(StageMorph).edgeAttributes.concat(morph.edgeAttributes);
+
+StageMorph.prototype.allEdgeAttributes = SpriteMorph.prototype.allEdgeAttributes = function() {
+    return this.parentThatIsA(StageMorph).edgeAttributes.concat(this.edgeAttributes);
 }
 
-function addEdgeAttribute(morph, name, global) {
+StageMorph.prototype.isEdgeAttrAvailable = SpriteMorph.prototype.isEdgeAttrAvailable = function(name) {
+    var attrs = this.allEdgeAttributes().concat(["label", "color", "width"]);
+    return attrs.indexOf(name) === -1;
+}
+
+StageMorph.prototype.addEdgeAttribute = SpriteMorph.prototype.addEdgeAttribute = function(name, global) {
     var attrs;
     if(global) {
-        attrs = morph.parentThatIsA(StageMorph).edgeAttributes
+        attrs = this.parentThatIsA(StageMorph).edgeAttributes;
     } else {
-        attrs = morph.edgeAttributes;
+        attrs = this.edgeAttributes;
     }
 
-    if(allEdgeAttributes(morph).indexOf(name) === -1) {
+    if(this.isEdgeAttrAvailable(name)) {
         attrs.push(name);
         return true;
     }
@@ -2533,20 +2544,19 @@ function addEdgeAttribute(morph, name, global) {
     return false;
 }
 
-function deleteEdgeAttribute(morph, name) {
-    var idx = morph.parentThatIsA(StageMorph).edgeAttributes.indexOf(name);
+StageMorph.prototype.deleteEdgeAttribute = SpriteMorph.prototype.deleteEdgeAttribute = function(name) {
+    var idx = this.parentThatIsA(StageMorph).edgeAttributes.indexOf(name);
     if(idx > -1) {
-        morph.parentThatIsA(StageMorph).edgeAttributes.splice(idx, 1);
+        this.parentThatIsA(StageMorph).edgeAttributes.splice(idx, 1);
         return true;
     }
-    idx = morph.edgeAttributes.indexOf(name);
+    idx = this.edgeAttributes.indexOf(name);
     if(idx > -1) {
-        morph.edgeAttributes.splice(idx, 1)
+        this.edgeAttributes.splice(idx, 1)
         return true;
     }
     return false;
 }
-
 
 InputSlotMorph.prototype.getEdgeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
@@ -2558,7 +2568,7 @@ InputSlotMorph.prototype.getEdgeAttrsDict = function () {
     }
     sprite = block.receiver();
 
-    allEdgeAttributes(sprite).forEach(function (name) {
+    sprite.allEdgeAttributes().forEach(function (name) {
         dict[name] = name;
     });
 
@@ -2627,7 +2637,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                     new VariableDialogMorph(
                         null,
                         function (pair) {
-                            if (addNodeAttribute(myself, pair[0], pair[1])) {
+                            if (myself.addNodeAttribute(pair[0], pair[1])) {
                                 myself.blocksCache[category] = null;
                                 myself.paletteCache[category] = null;
                                 myself.parentThatIsA(IDE_Morph).refreshPalette();
@@ -2644,13 +2654,13 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             );
             blocks.push(button);
 
-            if (allNodeAttributes(this).length > 0) {
+            if (this.allNodeAttributes().length > 0) {
                 button = new PushButtonMorph(
                     null,
                     function () {
                         var menu = new MenuMorph(
                             function(attr) {
-                                if(deleteNodeAttribute(myself, attr)) {
+                                if(myself.deleteNodeAttribute(attr)) {
                                     myself.blocksCache[category] = null;
                                     myself.paletteCache[category] = null;
                                     myself.parentThatIsA(IDE_Morph).refreshPalette();
@@ -2659,7 +2669,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                             null,
                             myself
                         );
-                        allNodeAttributes(myself).forEach(function (name) {
+                        myself.allNodeAttributes().forEach(function (name) {
                             menu.addItem(name, name);
                         });
                         menu.popUpAtHand(myself.world());
@@ -2703,7 +2713,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                     new VariableDialogMorph(
                         null,
                         function (pair) {
-                            if (addEdgeAttribute(myself, pair[0], pair[1])) {
+                            if (myself.addEdgeAttribute(pair[0], pair[1])) {
                                 myself.blocksCache[category] = null;
                                 myself.paletteCache[category] = null;
                                 myself.parentThatIsA(IDE_Morph).refreshPalette();
@@ -2720,13 +2730,13 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             );
             blocks.push(button);
 
-            if (allEdgeAttributes(this).length > 0) {
+            if (this.allEdgeAttributes().length > 0) {
                 button = new PushButtonMorph(
                     null,
                     function () {
                         var menu = new MenuMorph(
                             function(attr) {
-                                if(deleteEdgeAttribute(myself, attr)) {
+                                if(myself.deleteEdgeAttribute(attr)) {
                                     myself.blocksCache[category] = null;
                                     myself.paletteCache[category] = null;
                                     myself.parentThatIsA(IDE_Morph).refreshPalette();
@@ -2735,7 +2745,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
                             null,
                             myself
                         );
-                        allEdgeAttributes(myself).forEach(function (name) {
+                        myself.allEdgeAttributes().forEach(function (name) {
                             menu.addItem(name, name);
                         });
                         menu.popUpAtHand(myself.world());
@@ -2946,7 +2956,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
                         delete data[k];
                     }
                 } else if(k !== 'color' && k !== 'label') {
-                    addNodeAttribute(myself, k, false);
+                    myself.addNodeAttribute(k, false);
                 }
             }
         }
@@ -2965,7 +2975,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
                         delete data[k];
                     }
                 } else if(k !== 'color' && k !== 'label') {
-                    addEdgeAttribute(myself, k, false);
+                    this.addEdgeAttribute(k, false);
                 }
             }
         }
