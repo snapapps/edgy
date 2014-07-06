@@ -169,7 +169,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.data.color = autoNumericize(color);
-                        node.select(".node-shape").style("fill", LAYOUT_OPTS.edge_style.fill);
+                        node.select(".line").style("fill", LAYOUT_OPTS.edge_style.fill);
                     }).prompt('Edge color', (d.data.color || DEFAULT_EDGE_COLOR).toString(), world);
                     world.worldCanvas.focus();
                 });
