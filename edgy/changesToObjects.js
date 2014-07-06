@@ -1017,7 +1017,11 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
 
 SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     node = parseNode(node);
-    var val = this.G.node.get(node)[attrib];
+    if(this.G.has_node(node)) {
+        var val = this.G.node.get(node)[attrib];
+    } else {
+        throw new Error("Node '" + node.toString() + "' does not exist.")
+    }
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
     if(val === undefined) {
@@ -1071,8 +1075,13 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
 
 SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     var a = parseNode(edge.at(1)),
-        b = parseNode(edge.at(2)),
-        val = this.G.adj.get(a).get(b)[attrib];
+        b = parseNode(edge.at(2));
+
+    if(this.G.has_edge(a, b)) {
+        var val = this.G.adj.get(a).get(b)[attrib];
+    } else {
+        throw new Error(["Edge (", a.toString(), ",", b.toString(), ") does not exist."].join(""));
+    }
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
     if(val === undefined) {
