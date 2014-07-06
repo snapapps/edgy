@@ -1089,6 +1089,14 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     }
 };
 
+SpriteMorph.prototype.getEdgeAttribDict = function(node) {
+    var myself = this;
+    var attribs = allEdgeAttributes(this).concat(["color", "label", "width"]);
+    return new Map(attribs.map(function(attr) {
+        return [attr, myself.getEdgeAttrib(attr, node)];
+    }));
+};
+
 SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
     // NB: Due to InputSlotMorph not having support for multiple dropdown
     // elements with the same name, we are only able to get the first costume
@@ -2166,6 +2174,11 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'edges',
             spec: '%edgeAttr of edge %l'
         },
+        getEdgeAttribDict: {
+            type: 'reporter',
+            category: 'edges',
+            spec: 'all attributes of %l'
+        },
         setNodeCostume: {
             type: 'command',
             category: 'nodes',
@@ -2745,6 +2758,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push('-');
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getEdgeAttrib'));
+            blocks.push(block('getEdgeAttribDict'));
             blocks.push(block('setEdgeCostume'));
             blocks.push(block('getEdgesWithAttr'));
             blocks.push(block('sortEdges'));
