@@ -108,6 +108,17 @@ graphEl.on("DOMNodeInserted", function() {
                               true);
                     world.worldCanvas.focus();
                 });
+                menu.addLine();
+                allNodeAttributes(currentGraphSprite).forEach(function(attr) {
+                    menu.addItem('set "' + attr + '"', function () {
+                        new DialogBoxMorph(null, function (value) {
+                            currentGraphSprite.setNodeAttrib(attr, d.node, value)
+                        }).prompt(attr,
+                                  d.data[attr] !== undefined ? d.data[attr] : "",
+                                  world);
+                        world.worldCanvas.focus();
+                    });
+                });
                 menu.popUpAtHand(world);
             } else {
                 // Layout uses the fixed attribute for other things during
@@ -178,6 +189,17 @@ graphEl.on("DOMNodeInserted", function() {
                               graphDisplayCostumesMenu,
                               true);
                     world.worldCanvas.focus();
+                });
+                menu.addLine();
+                allEdgeAttributes(currentGraphSprite).forEach(function(attr) {
+                    menu.addItem('set "' + attr + '"', function () {
+                        new DialogBoxMorph(null, function (value) {
+                            currentGraphSprite.setEdgeAttrib(attr, new List(d.edge), value)
+                        }).prompt(attr,
+                                  d.data[attr] !== undefined ? d.data[attr] : "",
+                                  world);
+                        world.worldCanvas.focus();
+                    });
                 });
                 menu.popUpAtHand(world);
                 d3.event.stopPropagation();
