@@ -77,7 +77,7 @@ graphEl.on("DOMNodeInserted", function() {
                 }
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
-                        d.G.node.get(d.node).label = autoNumericize(label);
+                        d.data.label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                         updateNodeDimensionsAndCostume(node);
                     }).prompt('Node label', (d.data.label || d.node).toString(), world);
@@ -161,7 +161,7 @@ graphEl.on("DOMNodeInserted", function() {
                 }
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
-                        d.G.adj.get(d.edge[0]).get(d.edge[1]).label = autoNumericize(label);
+                        d.data.label = autoNumericize(label);
                         node.select("text").node().textContent = label;
                     }).prompt('Edge label', (d.data.label || '').toString(), world);
                     world.worldCanvas.focus();
