@@ -989,6 +989,9 @@ SpriteMorph.prototype.getNeighbors = function(node) {
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
     if(this.G.has_node(node)) {
+        // For consistency's sake, we use autoNumericize() to normalize
+        // attribute values since Snap's UI does not distinguish between the
+        // number 1 and the string "1".
         if(attrib === "color" || attrib === "label" || attrib === "scale") {
             var data = {};
             data[attrib] = autoNumericize(val);
@@ -1059,6 +1062,9 @@ SpriteMorph.prototype.setNodeAttribsFromDict = function(node, dict) {
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(this.G.has_edge(a, b)) {
+        // For consistency's sake, we use autoNumericize() to normalize
+        // attribute values since Snap's UI does not distinguish between the
+        // number 1 and the string "1".
         if(attrib === "color" || attrib === "label" || attrib === "scale") {
             var data = {};
             data[attrib] = autoNumericize(val);
