@@ -1389,9 +1389,8 @@ SpriteMorph.prototype.isCyclic = function() {
 };
 
 SpriteMorph.prototype.getMatrixEntry = function(a, b) {
-    a = parseNode(a);
-    b = parseNode(b);
-    if(this.G.has_edge(a, b)) {
+    var edge = new List([a, b]);
+    if(this.G.hasEdge(edge)) {
         return 1;
     } else {
         return 0;
@@ -1409,9 +1408,7 @@ SpriteMorph.prototype.setMatrixEntry = function(a, b, val) {
 
 SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
     var edge = new List([a, b]);
-    a = parseNode(a);
-    b = parseNode(b);
-    if(this.G.has_edge(a, b)) {
+    if(this.hasEdge(edge)) {
         return this.getEdgeAttrib(weightKey, edge);
     } else {
         return Infinity;
