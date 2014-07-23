@@ -989,6 +989,9 @@ SpriteMorph.prototype.getNeighbors = function(node) {
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
     if(this.G.has_node(node)) {
+        // For consistency's sake, we use autoNumericize() to normalize
+        // attribute values since Snap's UI does not distinguish between the
+        // number 1 and the string "1".
         if(attrib === "color" || attrib === "label" || attrib === "scale") {
             var data = {};
             data[attrib] = autoNumericize(val);
@@ -1046,9 +1049,22 @@ SpriteMorph.prototype.getNodeAttribDict = function(node) {
     }));
 };
 
+SpriteMorph.prototype.setNodeAttribsFromDict = function(node, dict) {
+    var myself = this;
+    if(!this.hasNode(node)) {
+        this.addNode(new List([node]));
+    }
+    dict.forEach(function(v, k) {
+        myself.setNodeAttrib(k, node, v);
+    });
+};
+
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(this.G.has_edge(a, b)) {
+        // For consistency's sake, we use autoNumericize() to normalize
+        // attribute values since Snap's UI does not distinguish between the
+        // number 1 and the string "1".
         if(attrib === "color" || attrib === "label" || attrib === "scale") {
             var data = {};
             data[attrib] = autoNumericize(val);
@@ -1104,6 +1120,16 @@ SpriteMorph.prototype.getEdgeAttribDict = function(node) {
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getEdgeAttrib(attr, node)];
     }));
+};
+
+SpriteMorph.prototype.setEdgeAttribsFromDict = function(edge, dict) {
+    var myself = this;
+    if(!this.hasEdge(edge)) {
+        this.addEdge(new List([edge]));
+    }
+    dict.forEach(function(v, k) {
+        myself.setEdgeAttrib(k, edge, v);
+    });
 };
 
 SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
@@ -1363,9 +1389,8 @@ SpriteMorph.prototype.isCyclic = function() {
 };
 
 SpriteMorph.prototype.getMatrixEntry = function(a, b) {
-    a = parseNode(a);
-    b = parseNode(b);
-    if(this.G.has_edge(a, b)) {
+    var edge = new List([a, b]);
+    if(this.G.hasEdge(edge)) {
         return 1;
     } else {
         return 0;
@@ -1383,9 +1408,7 @@ SpriteMorph.prototype.setMatrixEntry = function(a, b, val) {
 
 SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
     var edge = new List([a, b]);
-    a = parseNode(a);
-    b = parseNode(b);
-    if(this.G.has_edge(a, b)) {
+    if(this.hasEdge(edge)) {
         return this.getEdgeAttrib(weightKey, edge);
     } else {
         return Infinity;
@@ -2173,6 +2196,11 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'nodes',
             spec: 'all attributes of %s'
         },
+        setNodeAttribsFromDict: {
+            type: 'command',
+            category: 'nodes',
+            spec: 'set attributes of %s from dict %l'
+        },
         setEdgeAttrib: {
             type: 'command',
             category: 'edges',
@@ -2187,6 +2215,11 @@ SpriteMorph.prototype.convertToGraph = function() {
             type: 'reporter',
             category: 'edges',
             spec: 'all attributes of %l'
+        },
+        setEdgeAttribsFromDict: {
+            type: 'command',
+            category: 'edges',
+            spec: 'set attributes of %s from dict %l'
         },
         setNodeCostume: {
             type: 'command',
@@ -2703,6 +2736,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setNodeAttrib'));
             blocks.push(block('getNodeAttrib'));
             blocks.push(block('getNodeAttribDict'));
+            blocks.push(block('setNodeAttribsFromDict'));
             blocks.push(block('setNodeCostume'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('sortNodes'));
@@ -2778,6 +2812,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setEdgeAttrib'));
             blocks.push(block('getEdgeAttrib'));
             blocks.push(block('getEdgeAttribDict'));
+            blocks.push(block('setEdgeAttribsFromDict'));
             blocks.push(block('setEdgeCostume'));
             blocks.push(block('getEdgesWithAttr'));
             blocks.push(block('sortEdges'));
