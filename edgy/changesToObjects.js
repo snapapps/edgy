@@ -1446,16 +1446,10 @@ function NotDisjointError(message) {
 }
 NotDisjointError.prototype = new Error;
 
-function addGraph(G, other) {
-    if(!areDisjoint(G, other)) {
+SpriteMorph.prototype.addGraph = function(other) {
+    if(!areDisjoint(this.G, other)) {
         throw new NotDisjointError("The graphs are not disjoint.");
     }
-    // FIXME: JSNetworkX throws an exception if iterators are used here.
-    G.add_nodes_from(other.nodes(true));
-    G.add_edges_from(other.edges(null, true));
-}
-
-SpriteMorph.prototype.renumberAndAdd = function(other, startNum) {
     var ide = this.parentThatIsA(IDE_Morph),
         totalNodes = this.G.number_of_nodes() + other.number_of_nodes();
     if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
@@ -1465,8 +1459,14 @@ SpriteMorph.prototype.renumberAndAdd = function(other, startNum) {
         ide.showMessage(formatTooManyNodesMessage(totalNodes,
                                                   ide.maxVisibleNodes));
     }
+    // FIXME: JSNetworkX throws an exception if iterators are used here.
+    this.G.add_nodes_from(other.nodes(true));
+    this.G.add_edges_from(other.edges(null, true));
+}
+
+SpriteMorph.prototype.renumberAndAdd = function(other, startNum) {
     var relabeled = jsnx.relabel.relabel_nodes(other, function (n) { return n + startNum; });
-    addGraph(this.G, relabeled);
+    this.addGraph(relabeled);
 }
 
 SpriteMorph.prototype.generateBalancedTree = function(r, h, n) {
@@ -1494,7 +1494,7 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
     // Grid graphs by default come with labels as [x, y], which blow up with
     // the renderer for some reason. Stringify the labels instead.
     grid = jsnx.relabel.relabel_nodes(grid, function(x) { return x.toString(); });
-    addGraph(this.G, grid);
+    this.addGraph(G, grid);
 };
 
 SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
@@ -3026,7 +3026,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
     });
 
     if(addTo) {
-        addGraph(this.G, G);
+        this.addGraph(G);
     } else {
         this.setGraph(G);
     }
