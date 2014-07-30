@@ -83,7 +83,7 @@ ArgLabelMorph, localize, XML_Element, hex_sha512*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.threads = '2014-Feb-10';
+modules.threads = '2014-July-28';
 
 var ThreadManager;
 var Process;
@@ -676,6 +676,7 @@ Process.prototype.doYield = function () {
 // Process Exception Handling
 
 Process.prototype.handleError = function (error, element) {
+    var m = element;
     this.stop();
     this.errorFlag = true;
     this.topBlock.addErrorHighlight();
@@ -762,6 +763,13 @@ Process.prototype.reifyPredicate = function (topBlock, parameterNames) {
     return this.reify(topBlock, parameterNames);
 };
 
+Process.prototype.reportJSFunction = function (parmNames, body) {
+    return Function.apply(
+        null,
+        parmNames.asArray().concat([body])
+    );
+};
+
 Process.prototype.doRun = function (context, args, isCustomBlock) {
     return this.evaluate(context, args, true, isCustomBlock);
 };
@@ -772,6 +780,12 @@ Process.prototype.evaluate = function (
     isCommand
 ) {
     if (!context) {return null; }
+    if (context instanceof Function) {
+        return context.apply(
+            this.homeContext.receiver,
+            args.asArray().concat([this])
+        );
+    }
     if (context.isContinuation) {
         return this.runContinuation(context, args);
     }
@@ -1080,7 +1094,6 @@ Process.prototype.evaluateCustomBlock = function () {
     }
 };
 
-
 // Process variables primitives
 
 Process.prototype.doDeclareVariables = function (varNames) {
@@ -1131,6 +1144,7 @@ Process.prototype.doShowVar = function (varName) {
         target,
         label,
         others,
+        isGlobal,
         name = varName;
 
     if (name instanceof Context) {
@@ -1157,7 +1171,11 @@ Process.prototype.doShowVar = function (varName) {
                 return;
             }
             // if no watcher exists, create a new one
-            if (target.owner) {
+            isGlobal = contains(
+                this.homeContext.receiver.variables.parentFrame.names(),
+                varName
+            );
+            if (isGlobal || target.owner) {
                 label = name;
             } else {
                 label = name + ' (temporary)';
@@ -1263,6 +1281,36 @@ Process.prototype.getRandomFromList = function (l) {
     // in 2^62" according to
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random)
     return l.at(Math.min(idx, l.length()));
+}
+
+function snapClone(o, memo) {
+    memo = memo || new Map();
+
+    if(memo.has(o)) {
+        return memo.get(o);
+    }
+
+    if(o instanceof List) {
+        var c = new List(o.asArray().map(snapClone, memo));
+        memo.set(o, c);
+        return c;
+    } else if(o instanceof Map) {
+        var l = [];
+        o.forEach(function(v, k) {
+            l.push([snapClone(k, memo), snapClone(v, memo)]);
+        });
+        var c = new Map(l);
+        memo.set(o, c);
+        return c;
+    } else if(typeof o == "number" || typeof o == "string" || typeof o == "boolean") {
+        return o;
+    } else {
+        throw new Error("Encountered object of unknown type.");
+    }
+}
+
+Process.prototype.getClone = function (l) {
+    return snapClone(l);
 }
 
 Process.prototype.doListJoin = function (a, b) {
@@ -1525,10 +1573,10 @@ Process.prototype.doSetFastTracking = function (bool) {
     if (this.homeContext.receiver) {
         ide = this.homeContext.receiver.parentThatIsA(IDE_Morph);
         if (ide) {
-            if (ide.stage.isFastTracked) {
-                ide.stopFastTracking();
-            } else {
+            if (bool) {
                 ide.startFastTracking();
+            } else {
+                ide.stopFastTracking();
             }
         }
     }
@@ -2190,6 +2238,9 @@ Process.prototype.reportTextSplit = function (string, delimiter) {
         break;
     case 'whitespace':
         return new List(str.trim().split(/[\t\r\n ]+/));
+    case 'letter':
+        del = '';
+        break;
     default:
         del = (delimiter || '').toString();
     }
@@ -2277,14 +2328,14 @@ Process.prototype.getObjectsNamed = function (name, thisObj, stageObj) {
 };
 
 Process.prototype.doFaceTowards = function (name) {
-    var thisObj = this.homeContext.receiver,
+    var thisObj = this.blockReceiver(),
         thatObj;
 
     if (thisObj) {
         if (this.inputOption(name) === 'mouse-pointer') {
             thisObj.faceToXY(this.reportMouseX(), this.reportMouseY());
         } else {
-            thatObj = this.getOtherObject(name, thisObj);
+            thatObj = this.getOtherObject(name, this.homeContext.receiver);
             if (thatObj) {
                 thisObj.faceToXY(
                     thatObj.xPosition(),
@@ -2296,14 +2347,14 @@ Process.prototype.doFaceTowards = function (name) {
 };
 
 Process.prototype.doGotoObject = function (name) {
-    var thisObj = this.homeContext.receiver,
+    var thisObj = this.blockReceiver(),
         thatObj;
 
     if (thisObj) {
         if (this.inputOption(name) === 'mouse-pointer') {
             thisObj.gotoXY(this.reportMouseX(), this.reportMouseY());
         } else {
-            thatObj = this.getOtherObject(name, thisObj);
+            thatObj = this.getOtherObject(name, this.homeContext.receiver);
             if (thatObj) {
                 thisObj.gotoXY(
                     thatObj.xPosition(),
@@ -2888,7 +2939,18 @@ Context.prototype.image = function () {
         ring.embed(block, this.isContinuation ? [] : this.inputs);
         return ring.fullImage();
     }
-    return newCanvas();
+
+    // otherwise show an empty ring
+    ring.color = SpriteMorph.prototype.blockColor.other;
+    ring.setSpec('%rc %ringparms');
+
+    // also show my inputs, unless I'm a continuation
+    if (!this.isContinuation) {
+        this.inputs.forEach(function (inp) {
+            ring.parts()[1].addInput(inp);
+        });
+    }
+    return ring.fullImage();
 };
 
 // Context continuations:
@@ -2910,7 +2972,8 @@ Context.prototype.continuation = function () {
 Context.prototype.copyForContinuation = function () {
     var cpy = copy(this),
         cur = cpy,
-        isReporter = !(this.expression instanceof Array);
+        isReporter = !(this.expression instanceof Array ||
+            isString(this.expression));
     if (isReporter) {
         cur.prepareContinuationForBinding();
         while (cur.parentContext) {
@@ -2925,7 +2988,8 @@ Context.prototype.copyForContinuation = function () {
 Context.prototype.copyForContinuationCall = function () {
     var cpy = copy(this),
         cur = cpy,
-        isReporter = !(this.expression instanceof Array);
+        isReporter = !(this.expression instanceof Array ||
+            isString(this.expression));
     if (isReporter) {
         this.expression = this.expression.fullCopy();
         this.inputs = [];
@@ -3097,7 +3161,7 @@ VariableFrame.prototype.getVar = function (name, upvars) {
 VariableFrame.prototype.addVar = function (name, value) {
     this.vars[name] = (value === 0 ? 0
               : value === false ? false
-                       : value === '' ? '' : value || null);
+                       : value === '' ? '' : value || 0);
 };
 
 VariableFrame.prototype.deleteVar = function (name) {
@@ -3151,6 +3215,20 @@ VariableFrame.prototype.allNames = function () {
         }
     }
     return answer;
+};
+
+// Variable /////////////////////////////////////////////////////////////////
+
+function Variable(value) {
+    this.value = value;
+}
+
+Variable.prototype.toString = function () {
+    return 'a Variable [' + this.value + ']';
+};
+
+Variable.prototype.copy = function () {
+    return new Variable(this.value);
 };
 
 // UpvarReference ///////////////////////////////////////////////////////////
