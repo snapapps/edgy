@@ -1158,6 +1158,11 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'lists',
             spec: 'random item from %l'
         },
+        getClone: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'clone %l'
+        },
 
         // MAP - experimental
         reportMap: {
@@ -2064,6 +2069,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('doListJoin'));
         blocks.push('-');
         blocks.push(block('getRandomFromList'));
+        blocks.push(block('getClone'));
 
     // for debugging: ///////////////
 
@@ -5187,6 +5193,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('doListJoin'));
         blocks.push('-');
         blocks.push(block('getRandomFromList'));
+        blocks.push(block('getClone'));
 
 
     // for debugging: ///////////////

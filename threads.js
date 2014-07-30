@@ -1283,6 +1283,36 @@ Process.prototype.getRandomFromList = function (l) {
     return l.at(Math.min(idx, l.length()));
 }
 
+function snapClone(o, memo) {
+    memo = memo || new Map();
+
+    if(memo.has(o)) {
+        return memo.get(o);
+    }
+
+    if(o instanceof List) {
+        var c = new List(o.asArray().map(snapClone, memo));
+        memo.set(o, c);
+        return c;
+    } else if(o instanceof Map) {
+        var l = [];
+        o.forEach(function(v, k) {
+            l.push([snapClone(k, memo), snapClone(v, memo)]);
+        });
+        var c = new Map(l);
+        memo.set(o, c);
+        return c;
+    } else if(typeof o == "number" || typeof o == "string") {
+        return o;
+    } else {
+        throw new Error("Encountered object of unknown type.");
+    }
+}
+
+Process.prototype.getClone = function (l) {
+    return snapClone(l);
+}
+
 Process.prototype.doListJoin = function (a, b) {
     a.becomeArray();
     b.becomeArray();
