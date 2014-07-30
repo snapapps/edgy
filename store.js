@@ -61,7 +61,7 @@ SyntaxElementMorph*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.store = '2014-February-13';
+modules.store = '2014-July-29';
 
 
 // XML_Serializer ///////////////////////////////////////////////////////
@@ -457,8 +457,6 @@ SnapSerializer.prototype.loadProjectModel = function (xmlNode) {
         }
     });
 
-    this.objects = {};
-
     /* Global Variables */
 
     if (model.globalVariables) {
@@ -467,6 +465,8 @@ SnapSerializer.prototype.loadProjectModel = function (xmlNode) {
             model.globalVariables
         );
     }
+
+    this.objects = {};
 
     /* Watchers */
 
@@ -521,7 +521,7 @@ SnapSerializer.prototype.loadProjectModel = function (xmlNode) {
             ))
         );
         project.stage.add(watcher);
-        watcher.update();
+        watcher.onNextStep = function () {this.currentValue = null; };
 
         // set watcher's contentsMorph's extent if it is showing a list and
         // its monitor dimensions are given
@@ -618,6 +618,25 @@ SnapSerializer.prototype.loadSprites = function (xmlString, ide) {
         sprite.gotoXY(+model.attributes.x || 0, +model.attributes.y || 0);
         myself.loadObject(sprite, model);
     });
+
+    // restore nesting associations
+    project.stage.children.forEach(function (sprite) {
+        var anchor;
+        if (sprite.nestingInfo) { // only sprites may have nesting info
+            anchor = project.sprites[sprite.nestingInfo.anchor];
+            if (anchor) {
+                anchor.attachPart(sprite);
+            }
+            sprite.rotatesWithAnchor = (sprite.nestingInfo.synch === 'true');
+        }
+    });
+    project.stage.children.forEach(function (sprite) {
+        if (sprite.nestingInfo) { // only sprites may have nesting info
+            sprite.nestingScale = +(sprite.nestingInfo.scale || sprite.scale);
+            delete sprite.nestingInfo;
+        }
+    });
+
     this.objects = {};
     this.project = {};
     this.mediaDict = {};
@@ -1039,7 +1058,7 @@ SnapSerializer.prototype.loadInput = function (model, input, block) {
         input.setColor(this.loadColor(model.contents));
     } else {
         val = this.loadValue(model);
-        if (val) {
+        if (!isNil(val) && input.setContents) {
             input.setContents(this.loadValue(model));
         }
     }
@@ -1309,6 +1328,12 @@ SnapSerializer.prototype.openProject = function (project, ide) {
     ide.createCorral();
     ide.selectSprite(sprite);
     ide.fixLayout();
+
+    // force watchers to update
+    //project.stage.watchers().forEach(function (watcher) {
+    //  watcher.onNextStep = function () {this.currentValue = null;};
+    //})
+
     ide.world().keyboardReceiver = project.stage;
 };
 

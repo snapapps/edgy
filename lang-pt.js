@@ -185,7 +185,7 @@ SnapTranslator.dict.pt = {
     'translator_e-mail':
         'mmsequeira@gmail.com',
     'last_changed':
-        '2014-01-12',
+        '2014-07-29',
 
     // GUI
     // control bar:
@@ -685,6 +685,16 @@ SnapTranslator.dict.pt = {
         'Língua…',
     'Zoom blocks...':
         'Ampliação dos blocos…',
+    'Stage size...':
+        'Tamanho do palco…',
+    'Stage size':
+        'Tamanho do palco',
+    'Stage width':
+        'Largura do palco',
+    'Stage height':
+        'Altura do palco',
+    'Default':
+        'Normal',
     'Blurred shadows':
         'Sombras desfocadas',
     'uncheck to use solid drop\nshadows and highlights':
@@ -767,6 +777,12 @@ SnapTranslator.dict.pt = {
         'Desassinalar para aumentar a velocidade\npermitindo ritmos variáveis das tramas.',
     'check for smooth, predictable\nanimations across computers':
         'Assinalar para obter animações mais suaves\ne previsíveis de computador para computador.',
+    'Flat line ends':
+        'Extremos das linhas planos',
+    'check for flat ends of lines':
+        'Assinalar para que os extremos das linhas\ndesenhadas pela caneta sejam planos.',
+    'uncheck for round ends of lines':
+        'Desassinalar para que os extremos das linhas\ndesenhadas pela caneta sejam redondos.',
 
     // entradas
     'with inputs':
@@ -1093,21 +1109,29 @@ SnapTranslator.dict.pt = {
 
     // detecção de colisões
     'mouse-pointer':
-        'ponteiro do rato',
+        'o ponteiro do rato',
     'edge':
-        'borda',
+        'a borda',
     'pen trails':
         'traços da caneta',
 
     // trajes
     'Turtle':
-        'seta',
+        'tartaruga',
     'Empty':
         'vazio',
 
     // efeitos gráficos
+    'brightness':
+        'brilho',
     'ghost':
         'fantasma',
+    'negative':
+        'negativo',
+    'comic':
+        'ondeado',
+    'confetti':
+        'cor',
 
     // teclas
     'space':
@@ -1222,10 +1246,12 @@ SnapTranslator.dict.pt = {
         'a exponencial',
 
     // delimitadores
+    'letter':
+        'letra',
     'whitespace':
         'espaços em branco',
     'line':
-        'avanços de linha',
+        'linha',
     'tab':
         'tabuladores',
     'cr':
@@ -1254,20 +1280,74 @@ SnapTranslator.dict.pt = {
         'um item ao acaso',
 
     // em falta no ficheiro lang-de.js
+    'grow':
+        'aumentar',
+    'shrink':
+        'reduzir',
+    'flip ↔':
+        'inverter ↔',
+    'flip ↕':
+        'inverter ↕',
+    'Export all scripts as pic...':
+        'Exportar todos os guiões como fotografia…',
+    'show a picture of all scripts\nand block definitions':
+        'Mostra uma imagem com todos\nos guiões e definições de blocos',
+    'current %dates':
+        '%dates corrente',
+    'year':
+        'ano',
+    'month':
+        'mês',
+    'date':
+        'dia',
+    'day of week':
+        'dia da semana',
+    'hour':
+        'hora',
+    'minute':
+        'minuto',
+    'second':
+        'segundo',
+    'time in milliseconds':
+        'tempo (em milisegundos)',
+    'find blocks...':
+        'procurar blocos…',
     'costume name':
         'o nome do traje',
     'Open':
         'Abrir',
     'Share':
         'Partilhar',
+    'Snap!Cloud':
+        'Snap!Nuvem',
     'Cloud':
         'Nuvem',
+    'could not connect to:':
+        'Não foi possível ligar a:',
+    'Service:':
+        'Serviço:',
+    'login':
+        'autenticação',
+    'ERROR: INVALID PASSWORD':
+        'ERRO: PALAVRA-PASSE INVÁLIDA',
     'Browser':
         'Navegador',
     'Sign up':
         'Registar nova conta',
+    'Signup':
+        'Registo de nova conta',
     'Sign in':
         'Entrar',
+    'Logout':
+        'Sair',
+    'Change Password...':
+        'Alterar palavra-passe…',
+    'Change Password':
+        'Alterar palavra-passe',
+    'Account created.':
+        'Conta criada.',
+    'An e-mail with your password\nhas been sent to the address provided':
+        'Foi enviada uma mensagem para\no endereço disponibilizado\ncontendo a sua palavra-passe.',
     'now connected.':
         'entrou.',
     'disconnected.':
@@ -1280,6 +1360,12 @@ SnapTranslator.dict.pt = {
         'Nome de utilizador:',
     'Password:':
         'Palavra-passe:',
+    'Old password:':
+        'Palavra-passe actual:',
+    'New password:':
+        'Nova palavra-passe:',
+    'Repeat new password:':
+        'Repita a nova palavra-passe:',
     'Birth date:':
         'Data de nascimento:',
     'January':
@@ -1385,5 +1471,167 @@ SnapTranslator.dict.pt = {
     'comment pic...':
         'fotografia do comentário…',
     'open a new window\nwith a picture of this comment':
-        'Abrir uma nova janela com\numa fotografia deste comentário.'
+        'Abrir uma nova janela com\numa fotografia deste comentário.',
+    'undo':
+        'desfazer',
+    'Brush size':
+        'Espessura do pincel',
+    'Constrain proportions of shapes?\n(you can also hold shift)':
+        'Preservar proporções das formas?\n(também pode pressionar shift)',
+    'Eraser tool':
+        'Borracha',
+    'Paintbrush tool\n(free draw)':
+        'Pincel\n(desenho livre)',
+    'Line tool\n(shift: vertical/horizontal)':
+        'Segmento de recta\n(shift: vertical/horizontal)',
+    'Stroked Rectangle\n(shift: square)':
+        'Rectângulo\n(shift: quadrado)',
+    'Filled Rectangle\n(shift: square)':
+        'Rectângulo preenchido\n(shift: quadrado)',
+    'Stroked Ellipse\n(shift: circle)':
+        'Elipse\n(shift: circunferência)',
+    'Filled Ellipse\n(shift: circle)':
+        'Elipse preenchida\n(shift: círculo)',
+    'Fill a region':
+        'Balde de tinta',
+    'Set the rotation center':
+        'Estabelecer centro de rotação',
+    'Pipette tool\n(pick a color anywhere)':
+        'Pipeta\n(recolher uma cor em qualquer lado)',
+    'Paint Editor':
+        'Editor de Pintura',
+    'square':
+        'quadrado',
+    'pointRight':
+        'triângulo para a direita',
+    'gears':
+        'roda dentada',
+    'file':
+        'arquivo',
+    'fullScreen':
+        'ecrã inteiro',
+    'normalScreen':
+        'ecrã normal',
+    'smallStage':
+        'palco pequeno',
+    'normalStage':
+        'palco normal',
+    'turtle':
+        'tartaruga',
+    'stage':
+        'palco',
+    'turtleOutline':
+        'contorno de tartaruga',
+    'pause':
+        'pausa',
+    'flag':
+        'bandeira',
+    'octagon':
+        'octógono',
+    'cloud':
+        'nuvem',
+    'cloudOutline':
+        'contorno de nuvem',
+    'cloudGradient':
+        'nuvem com gradiente',
+    'turnRight':
+        'girar à direita',
+    'turnLeft':
+        'girar à esquerda',
+    'storage':
+        'armazenagem',
+    'poster':
+        'póster',
+    'flash':
+        'relâmpago',
+    'brush':
+        'pincel',
+    'rectangle':
+        'rectângulo',
+    'rectangleSolid':
+        'rectângulo preenchido',
+    'circle':
+        'circunferência',
+    'circleSolid':
+        'círculo',
+    'crosshairs':
+        'mira',
+    'paintbucket':
+        'balde de tinta',
+    'eraser':
+        'borracha',
+    'pipette':
+        'pipeta',
+    'speechBubble':
+        'balão de fala',
+    'speechBubbleOutline':
+        'contorno de balão de fala',
+    'arrowUp':
+        'seta para cima',
+    'arrowUpOutline':
+        'contorno de seta para cima',
+    'arrowLeft':
+        'seta para a esquerda',
+    'arrowLeftOutline':
+        'contorno de seta para a esquerda',
+    'arrowDown':
+        'seta para baixo',
+    'arrowDownOutline':
+        'contorno de seta para baixo',
+    'arrowRight':
+        'seta para a direita',
+    'arrowRightOutline':
+        'contorno de seta para a direita',
+    'robot':
+        'robot',
+    'turn pen trails into new costume...':
+        'transformar traços da caneta em novo traje…',
+    'turn all pen trails and stamps\ninto a new costume for the\ncurrently selected sprite':
+        'Transforma todos os traços da caneta\ne carimbagens num novo traje\n'
+            + 'do actor seleccionado neste momento',
+    'pen':
+        'caneta',
+    'tip':
+        'ponta',
+    'middle':
+        'meio',
+
+    // produção de código
+    'map %cmdRing to %codeKind %code':
+        'mapear %cmdRing no %codeKind %code',
+    'map String to code %code':
+        'mapear texto no código %code',
+    'map %codeListPart of %codeListKind to code %code':
+        'mapear %codeListPart de %codeListKind no código %code',
+    'code of %cmdRing':
+        'o código de %cmdRing',
+    'delimiter':
+        'delimitador',
+    'collection':
+        'colecção',
+    'variables':
+        'variáveis',
+    'parameters':
+        'parâmetros',
+    'code':
+        'código',
+    'header':
+        'cabeçalho',
+    'header mapping...':
+        'mapeamento para cabeçalho…',
+    'code mapping...':
+        'mapeamento para código…',
+    'Code mapping':
+        'Mapeamento para código',
+    'Header mapping':
+        'Mapeamento para cabeçalho',
+    'Enter code that corresponds to the block\'s definition. Use the formal parameter\nnames as shown and <body> to reference the definition body\'s generated text code.':
+        'Introduza o código correspondente à definição do bloco. Use os nomes dos parâmetros\n'
+            + 'tal como mostrados e use <body> para referenciar o código gerado da definição do corpo',
+    'Enter code that corresponds to the block\'s definition. Choose your own\nformal parameter names (ignoring the ones shown).':
+        'Introduza o código correspondente à definição do bloco. Escolha os seus próprios\n'
+            + 'nomes para os parâmetros (ignorando os nomes mostrados).',
+    'Enter code that corresponds to the block\'s operation (usually a single\nfunction invocation). Use <#n> to reference actual arguments as shown.':
+        'Introduza o código que corresponda à operação do bloco (normalmente uma simples\n'
+            + 'invocação de rotina). Use <#n> para referenciar os argumentos tal como mostrado'
 };
