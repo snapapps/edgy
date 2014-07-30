@@ -1302,7 +1302,7 @@ function snapClone(o, memo) {
         var c = new Map(l);
         memo.set(o, c);
         return c;
-    } else if(typeof o == "number" || typeof o == "string") {
+    } else if(typeof o == "number" || typeof o == "string" || typeof o == "boolean") {
         return o;
     } else {
         throw new Error("Encountered object of unknown type.");
