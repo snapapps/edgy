@@ -1291,7 +1291,9 @@ function snapClone(o, memo) {
     }
 
     if(o instanceof List) {
-        var c = new List(o.asArray().map(snapClone, memo));
+        var c = new List(o.asArray().map(function(x) {
+            return snapClone(x, memo);
+        }));
         memo.set(o, c);
         return c;
     } else if(o instanceof Map) {
