@@ -28,6 +28,10 @@ WorldMorph.prototype.initEventListeners = (function initEventListeners(oldInitEv
             // For Safari / chrome
             return msg;
         };
+        window.onunload = function() {
+            clickstream.log("sessionend");
+            localStorage['-snap-clickstream'] = JSON.stringify(clickstream);
+        }
         return retval;
     };
 }(WorldMorph.prototype.initEventListeners));
