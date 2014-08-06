@@ -16,6 +16,14 @@ IDE_Morph.prototype.init = (function init (oldInit) {
     }
 }(IDE_Morph.prototype.init));
 
+IDE_Morph.prototype.save = (function save(oldSave) {
+    return function() {
+        var retval = oldSave.call(this);
+        clickstream.log("save");
+        return retval;
+    };
+}(IDE_Morph.prototype.save));
+
 IDE_Morph.prototype.createCorralBar = (function createCorralBar (oldCreateCorralBar) {
     return function () {
         var retval = oldCreateCorralBar.call(this);
