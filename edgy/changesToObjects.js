@@ -1,7 +1,8 @@
 // Since we're not supposed to be altering the original file too much, monkey
 // patching is in order.
 
-var redrawGraph;
+var redrawGraph,
+    currentGraph = null; // The current JSNetworkX graph to display.
 
 (function() {
 "use strict";
@@ -14,7 +15,6 @@ var graphEl = d3.select(document.body)
                 '-khtml-user-select': 'none',
                 '-webkit-user-select': 'none',
                 'user-select': 'none'}),
-    currentGraph = null, // The current JSNetworkX graph to display.
     currentGraphSprite = null,
     hiddenCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
