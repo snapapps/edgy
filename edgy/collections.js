@@ -532,7 +532,11 @@ SpriteMorph.prototype.reportDictLength = function(dict) {
 };
 
 SpriteMorph.prototype.getDict = function(key, dict) {
-    return dict.get(key);
+    var val = dict.get(key);
+    // Avoid infinite loop due to Snap! handling of undefined in reporters.
+    if(val === undefined)
+        throw new Error("No entry " + key + " in dict.")
+    return val;
 };
 
 SpriteMorph.prototype.setDict = function(key, dict, val) {

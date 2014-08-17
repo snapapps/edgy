@@ -1447,9 +1447,23 @@ IDE_Morph.prototype.fixLayout = function (situation) {
 };
 
 IDE_Morph.prototype.setProjectName = function (string) {
-    this.projectName = string.replace(/['"]/g, ''); // filter quotation marks
+    var newName = string.replace(/['"]/g, ''); // filter quotation marks
+    if(newName !== this.projectName) {
+        clickstream.log("set_project_name", {name: string});
+        this.setProjectId();
+    }
+    this.projectName = newName;
     this.hasChangedMedia = true;
     this.controlBar.updateLabel();
+};
+
+IDE_Morph.prototype.setProjectId = function (id) {
+    if(id === undefined) {
+        this.projectId = uuid.v1();
+        clickstream.log("set_project_id", {id: this.projectId});
+    } else {
+        this.projectId = id;
+    }
 };
 
 // IDE_Morph resizing
