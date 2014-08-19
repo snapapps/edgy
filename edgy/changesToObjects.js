@@ -1,7 +1,8 @@
 // Since we're not supposed to be altering the original file too much, monkey
 // patching is in order.
 
-var redrawGraph;
+var redrawGraph,
+    currentGraph = null; // The current JSNetworkX graph to display.
 
 (function() {
 "use strict";
@@ -14,7 +15,6 @@ var graphEl = d3.select(document.body)
                 '-khtml-user-select': 'none',
                 '-webkit-user-select': 'none',
                 'user-select': 'none'}),
-    currentGraph = null, // The current JSNetworkX graph to display.
     currentGraphSprite = null,
     hiddenCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
@@ -996,7 +996,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
             var data = {};
             data[attrib] = autoNumericize(val);
             this.G.add_node(node, data);
-            if(this.G === currentGraph.parent_graph) {
+            if(this.isNodeDisplayed(node)) {
                 currentGraph.add_node(node, data);
             }
         } else {
@@ -1069,7 +1069,7 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
             var data = {};
             data[attrib] = autoNumericize(val);
             this.G.add_edge(a, b, data);
-            if(this.G === currentGraph.parent_graph) {
+            if(this.isNodeDisplayed(a) && this.isNodeDisplayed(b)) {
                 currentGraph.add_edge(a, b, data);
             }
         } else {
@@ -2100,6 +2100,37 @@ SpriteMorph.prototype.convertToGraph = function() {
     }
 };
 
+SpriteMorph.prototype.isNodeDisplayed = function(node) {
+    if(this.isActiveGraph()) {
+        return currentGraph.has_node(parseNode(node));
+    }
+    return false;
+};
+
+SpriteMorph.prototype.hideNodeInSubgraph = function(node) {
+    if(this.isActiveGraph() && currentGraph.parent_graph == this.G) {
+        node = parseNode(node);
+        currentGraph.remove_nodes_from([node]);
+    }
+};
+
+SpriteMorph.prototype.showEdgeInSubgraph = function(edge) {
+    if(this.isActiveGraph() && currentGraph.parent_graph == this.G && this.hasEdge(edge)) {
+        var a = parseNode(edge.at(1)),
+            b = parseNode(edge.at(2));
+        currentGraph.add_node(a, this.G.node.get(a));
+        currentGraph.add_node(b, this.G.node.get(b));
+        currentGraph.add_edge(a, b, this.G.edge.get(a).get(b));
+    }
+};
+
+SpriteMorph.prototype.hideEdgeInSubgraph = function(edge) {
+    if(this.isActiveGraph() && currentGraph.parent_graph == this.G) {
+        var a = parseNode(edge.at(1)),
+            b = parseNode(edge.at(2));
+        currentGraph.remove_nodes_from([a, b]);
+    }
+};
 
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
@@ -2493,6 +2524,26 @@ SpriteMorph.prototype.convertToGraph = function() {
             category: 'control',
             spec: 'when node %upvar double-clicked',
             defaults: ['node']
+        },
+        isNodeDisplayed: {
+            type: 'predicate',
+            category: 'nodes',
+            spec: 'is %s displayed'
+        },
+        hideNodeInSubgraph: {
+            type: 'command',
+            category: 'nodes',
+            spec: 'hide %s in subgraph'
+        },
+        showEdgeInSubgraph: {
+            type: 'command',
+            category: 'edges',
+            spec: 'show %l in subgraph'
+        },
+        hideEdgeInSubgraph: {
+            type: 'command',
+            category: 'edges',
+            spec: 'hide %l in subgraph'
         }
     };
 
@@ -2748,6 +2799,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getDegree'));
             blocks.push(block('getInDegree'));
             blocks.push(block('getOutDegree'));
+            blocks.push('-');
+            blocks.push(block('isNodeDisplayed'));
+            blocks.push(block('hideNodeInSubgraph'));
         } else if(category === 'edges') {
             // Edge attributes.
             button = new PushButtonMorph(
@@ -2820,6 +2874,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNeighborEdges'));
             blocks.push(block('getOutgoingEdges'));
             blocks.push(block('getIncomingEdges'));
+            blocks.push('-');
+            blocks.push(block('showEdgeInSubgraph'));
+            blocks.push(block('hideEdgeInSubgraph'));
         } else if (category === 'external') {
             blocks.push(block('loadGraphFromURL'));
             blocks.push('-');
