@@ -2699,7 +2699,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('newDiGraph'));
             blocks.push(block('convertToGraph'));
             blocks.push(block('convertToDigraph'));
-            blocks.push(block('clearGraph'));
+            // Hide 'clear graph' as per #207
+            // blocks.push(block('clearGraph'));
             blocks.push(block('setActiveGraph'));
             blocks.push(block('showGraphSlice'));
             blocks.push(block('hideActiveGraph'));
