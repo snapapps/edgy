@@ -409,6 +409,21 @@ redrawGraph = function() {
         layout.start(10, 15, 20);
     }
 
+    jsnx.forEach(currentGraph.nodes_iter(true), function(node) {
+        var data = node[1];
+        if(data.fixed) {
+            data.__d3datum__.fixed |= 1;
+        }
+
+        if(data.x !== undefined) {
+            data.__d3datum__.px = data.__d3datum__.x = data.x;
+        }
+
+        if(data.y !== undefined) {
+            data.__d3datum__.px = data.__d3datum__.y = data.y;
+        }
+    });
+
     // Calling jsnx.draw() will purge the graph container element, so we need
     // to re-add the edge patterns regardless of whether they have changed.
     for(var costumeId in costumeIdMap) {
@@ -999,6 +1014,14 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
             if(this.isNodeDisplayed(node)) {
                 currentGraph.add_node(node, data);
             }
+        } else if(attrib === "fixed") {
+            this.G.node.get(node).fixed = autoNumericize(val);
+            this.G.node.get(node).__d3datum__.fixed |= +(!!val);
+        } else if(attrib === "x" || attrib === "y") {
+            this.G.node.get(node)[attrib] = autoNumericize(val);
+            this.G.node.get(node).__d3datum__["p" + attrib] = autoNumericize(val);
+            this.G.node.get(node).__d3datum__[attrib] = autoNumericize(val);
+            this.resumeLayout();
         } else {
             this.G.node.get(node)[attrib] = autoNumericize(val);
         }
