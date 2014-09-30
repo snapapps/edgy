@@ -2594,10 +2594,13 @@ StageMorph.prototype.deleteNodeAttribute = SpriteMorph.prototype.deleteNodeAttri
     return false;
 }
 
+var BUILTIN_NODE_ATTRS = ['color', 'label', 'scale', 'fixed', 'x', 'y'];
+
 InputSlotMorph.prototype.getNodeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
-        dict = {'color': 'color', 'label': 'label', 'scale': 'scale'};
+        dict = {};
+    BUILTIN_NODE_ATTRS.forEach(function(v) { dict[v] = v; });
 
     if (!block) {
         return dict;
@@ -3057,7 +3060,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
                     } else {
                         delete data[k];
                     }
-                } else if(k !== 'color' && k !== 'label') {
+                } else if(BUILTIN_NODE_ATTRS.indexOf(k) === -1) {
                     myself.addNodeAttribute(k, false);
                 }
             }
