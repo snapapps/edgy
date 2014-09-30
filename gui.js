@@ -2100,11 +2100,11 @@ IDE_Morph.prototype.settingsMenu = function () {
     menu = new MenuMorph(this);
     menu.addItem('Maximum visible nodes', 'setMaxVisibleNodes');
     addPreference(
-        'Use newer layout algorithm',
+        'Use force-directed layout',
         'toggleUseWebCola',
-        (edgyLayoutAlgorithm == cola.d3adaptor),
-        'uncheck to use the default\n"D3" force-directed graph',
-        'check to use the WebCOLA\ngraph layout algorithm',
+        (edgyLayoutAlgorithm == d3.layout.force),
+        'uncheck to use the WebCOLA\ngraph layout algorithm',
+        'check to use the default\n"D3" force-directed graph',
         false
     );
     addPreference(
