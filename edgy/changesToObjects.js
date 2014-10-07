@@ -2155,6 +2155,24 @@ SpriteMorph.prototype.hideEdgeInSubgraph = function(edge) {
     }
 };
 
+SpriteMorph.prototype.newNode = function() {
+    // Get a unique number for a node ID.
+    var maximum = this.maximumNode;
+    if(maximum === undefined || this.G.has_node(maximum + 1)) {
+        maximum = 0;
+        jsnx.forEach(this.G.nodes_iter(), function(node) {
+            if(node > maximum) {
+                maximum = node;
+            }
+        });
+    }
+
+    var node = maximum + 1;
+    this.addNode(new List([node]));
+    this.maximumNode = node;
+    return node;
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
@@ -2214,6 +2232,11 @@ SpriteMorph.prototype.hideEdgeInSubgraph = function(edge) {
             type: 'command',
             category: 'nodes',
             spec: 'add node %exp'
+        },
+        newNode: {
+            type: 'reporter',
+            category: 'nodes',
+            spec: 'new node'
         },
         removeNode: {
             type: 'command',
@@ -2805,6 +2828,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('endNode'));
             blocks.push('-');
             blocks.push(block('addNode'));
+            blocks.push(block('newNode'));
             blocks.push(block('removeNode'));
             blocks.push(block('hasNode'));
             blocks.push('-');
