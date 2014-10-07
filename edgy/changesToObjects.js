@@ -70,6 +70,9 @@ graphEl.on("DOMNodeInserted", function() {
             {
                 var menu = new MenuMorph(this);
 
+                menu.addItem('ID: ' + d.node);
+                menu.addLine();
+
                 if(!d.G.parent_graph) {
                     menu.addItem('delete', function () {
                         d.G.remove_node(d.node);
