@@ -78,14 +78,6 @@ graphEl.on("DOMNodeInserted", function() {
                         d.G.remove_node(d.node);
                     });
                 }
-                menu.addItem('set label', function () {
-                    new DialogBoxMorph(null, function (label) {
-                        d.data.label = autoNumericize(label);
-                        node.select("text").node().textContent = label;
-                        updateNodeDimensionsAndCostume(node);
-                    }).prompt('Node label', (d.data.label || d.node).toString(), world);
-                    world.worldCanvas.focus();
-                });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.data.color = autoNumericize(color);
@@ -1099,7 +1091,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         // For consistency's sake, we use autoNumericize() to normalize
         // attribute values since Snap's UI does not distinguish between the
         // number 1 and the string "1".
-        if(attrib === "color" || attrib === "label" || attrib === "scale") {
+        if(attrib === "color" || attrib === "scale") {
             var data = {};
             data[attrib] = autoNumericize(val);
             this.G.add_node(node, data);
@@ -1117,18 +1109,6 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         } else {
             this.G.node.get(node)[attrib] = autoNumericize(val);
         }
-
-        // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && this.isActiveGraph()) {
-            var nodes = graphEl.selectAll(".node");
-            nodes.each(function(d, i) {
-                if(d.node === node) {
-                    var nodeSelection = d3.select(nodes[0][i]);
-                    nodeSelection.select("text").text(val.toString());
-                    updateNodeDimensionsAndCostume(nodeSelection);
-                }
-            });
-        }
     }
 };
 
@@ -1144,8 +1124,6 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     if(val === undefined) {
         if(attrib === "color")
             return DEFAULT_NODE_COLOR;
-        if(attrib === "label")
-            return node.toString();
         if(attrib === "scale")
             return 1;
 
@@ -1157,7 +1135,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
 
 SpriteMorph.prototype.getNodeAttribDict = function(node) {
     var myself = this;
-    var attribs = this.allNodeAttributes().concat(["color", "label", "scale"]);
+    var attribs = this.allNodeAttributes().concat(["color", "scale"]);
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getNodeAttrib(attr, node)];
     }));
@@ -2702,7 +2680,7 @@ StageMorph.prototype.allNodeAttributes = SpriteMorph.prototype.allNodeAttributes
 }
 
 StageMorph.prototype.isNodeAttrAvailable = SpriteMorph.prototype.isNodeAttrAvailable = function(name) {
-    var attrs = this.allNodeAttributes().concat(["label", "color", "scale"]);
+    var attrs = this.allNodeAttributes().concat(["color", "scale"]);
     return attrs.indexOf(name) === -1;
 }
 
@@ -2736,7 +2714,7 @@ StageMorph.prototype.deleteNodeAttribute = SpriteMorph.prototype.deleteNodeAttri
     return false;
 }
 
-var BUILTIN_NODE_ATTRS = ['color', 'label', 'scale', 'fixed', 'x', 'y'];
+var BUILTIN_NODE_ATTRS = ['color', 'scale', 'fixed', 'x', 'y'];
 
 InputSlotMorph.prototype.getNodeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
