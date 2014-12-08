@@ -78,14 +78,6 @@ graphEl.on("DOMNodeInserted", function() {
                         d.G.remove_node(d.node);
                     });
                 }
-                menu.addItem('set label', function () {
-                    new DialogBoxMorph(null, function (label) {
-                        d.data.label = autoNumericize(label);
-                        node.select("text").node().textContent = label;
-                        updateNodeDimensionsAndCostume(node);
-                    }).prompt('Node label', (d.data.label || d.node).toString(), world);
-                    world.worldCanvas.focus();
-                });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         d.data.color = autoNumericize(color);
@@ -218,6 +210,51 @@ graphEl.on("DOMNodeInserted", function() {
         });
     }
 });
+
+// Store the positions of all the nodes so they can restored later.
+function saveLayout(el) {
+    // This is used in e.g. renameNode() because JSNetworkX's renderer will
+    // call layout.start() every time a new node is added, which will reset
+    // the positions of all the nodes. We need to save them here.
+    el.selectAll(".node").each(function(d) {
+        d.G.node.get(d.node).__oldpos__ = {
+            px: d.px,
+            py: d.py,
+            x: d.x,
+            y: d.y
+        };
+    });
+}
+
+// Restore node positions to those previously stored with saveLayout()
+function restoreLayout(el, layout) {
+    graphEl.selectAll(".node").each(function(d) {
+        var n = d.G.node.get(d.node);
+        var p = n.__oldpos__;
+
+        d.px = p.px;
+        d.py = p.py;
+        d.x = p.x;
+        d.y = p.y;
+        // Fix the positions of the nodes temporarily.
+        d.fixed = true;
+    });
+
+    // Need to run one tick of layout in order to update the positions so
+    // everything doesn't break when layout.stop() is called.
+    layout.tick();
+    // No need to do a complete relayout if start() was called, so just fix
+    // any broken constraints (e.g. overlapping nodes).
+    layout.stop();
+    layout.resume();
+
+    // Restore the fixedness of the nodes and clean up.
+    graphEl.selectAll(".node").each(function(d) {
+        var n = d.G.node.get(d.node);
+        d.fixed = n.fixed || false;
+        delete n.__oldpos__;
+    });
+}
 
 function updateGraphDimensions(stage) {
     // console.log("resizing graph element to %dx%d", stage.width(), stage.height());
@@ -982,6 +1019,50 @@ SpriteMorph.prototype.removeNode = function(node) {
     }
 };
 
+SpriteMorph.prototype.renameNode = function(from, to) {
+    if(!this.hasNode(from)) {
+        throw new Error("The node '" + from + "' is not in the graph.");
+    }
+
+    if(this.hasNode(to)) {
+        throw new Error("The node '" + to + "' is already in the graph.")
+    }
+
+    try
+    {
+        saveLayout(graphEl);
+
+        // The following doesn't work because jsnx.relabel.relabel_nodes()
+        // performs the operations in the wrong order:
+        //
+        // var mapping = {};
+        // mapping[from] = to;
+        // jsnx.relabel.relabel_nodes(this.G, mapping, false);
+
+        // Since there's no way to just change the ID of a node, we have to
+        // remove the old node and then create a new node with the desired new
+        // ID with the same attributes.
+        from = parseNode(from);
+        to = parseNode(to);
+
+        var edges = jsnx.map(this.G.edges(from, true), function(d) {
+            return [to, d[1], d[2]];
+        });
+
+        if(this.G.is_directed()) {
+            edges = edges.concat(jsnx.map(this.G.in_edges(old, true), function(d) {
+                return [d[0], to, d[2]];
+            }));
+        }
+        var data = this.G.node.get(from);
+        this.G.remove_node(from);
+        this.G.add_node(to, data);
+        this.G.add_edges_from(edges);
+    } finally {
+        restoreLayout(graphEl, layout);
+    }
+};
+
 SpriteMorph.prototype.addEdge = function(edges) {
     edges = edges.asArray();
     this.G.add_edges_from(edges.map(function(x) { return x.asArray().map(parseNode); }));
@@ -1010,7 +1091,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         // For consistency's sake, we use autoNumericize() to normalize
         // attribute values since Snap's UI does not distinguish between the
         // number 1 and the string "1".
-        if(attrib === "color" || attrib === "label" || attrib === "scale") {
+        if(attrib === "color" || attrib === "scale") {
             var data = {};
             data[attrib] = autoNumericize(val);
             this.G.add_node(node, data);
@@ -1028,19 +1109,6 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
         } else {
             this.G.node.get(node)[attrib] = autoNumericize(val);
         }
-
-        // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && this.isActiveGraph()) {
-            var nodes = graphEl.selectAll(".node");
-            nodes.each(function(d, i) {
-                if(d.node === node) {
-                    var nodeSelection = d3.select(nodes[0][i]);
-                    var textEl = nodeSelection.select("text");
-                    textEl.node().textContent = val.toString();
-                    updateNodeDimensionsAndCostume(nodeSelection);
-                }
-            });
-        }
     }
 };
 
@@ -1056,8 +1124,6 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     if(val === undefined) {
         if(attrib === "color")
             return DEFAULT_NODE_COLOR;
-        if(attrib === "label")
-            return node.toString();
         if(attrib === "scale")
             return 1;
 
@@ -1069,7 +1135,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
 
 SpriteMorph.prototype.getNodeAttribDict = function(node) {
     var myself = this;
-    var attribs = this.allNodeAttributes().concat(["color", "label", "scale"]);
+    var attribs = this.allNodeAttributes().concat(["color", "scale"]);
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getNodeAttrib(attr, node)];
     }));
@@ -2246,6 +2312,11 @@ SpriteMorph.prototype.newNode = function() {
             category: 'nodes',
             spec: 'remove node %s'
         },
+        renameNode: {
+            type: 'command',
+            category: 'nodes',
+            spec: 'rename node %s to %s'
+        },
         addEdge: {
             type: 'command',
             category: 'edges',
@@ -2609,7 +2680,7 @@ StageMorph.prototype.allNodeAttributes = SpriteMorph.prototype.allNodeAttributes
 }
 
 StageMorph.prototype.isNodeAttrAvailable = SpriteMorph.prototype.isNodeAttrAvailable = function(name) {
-    var attrs = this.allNodeAttributes().concat(["label", "color", "scale"]);
+    var attrs = this.allNodeAttributes().concat(["color", "scale"]);
     return attrs.indexOf(name) === -1;
 }
 
@@ -2643,7 +2714,7 @@ StageMorph.prototype.deleteNodeAttribute = SpriteMorph.prototype.deleteNodeAttri
     return false;
 }
 
-var BUILTIN_NODE_ATTRS = ['color', 'label', 'scale', 'fixed', 'x', 'y'];
+var BUILTIN_NODE_ATTRS = ['color', 'scale', 'fixed', 'x', 'y'];
 
 InputSlotMorph.prototype.getNodeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
@@ -2834,6 +2905,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('newNode'));
             blocks.push(block('removeNode'));
             blocks.push(block('hasNode'));
+            blocks.push(block('renameNode'));
             blocks.push('-');
             blocks.push(block('numberOfNodes'));
             blocks.push(block('getNodes'));
