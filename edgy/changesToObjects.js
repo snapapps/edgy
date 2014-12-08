@@ -1035,8 +1035,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
             nodes.each(function(d, i) {
                 if(d.node === node) {
                     var nodeSelection = d3.select(nodes[0][i]);
-                    var textEl = nodeSelection.select("text");
-                    textEl.node().textContent = val.toString();
+                    nodeSelection.select("text").text(val.toString());
                     updateNodeDimensionsAndCostume(nodeSelection);
                 }
             });
