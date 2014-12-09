@@ -869,6 +869,12 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
     sliceRadius = radius;
 };
 
+SpriteMorph.prototype.redrawGraphSlice = function() {
+    if(currentGraph.parent_graph === this.G) {
+        this.showGraphSlice(sliceStart, sliceRadius);
+    }
+}
+
 function hideGraph() {
     displayGraph(jsnx.Graph());
     currentGraphSprite = null;
@@ -922,10 +928,9 @@ SpriteMorph.prototype.addNode = function(nodes) {
 
 SpriteMorph.prototype.removeNode = function(node) {
     this.G.remove_node(parseNode(node));
-    if(currentGraph.parent_graph === this.G) {
-        if(currentGraph.has_node(node)) {
-            this.showGraphSlice(sliceStart, sliceRadius);
-        }
+
+    if(currentGraph.has_node(node)) {
+        this.redrawGraphSlice();
     }
 };
 
@@ -975,18 +980,16 @@ SpriteMorph.prototype.renameNode = function(from, to) {
 SpriteMorph.prototype.addEdge = function(edges) {
     edges = edges.asArray();
     this.G.add_edges_from(edges.map(function(x) { return x.asArray().map(parseNode); }));
-    if(currentGraph.parent_graph === this.G) {
-        this.showGraphSlice(sliceStart, sliceRadius);
-    }
+
+    this.redrawGraphSlice();
 };
 
 SpriteMorph.prototype.removeEdge = function(edge) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     this.G.remove_edge(a, b);
-    if(currentGraph.parent_graph === this.G) {
-        if(currentGraph.has_node(a) || currentGraph.has_node(b)) {
-            this.showGraphSlice(sliceStart, sliceRadius);
-        }
+
+    if(currentGraph.has_node(a) || currentGraph.has_node(b)) {
+        this.redrawGraphSlice();
     }
 };
 
