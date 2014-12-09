@@ -117,14 +117,9 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.popUpAtHand(world);
             } else {
-                // Layout uses the fixed attribute for other things during
-                // dragging, so it would get overwritten if we tried to set it
-                // immediately. Wait until the layout is done dealing with
-                // the dragging before fixing the node position.
+                // Fix the node if manual (sticky) layout is on.
                 if(currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout) {
-                    setTimeout(function() {
-                        d.fixed = true;
-                    }, 0);
+                    d.fixed |= 1;
                 }
             }
         }).on("dblclick", function() {
