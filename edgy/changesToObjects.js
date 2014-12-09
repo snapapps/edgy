@@ -1441,11 +1441,9 @@ SpriteMorph.prototype.getNodesWithAttr = function(attr, val) {
 };
 
 SpriteMorph.prototype.getEdges = function() {
-    var edges = [];
-    jsnx.forEach(this.G.edges_iter(), function (edge) {
-        edges.push(new List(edge));
-    });
-    return new List(edges);
+    return new List(jsnx.toArray(jsnx.map(this.G.edges_iter(), function (edge) {
+        return new List(edge);
+    })));
 };
 
 SpriteMorph.prototype.getDegree = function(node) {
