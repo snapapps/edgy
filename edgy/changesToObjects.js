@@ -123,19 +123,22 @@ graphEl.on("DOMNodeInserted", function() {
                 }
             }
         }).on("dblclick", function() {
+            // Trigger any "on node double-clicked" listeners.
             if(d3.event.button === 0) {
+                d3.event.stopPropagation();
+
+                // Get the listeners.
                 var hats = currentGraphSprite.scripts.children.filter(function (morph) {
                     return morph.selector === 'receiveNodeClick';
                 });
                 hats.forEach(function (block) {
+                    // Run the triggered block.
                     var stage = currentGraphSprite.parentThatIsA(StageMorph);
                     var proc = stage.threads.startProcess(block, stage.isThreadSafe);
                     proc.pushContext('doYield');
                     var uv = block.inputs()[0].evaluate();
-                    // console.log(proc, uv);
                     proc.context.outerContext.variables.addVar(uv, node.datum().node);
                 });
-                d3.event.stopPropagation();
             }
         });
     } else if(node.classed("edge")) {
