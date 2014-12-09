@@ -277,7 +277,7 @@ function getNodeElementType(d) {
     return d.data.__costume__ ? "use" : "rect";
 }
 
-function updateNodeDimensionsAndCostume(node) {
+function updateNodeAppearance(node) {
     // If the current type of the node element is not what it should be (e.g.
     // the node had a costume added), fix that.
 	var shape = getNodeElementType(node.datum());
@@ -1105,7 +1105,7 @@ var nodeAttributeHandlers = {
         default: DEFAULT_NODE_COLOR,
         set: function(node, data, val) {
             if(this.isActiveGraph()) {
-                updateNodeDimensionsAndCostume(findNodeElement(node));
+                updateNodeAppearance(findNodeElement(node));
             }
         }
     },
@@ -1113,7 +1113,7 @@ var nodeAttributeHandlers = {
         default: 1,
         set: function(node, data, val) {
             if(this.isActiveGraph()) {
-                updateNodeDimensionsAndCostume(findNodeElement(node));
+                updateNodeAppearance(findNodeElement(node));
             }
         }
     },
@@ -1398,7 +1398,7 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
             var nodes = graphEl.selectAll(".node");
             nodes.each(function(d, i) {
                 if(d.node === node) {
-                    updateNodeDimensionsAndCostume(d3.select(nodes[0][i]));
+                    updateNodeAppearance(d3.select(nodes[0][i]));
                 }
             });
         }
