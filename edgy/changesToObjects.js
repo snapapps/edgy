@@ -1860,6 +1860,7 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
     return new List(edgesArr.map(function(x) { return new List(x); }));
 };
 
+// Efficient built-in for-each over lists, because loading tools.xml is slow.
 Process.prototype.doForEach = function(uv, list, body) {
     if(!list.length() || !body)
         return;
@@ -1887,6 +1888,7 @@ Process.prototype.doForEach = function(uv, list, body) {
     this.pushContext();
 }
 
+// Efficient built-in numeric for, because loading tools.xml is slow.
 Process.prototype.doNumericFor = function(uv, start, end, body) {
     if(!body)
         return;
