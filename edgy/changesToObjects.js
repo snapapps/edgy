@@ -1228,7 +1228,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
             if(hval !== undefined) {
                 val = hval;
             }
-        } else if(val === undefined && handler.default) {
+        } else if(val === undefined && handler.default !== undefined) {
             val = handler.default;
         }
     }
