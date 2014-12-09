@@ -1773,55 +1773,7 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
     }
 
     try {
-        var dotgraph = new DotGraph(DotParser.parse(string)),
-            graph;
-        dotgraph.walk();
-        if(dotgraph.rootGraph.type == "graph") {
-            graph = jsnx.Graph();
-        } else if(dotgraph.rootGraph.type == "digraph") {
-            graph = jsnx.DiGraph();
-        } else {
-            throw new Error("Invalid DOT graph type");
-        }
-        // console.log(dotgraph);
-        for(var node in dotgraph.nodes) {
-            if(dotgraph.nodes.hasOwnProperty(node)) {
-                var ournode = parseNode(node);
-                graph.add_node(ournode);
-                // console.log(ournode);
-                var attrs = dotgraph.nodes[node].attrs;
-                for(var attr in attrs) {
-                    if(attrs.hasOwnProperty(attr)) {
-                        if(attr === "fillcolor") {
-                            graph.node.get(ournode).color = attrs[attr];
-                        } else {
-                            graph.node.get(ournode)[attr] = attrs[attr];
-                        }
-                    }
-                }
-            }
-        }
-        for(var edgeid in dotgraph.edges) {
-            if(dotgraph.edges.hasOwnProperty(edgeid)) {
-                dotgraph.edges[edgeid].forEach(function(datum) {
-                    var edge = datum.edge;
-                    var a = parseNode(edge[0]), b = parseNode(edge[1]);
-                    graph.add_edge(a, b);
-                    // console.log(a, b);
-                    var attrs = datum.attrs;
-                    for(var attr in attrs) {
-                        if(attrs.hasOwnProperty(attr)) {
-                            if(attr === "penwidth") {
-                                graph.edge.get(a).get(b).width = attrs[attr];
-                            } else {
-                                graph.edge.get(a).get(b)[attr] = attrs[attr];
-                            }
-                        }
-                    }
-                });
-            }
-        }
-        this.importGraph(graph, true);
+        this.importGraph(parseDot(string), true);
         return;
     } catch(e) {
         if(!(e instanceof DotParser.SyntaxError)) {
@@ -3448,6 +3400,56 @@ function graphToObject(G) {
     }
 
     return data;
+}
+
+function parseDot(string) {
+    var dotgraph = new DotGraph(DotParser.parse(string)),
+        graph;
+    dotgraph.walk();
+    if(dotgraph.rootGraph.type == "graph") {
+        graph = jsnx.Graph();
+    } else if(dotgraph.rootGraph.type == "digraph") {
+        graph = jsnx.DiGraph();
+    } else {
+        throw new Error("Invalid DOT graph type");
+    }
+    for(var node in dotgraph.nodes) {
+        if(dotgraph.nodes.hasOwnProperty(node)) {
+            var ournode = parseNode(node);
+            graph.add_node(ournode);
+            var attrs = dotgraph.nodes[node].attrs;
+            for(var attr in attrs) {
+                if(attrs.hasOwnProperty(attr)) {
+                    if(attr === "fillcolor") {
+                        graph.node.get(ournode).color = attrs[attr];
+                    } else {
+                        graph.node.get(ournode)[attr] = attrs[attr];
+                    }
+                }
+            }
+        }
+    }
+    for(var edgeid in dotgraph.edges) {
+        if(dotgraph.edges.hasOwnProperty(edgeid)) {
+            dotgraph.edges[edgeid].forEach(function(datum) {
+                var edge = datum.edge;
+                var a = parseNode(edge[0]), b = parseNode(edge[1]);
+                graph.add_edge(a, b);
+                var attrs = datum.attrs;
+                for(var attr in attrs) {
+                    if(attrs.hasOwnProperty(attr)) {
+                        if(attr === "penwidth") {
+                            graph.edge.get(a).get(b).width = attrs[attr];
+                        } else {
+                            graph.edge.get(a).get(b)[attr] = attrs[attr];
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    return graph;
 }
 
 function parseAdjacencyList (list) {
