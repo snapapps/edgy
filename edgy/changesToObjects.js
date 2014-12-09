@@ -66,8 +66,7 @@ graphEl.on("DOMNodeInserted", function() {
     if(node.classed("node")) {
         node.on("mouseup", function() {
             var d = node.datum();
-            if(d3.event.ctrlKey || d3.event.button === 2)
-            {
+            if(d3.event.ctrlKey || d3.event.button === 2) {
                 var menu = new MenuMorph(this);
 
                 menu.addItem('ID: ' + d.node);
@@ -144,8 +143,7 @@ graphEl.on("DOMNodeInserted", function() {
         });
     } else if(node.classed("edge")) {
         node.on("mouseup", function() {
-            if(d3.event.ctrlKey || d3.event.button === 2)
-            {
+            if(d3.event.ctrlKey || d3.event.button === 2) {
                 var menu = new MenuMorph(this);
                 var d = node.datum();
 
@@ -203,8 +201,7 @@ graphEl.on("DOMNodeInserted", function() {
 
         // Prevent panning of the graph if we've right clicked on an edge.
         node.on("mousedown", function() {
-            if(d3.event.ctrlKey || d3.event.button === 2)
-            {
+            if(d3.event.ctrlKey || d3.event.button === 2) {
                 d3.event.stopPropagation();
             }
         });
@@ -267,15 +264,13 @@ function updateGraphDimensions(stage) {
     graphEl.select("svg")
         .attr("width", stage.width())
         .attr("height", stage.height());
-    if(layout) // Make sure the layout has been initialized.
-    {
+    if(layout) { // Make sure the layout has been initialized.
         layout.size([stage.width(), stage.height()]);
         layout.resume(); // Reflow the graph.
     }
 }
 
-function getNodeElementType(d)
-{
+function getNodeElementType(d) {
     return d.data.__costume__ ? "use" : "rect";
 }
 
@@ -284,8 +279,7 @@ function updateNodeDimensionsAndCostume(node) {
     // the node had a costume added), fix that.
 	var shape = getNodeElementType(node.datum());
     var shapeEl = node.select(shape);
-    if (shapeEl.size() == 0)
-    {
+    if (shapeEl.size() == 0) {
         node.selectAll(".node-shape").remove();
         shapeEl = node.insert(shape, "text").classed("node-shape", true);
     }
@@ -296,8 +290,7 @@ function updateNodeDimensionsAndCostume(node) {
     shapeEl.attr(LAYOUT_OPTS.node_attr);
 }
 
-function svgTextDimensions(text)
-{
+function svgTextDimensions(text) {
 	var svg = graphEl.select("svg");
 	var textEl = svg.append("text").text(text);
 	var bounds = textEl.node().getBBox();
@@ -343,8 +336,7 @@ var DEFAULT_NODE_COLOR = "white",
         with_edge_labels: true,
         layout_attr: {
             linkDistance: function(d) {
-				if (!d)
-				{
+				if (!d) {
 					//WebCOLA does not support different link-distances for different nodes.
 					return DEFAULT_LINK_DISTANCE;
 				}
@@ -516,17 +508,14 @@ function setGraphToDisplay (G) {
 
 StageMorph.prototype.changed = (function changed (oldChanged) {
     var graphNeedsRedraw = true;
-    return function ()
-    {
+    return function () {
         // console.log("stage changed");
         var result = oldChanged.call(this);
         // HACK: work around spontaneous resizing due to transient StageMorphs
         // being created for e.g. loading blocks and calling changed()
-        if(this.parent !== null)
-        {
+        if(this.parent !== null) {
             updateGraphDimensions(this);
-            if(graphNeedsRedraw)
-            {
+            if(graphNeedsRedraw) {
                 redrawGraph();
                 graphNeedsRedraw = false;
             }
@@ -536,8 +525,7 @@ StageMorph.prototype.changed = (function changed (oldChanged) {
 }(StageMorph.prototype.changed));
 
 StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
-    return function ()
-    {
+    return function () {
         var ide = this.parentThatIsA(IDE_Morph),
             menu = new MenuMorph(this),
             myself = this,
@@ -740,8 +728,7 @@ function serializeAttributes(serializer) {
 }
 
 StageMorph.prototype.init = (function init (oldInit) {
-    return function (globals)
-    {
+    return function (globals) {
         this.nodeAttributes = [];
         this.nodeAttributes.toXML = serializeAttributes;
         this.edgeAttributes = [];
@@ -752,8 +739,7 @@ StageMorph.prototype.init = (function init (oldInit) {
 
 
 SpriteMorph.prototype.init = (function init (oldInit) {
-    return function (globals)
-    {
+    return function (globals) {
         this.G = new jsnx.Graph();
         if(currentGraph === null) {
             setGraphToDisplay(this.G);
@@ -948,16 +934,14 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         return;
     }
 
-    if(this.G.is_directed())
-    {
+    if(this.G.is_directed()) {
         var distancesA = jsnx.single_source_shortest_path_length(this.G, start, radius);
         this.G.reverse(false);
         var distancesB = jsnx.single_source_shortest_path_length(this.G, start, radius);
         this.G.reverse(false);
         G = this.G.subgraph(distancesA.keys().concat(distancesB.keys()));
     }
-    else
-    {
+    else {
         var distances = jsnx.single_source_shortest_path_length(this.G, start, radius);
         G = this.G.subgraph(distances.keys());
     }
@@ -1050,8 +1034,7 @@ SpriteMorph.prototype.renameNode = function(from, to) {
         throw new NodeAlreadyInGraphError(to);
     }
 
-    try
-    {
+    try {
         saveLayout(graphEl);
 
         // The following doesn't work because jsnx.relabel.relabel_nodes()
@@ -1855,8 +1838,7 @@ Process.prototype.doNumericFor = function(uv, start, end, body) {
 Process.prototype.getLastfmFriends = function(username) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettinglastfmfriends)
-    {
+    if(!this.context.gettinglastfmfriends) {
         this.context.gettinglastfmfriends = true;
         this.context.lastfmfriends = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).lastfmAPIkey;
@@ -1872,8 +1854,7 @@ Process.prototype.getLastfmFriends = function(username) {
         });
     }
 
-    if(this.context.lastfmfriends)
-    {
+    if(this.context.lastfmfriends) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
@@ -1895,8 +1876,7 @@ Process.prototype.getLastfmFriends = function(username) {
 Process.prototype.getLastfmUserLovedTracks = function(username) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettinglastfmfriends)
-    {
+    if(!this.context.gettinglastfmfriends) {
         this.context.gettinglastfmfriends = true;
         this.context.lastfmfriends = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).lastfmAPIkey;
@@ -1912,8 +1892,7 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         });
     }
 
-    if(this.context.lastfmfriends)
-    {
+    if(this.context.lastfmfriends) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
@@ -1937,8 +1916,7 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
 Process.prototype.getTMDBMoviesByTitle = function(title) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovies)
-    {
+    if(!this.context.gettingTMDBMovies) {
         this.context.gettingTMDBMovies = true;
         this.context.TMDBMovies = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -1954,8 +1932,7 @@ Process.prototype.getTMDBMoviesByTitle = function(title) {
         });
     }
 
-    if(this.context.TMDBMovies)
-    {
+    if(this.context.TMDBMovies) {
         var data = this.context.TMDBMovies;
         this.popContext();
         this.pushContext('doYield');
@@ -1975,8 +1952,7 @@ Process.prototype.getTMDBMoviesByTitle = function(title) {
 Process.prototype.getTMDBPeopleByName = function(name) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBPeople)
-    {
+    if(!this.context.gettingTMDBPeople) {
         this.context.gettingTMDBPeople = true;
         this.context.TMDBPeople = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -1992,8 +1968,7 @@ Process.prototype.getTMDBPeopleByName = function(name) {
         });
     }
 
-    if(this.context.TMDBPeople)
-    {
+    if(this.context.TMDBPeople) {
         var data = this.context.TMDBPeople;
         this.popContext();
         this.pushContext('doYield');
@@ -2013,8 +1988,7 @@ Process.prototype.getTMDBPeopleByName = function(name) {
 Process.prototype.getTMDBTitle = function(movie) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovieData)
-    {
+    if(!this.context.gettingTMDBMovieData) {
         this.context.gettingTMDBMovieData = true;
         this.context.TMDBMovieData = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -2029,8 +2003,7 @@ Process.prototype.getTMDBTitle = function(movie) {
         });
     }
 
-    if(this.context.TMDBMovieData)
-    {
+    if(this.context.TMDBMovieData) {
         var data = this.context.TMDBMovieData;
         this.popContext();
         this.pushContext('doYield');
@@ -2048,8 +2021,7 @@ Process.prototype.getTMDBTitle = function(movie) {
 Process.prototype.getTMDBCast = function(movie) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovieCredits)
-    {
+    if(!this.context.gettingTMDBMovieCredits) {
         this.context.gettingTMDBMovieCredits = true;
         this.context.TMDBMovieCredits = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -2064,8 +2036,7 @@ Process.prototype.getTMDBCast = function(movie) {
         });
     }
 
-    if(this.context.TMDBMovieCredits)
-    {
+    if(this.context.TMDBMovieCredits) {
         var data = this.context.TMDBMovieCredits;
         this.popContext();
         this.pushContext('doYield');
@@ -2085,8 +2056,7 @@ Process.prototype.getTMDBCast = function(movie) {
 Process.prototype.getTMDBMoviesByPerson = function(person) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovies)
-    {
+    if(!this.context.gettingTMDBMovies) {
         this.context.gettingTMDBMovies = true;
         this.context.TMDBMovies = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -2101,8 +2071,7 @@ Process.prototype.getTMDBMoviesByPerson = function(person) {
         });
     }
 
-    if(this.context.TMDBMovies)
-    {
+    if(this.context.TMDBMovies) {
         var data = this.context.TMDBMovies;
         this.popContext();
         this.pushContext('doYield');
@@ -2122,8 +2091,7 @@ Process.prototype.getTMDBMoviesByPerson = function(person) {
 Process.prototype.getTMDBPersonName = function(person) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovies)
-    {
+    if(!this.context.gettingTMDBMovies) {
         this.context.gettingTMDBMovies = true;
         this.context.TMDBMovies = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -2138,8 +2106,7 @@ Process.prototype.getTMDBPersonName = function(person) {
         });
     }
 
-    if(this.context.TMDBMovies)
-    {
+    if(this.context.TMDBMovies) {
         var data = this.context.TMDBMovies;
         this.popContext();
         this.pushContext('doYield');
@@ -2830,8 +2797,7 @@ InputSlotMorph.prototype.costumesMenu2 = function () {
 };
 
 SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplates) {
-    return function (category)
-    {
+    return function (category) {
         // block() was copied from objects.js
         function block(selector) {
             if (StageMorph.prototype.hiddenPrimitives[selector]) {
@@ -2843,8 +2809,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         }
 
         var blocks = [], button, myself = this;
-        if(category === 'network')
-        {
+        if(category === 'network') {
             blocks.push(block('newGraph'));
             blocks.push(block('newDiGraph'));
             blocks.push(block('convertToGraph'));
