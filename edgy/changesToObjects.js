@@ -568,36 +568,23 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
         }
 
         menu.addItem("export to file", function () {
+            var title = myself.parentThatIsA(IDE_Morph).projectName || "project";
+
             var submenu = new MenuMorph(myself);
             submenu.addItem("JSON", function() {
-                var data = JSON.stringify(graphToObject(currentGraph));
-
-                var link = document.createElement('a');
-                link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
-                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                var json = JSON.stringify(graphToObject(currentGraph));
+                var blob = new Blob([json], {type: "application/json"});
+                saveAs(blob, title  + ".json");
             });
             submenu.addItem("comma-separated adjacency matrix", function() {
                 var csv = graphToCSV(currentGraph);
-
-                var link = document.createElement('a');
-                link.setAttribute('href', 'data:text/csv,' + encodeURIComponent(csv));
-                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                var blob = new Blob([csv], {type: "text/csv"});
+                saveAs(blob, title + ".csv");
             });
             submenu.addItem("DOT format", function() {
                 var dot = graphToDot(currentGraph);
-
-                var link = document.createElement('a');
-                link.setAttribute('href', 'data:text/plain,' + encodeURIComponent(dot));
-                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.dot');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                var blob = new Blob([dot], {type: "text/plain"});
+                saveAs(blob, title + ".dot");
             });
             submenu.popUpAtHand(world);
         });
