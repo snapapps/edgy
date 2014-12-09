@@ -326,6 +326,13 @@ function findNodeElement(node) {
     return graphEl.selectAll(".node").filter(function(d) { return d.node === node; });
 }
 
+function findEdgeElement(edge) {
+    var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
+    return graphEl.selectAll(".edge").filter(function(d) {
+        return d.edge[0] === a && d.edge[1] === b;
+    });
+}
+
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
@@ -1260,33 +1267,60 @@ SpriteMorph.prototype.setNodeAttribsFromDict = function(node, dict) {
     });
 };
 
+var edgeAttributeHandlers = {
+    color: {
+        default: DEFAULT_EDGE_COLOR,
+        set: function(edge, data, val) {
+            if(data.__d3datum__) {
+                findEdgeElement(edge).select(".line").style(LAYOUT_OPTS.edge_style);
+            }
+        }
+    },
+    width: {
+        default: 1,
+        set: function(edge, data, val) {
+            if(data.__d3datum__) {
+                // For flexibility (?) reasons, the stroke width is emulated
+                // in terms of polylines by the renderer, so we must make it
+                // redo the edge.
+                try {
+                    // Maintain the graph layout as it is.
+                    saveLayout(graphEl);
+                    var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
+                    this.G.add_edge(a, b, data);
+                } finally {
+                    restoreLayout(graphEl, layout);
+                }
+            }
+        }
+    },
+    label: {
+        default: "",
+        set: function(edge, data, val) {
+            if(data.__d3datum__) {
+                findEdgeElement(edge).select("text").text(val);
+            }
+        }
+    }
+};
+
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
-    if(this.G.has_edge(a, b)) {
-        // For consistency's sake, we use autoNumericize() to normalize
-        // attribute values since Snap's UI does not distinguish between the
-        // number 1 and the string "1".
-        if(attrib === "color" || attrib === "label" || attrib === "scale") {
-            var data = {};
-            data[attrib] = autoNumericize(val);
-            this.G.add_edge(a, b, data);
-            if(this.isNodeDisplayed(a) && this.isNodeDisplayed(b)) {
-                currentGraph.add_edge(a, b, data);
-            }
-        } else {
-            this.G.edge.get(a).get(b)[attrib] = autoNumericize(val);
-        }
+    if(!this.G.has_edge(a, b)) {
+        throw new EdgeNotInGraphError(edge);
+    }
 
-        // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && this.isActiveGraph()) {
-            var edges = graphEl.selectAll(".edge");
-            edges.each(function(d, i) {
-                if(d.edge[0] === a && d.edge[1] === b) {
-                    var textEl = d3.select(edges[0][i]).select("text");
-                    textEl.text(val);
-                }
-            });
-        }
+    // For consistency's sake, we use autoNumericize() to normalize attribute
+    // values since Snap's UI does not distinguish between the number 1 and
+    // the string "1".
+    val = autoNumericize(val);
+
+    var data = this.G.edge.get(a).get(b);
+    data[attrib] = val;
+
+    // Run any relevant special handlers.
+    if(edgeAttributeHandlers[attrib] && edgeAttributeHandlers[attrib].set) {
+        edgeAttributeHandlers[attrib].set.call(this, edge, data, val);
     }
 };
 
@@ -1294,24 +1328,33 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     var a = parseNode(edge.at(1)),
         b = parseNode(edge.at(2));
 
-    if(this.G.has_edge(a, b)) {
-        var val = this.G.adj.get(a).get(b)[attrib];
-    } else {
+    if(!this.G.has_edge(a, b)) {
         throw new EdgeNotInGraphError(edge);
     }
-    // Can't return undefined, since it is special to Snap, and will cause an
-    // infinite loop.
-    if(val === undefined) {
-        if(attrib === "color")
-            return DEFAULT_EDGE_COLOR;
-        if(attrib === "label")
-            return "";
-        if(attrib === "width")
-            return 1; // Width is normalized to 1; multiplied with EDGE_WIDTH_FACTOR.
 
-        throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
-    } else {
+    var data = this.G.adj.get(a).get(b);
+    var handler = edgeAttributeHandlers[attrib];
+    var val = data[attrib];
+
+    if(handler) {
+        // The getter takes priority if it exists and has a well-defined value
+        // now.
+        if(handler.get) {
+            var hval = handler.get.call(this, edge, data);
+            if(hval !== undefined) {
+                val = hval;
+            }
+        } else if(val === undefined && handler.default !== undefined) {
+            val = handler.default;
+        }
+    }
+
+    if(val !== undefined) {
         return val;
+    } else {
+        throw new Error([
+            "Undefined attribute '", attrib.toString(), "' on edge (",
+            a.toString(), ",", b.toString(), ")"].join(""));
     }
 };
 
