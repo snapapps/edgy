@@ -686,7 +686,7 @@ StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNo
         hiddenCurrentGraph = null;
     } else if (currentGraph.number_of_nodes() > num) {
         hiddenCurrentGraph = currentGraph;
-        justHideGraph();
+        hideGraph();
     }
 }
 
@@ -871,7 +871,7 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
     sliceRadius = radius;
 };
 
-function justHideGraph() {
+function hideGraph() {
     setGraphToDisplay(jsnx.Graph());
     currentGraphSprite = null;
 }
@@ -888,7 +888,7 @@ SpriteMorph.prototype.resumeLayout = function() {
 
 SpriteMorph.prototype.hideActiveGraph = function() {
     if(this.isActiveGraph()) {
-        justHideGraph();
+        hideGraph();
     }
 };
 
