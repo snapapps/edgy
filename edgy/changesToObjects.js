@@ -881,11 +881,7 @@ Costume.prototype.edit = (function edit(oldEdit) {
 }(Costume.prototype.edit));
 
 function autoNumericize(x) {
-    if(isNumeric(x)) {
-        return parseFloat(x);
-    }
-
-    return x;
+    return isNumeric(x) ? parseFloat(x) : x;
 }
 
 function parseNode(node) {
