@@ -79,16 +79,18 @@ graphEl.on("DOMNodeInserted", function() {
                 }
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
-                        d.data.color = autoNumericize(color);
-                        node.select(".node-shape").style("fill", LAYOUT_OPTS.node_style.fill);
-                    }).prompt('Node color', (d.data.color || DEFAULT_NODE_COLOR).toString(), world);
+                        currentGraphSprite.setNodeAttrib("color", d.node, color);
+                    }).prompt('Node color',
+                              currentGraphSprite.getNodeAttrib("color", d.node).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set scale', function () {
                     new DialogBoxMorph(null, function (scale) {
-                        d.data.scale = autoNumericize(scale);
-                        updateNodeDimensionsAndCostume(node);
-                    }).prompt('Node scale', (d.data.scale || 1).toString(), world);
+                        currentGraphSprite.setNodeAttrib("scale", d.node, scale);
+                    }).prompt('Node scale',
+                              currentGraphSprite.getNodeAttrib("scale", d.node).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set costume', function () {
@@ -154,22 +156,26 @@ graphEl.on("DOMNodeInserted", function() {
                 }
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
-                        d.data.label = autoNumericize(label);
-                        node.select("text").text(label);
-                    }).prompt('Edge label', (d.data.label || '').toString(), world);
+                        currentGraphSprite.setEdgeAttrib("label", new List(d.edge), label);
+                    }).prompt('Edge label',
+                              currentGraphSprite.getEdgeAttrib("label", new List(d.edge)).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
-                        d.data.color = autoNumericize(color);
-                        node.select(".line").style("fill", LAYOUT_OPTS.edge_style.fill);
-                    }).prompt('Edge color', (d.data.color || DEFAULT_EDGE_COLOR).toString(), world);
+                        currentGraphSprite.setEdgeAttrib("color", new List(d.edge), color);
+                    }).prompt('Edge color',
+                              currentGraphSprite.getEdgeAttrib("color", new List(d.edge)).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
-                        d.G.add_edge(d.edge[0], d.edge[1], {width: parseFloat(width)});
-                    }).prompt('Edge width', (d.data.width || 1).toString(), world);
+                        currentGraphSprite.setEdgeAttrib("width", new List(d.edge), width);
+                    }).prompt('Edge width',
+                              currentGraphSprite.getEdgeAttrib("width", new List(d.edge)).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set costume', function () {
