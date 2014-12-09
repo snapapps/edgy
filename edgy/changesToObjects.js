@@ -293,7 +293,7 @@ function updateNodeAppearance(node) {
     shapeEl.attr(LAYOUT_OPTS.node_attr);
 }
 
-function svgTextDimensions(text) {
+function measureText(text) {
 	var svg = graphEl.select("svg");
 	var textEl = svg.append("text").text(text);
 	var bounds = textEl.node().getBBox();
@@ -382,19 +382,19 @@ var DEFAULT_NODE_COLOR = "white",
 			width: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-				var dim = svgTextDimensions(d.data.label || d.node);
+				var dim = measureText(d.data.label || d.node);
 				d.width = dim.width + 16;
 				return dim.width + 8;
 			},
 			height: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-				var dim = svgTextDimensions(d.data.label || d.node);
+				var dim = measureText(d.data.label || d.node);
 				d.height = dim.height + 16;
 				return dim.height + 8;
 			},
 			transform: function(d) {
-				var dim = svgTextDimensions(d.data.label || d.node);
+				var dim = measureText(d.data.label || d.node);
 				var scale = (d.data.scale || 1);
                 var transform = ['scale(', scale, ')'];
                 if(!d.data.__costume__) {
