@@ -305,6 +305,30 @@ function svgTextDimensions(text)
 	return bounds;
 }
 
+function NodeNotInGraphError(node) {
+    this.name = "NodeNotInGraphError";
+    this.message = "The node '" + node.toString() + "' is not in the graph.";
+}
+NodeNotInGraphError.prototype = new Error();
+NodeNotInGraphError.prototype.constructor = NodeNotInGraphError;
+
+function NodeAlreadyInGraphError(node) {
+    this.name = "NodeAlreadyInGraphError";
+    this.message = "The node '" + node.toString() + "' is already in the graph.";
+}
+NodeAlreadyInGraphError.prototype = new Error();
+NodeAlreadyInGraphError.prototype.constructor = NodeAlreadyInGraphError;
+
+function EdgeNotInGraphError(edge) {
+    var a = edge.at(1),
+        b = edge.at(2);
+
+    this.name = "EdgeNotInGraphError";
+    this.message = ["Edge (", a.toString(), ", ", b.toString(), ") is not in the graph."].join("");
+}
+EdgeNotInGraphError.prototype = new Error();
+EdgeNotInGraphError.prototype.constructor = EdgeNotInGraphError;
+
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
@@ -1019,11 +1043,11 @@ SpriteMorph.prototype.removeNode = function(node) {
 
 SpriteMorph.prototype.renameNode = function(from, to) {
     if(!this.hasNode(from)) {
-        throw new Error("The node '" + from + "' is not in the graph.");
+        throw new NodeNotInGraphError(from);
     }
 
     if(this.hasNode(to)) {
-        throw new Error("The node '" + to + "' is already in the graph.")
+        throw new NodeAlreadyInGraphError(to);
     }
 
     try
@@ -1115,7 +1139,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     if(this.G.has_node(node)) {
         var val = this.G.node.get(node)[attrib];
     } else {
-        throw new Error("Node '" + node.toString() + "' does not exist.")
+        throw new NodeNotInGraphError(node);
     }
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
@@ -1186,7 +1210,7 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     if(this.G.has_edge(a, b)) {
         var val = this.G.adj.get(a).get(b)[attrib];
     } else {
-        throw new Error(["Edge (", a.toString(), ",", b.toString(), ") does not exist."].join(""));
+        throw new EdgeNotInGraphError(edge);
     }
     // Can't return undefined, since it is special to Snap, and will cause an
     // infinite loop.
