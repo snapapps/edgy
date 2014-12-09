@@ -996,7 +996,7 @@ SpriteMorph.prototype.getNeighbors = function(node) {
     return new List(this.G.neighbors(parseNode(node)));
 };
 
-var nodeAttributeHandlers = {
+var NODE_ATTR_HANDLERS = {
     color: {
         default: DEFAULT_NODE_COLOR,
         set: function(node, data, val) {
@@ -1092,7 +1092,7 @@ var nodeAttributeHandlers = {
     }
 };
 
-var BUILTIN_NODE_ATTRS = Object.keys(nodeAttributeHandlers);
+var BUILTIN_NODE_ATTRS = Object.keys(NODE_ATTR_HANDLERS);
 
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
@@ -1109,8 +1109,8 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     data[attrib] = val;
 
     // Run any relevant special handlers.
-    if(nodeAttributeHandlers[attrib] && nodeAttributeHandlers[attrib].set) {
-        nodeAttributeHandlers[attrib].set.call(this, node, data, val);
+    if(NODE_ATTR_HANDLERS[attrib] && NODE_ATTR_HANDLERS[attrib].set) {
+        NODE_ATTR_HANDLERS[attrib].set.call(this, node, data, val);
     }
 };
 
@@ -1121,7 +1121,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     }
 
     var data = this.G.node.get(node);
-    var handler = nodeAttributeHandlers[attrib];
+    var handler = NODE_ATTR_HANDLERS[attrib];
     var val = data[attrib];
 
     if(handler) {
@@ -1164,7 +1164,7 @@ SpriteMorph.prototype.setNodeAttribsFromDict = function(node, dict) {
     });
 };
 
-var edgeAttributeHandlers = {
+var EDGE_ATTR_HANDLERS = {
     color: {
         default: DEFAULT_EDGE_COLOR,
         set: function(edge, data, val) {
@@ -1201,7 +1201,7 @@ var edgeAttributeHandlers = {
     }
 };
 
-var BUILTIN_EDGE_ATTRS = Object.keys(edgeAttributeHandlers);
+var BUILTIN_EDGE_ATTRS = Object.keys(EDGE_ATTR_HANDLERS);
 
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
@@ -1218,8 +1218,8 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     data[attrib] = val;
 
     // Run any relevant special handlers.
-    if(edgeAttributeHandlers[attrib] && edgeAttributeHandlers[attrib].set) {
-        edgeAttributeHandlers[attrib].set.call(this, edge, data, val);
+    if(EDGE_ATTR_HANDLERS[attrib] && EDGE_ATTR_HANDLERS[attrib].set) {
+        EDGE_ATTR_HANDLERS[attrib].set.call(this, edge, data, val);
     }
 };
 
@@ -1232,7 +1232,7 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     }
 
     var data = this.G.adj.get(a).get(b);
-    var handler = edgeAttributeHandlers[attrib];
+    var handler = EDGE_ATTR_HANDLERS[attrib];
     var val = data[attrib];
 
     if(handler) {
