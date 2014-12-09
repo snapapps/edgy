@@ -2370,7 +2370,7 @@ SpriteMorph.prototype.newNode = function() {
         setEdgeAttribsFromDict: {
             type: 'command',
             category: 'edges',
-            spec: 'set attributes of %s from dict %l'
+            spec: 'set attributes of %l from dict %l'
         },
         setNodeCostume: {
             type: 'command',
