@@ -257,7 +257,6 @@ function restoreLayout(el, layout) {
 }
 
 function updateGraphDimensions(stage) {
-    // console.log("resizing graph element to %dx%d", stage.width(), stage.height());
     graphEl.style({
         top: stage.top() + "px",
         left: stage.left() + "px",
@@ -525,7 +524,6 @@ function displayGraph (G) {
 StageMorph.prototype.changed = (function changed (oldChanged) {
     var graphNeedsRedraw = true;
     return function () {
-        // console.log("stage changed");
         var result = oldChanged.call(this);
         // HACK: work around spontaneous resizing due to transient StageMorphs
         // being created for e.g. loading blocks and calling changed()
@@ -610,14 +608,12 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                     var frd = new FileReader();
                     var s = currentGraphSprite;
                     frd.onloadend = function(e) {
-                        // console.log(e);
                         try {
                             s.loadGraphFromString(e.target.result);
                         } catch(e) {
                             ide.showMessage("Error loading file: " + e.message);
                         }
                     }
-                    // console.log(inp.files);
                     for (var i = 0; i < inp.files.length; i += 1) {
                         frd.readAsText(inp.files[i]);
                     }
