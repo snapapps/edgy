@@ -19,9 +19,7 @@ var graphEl = d3.select(document.body)
     hiddenCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
     costumeIdMap = {},
-    numEdgePatterns = 0,
-    sliceStart,
-    sliceRadius;
+    numEdgePatterns = 0;
 
 graphEl.on("mousedown", function() {
     world.hand.processMouseDown(d3.event);
@@ -863,13 +861,13 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         G.parent_graph = this.G;
         this.setGraphToDisplay2(G);
     }
-    sliceStart = start;
-    sliceRadius = radius;
+    this.sliceStart = start;
+    this.sliceRadius = radius;
 };
 
 SpriteMorph.prototype.redrawGraphSlice = function() {
     if(currentGraph.parent_graph === this.G) {
-        this.showGraphSlice(sliceStart, sliceRadius);
+        this.showGraphSlice(this.sliceStart, this.sliceRadius);
     }
 }
 
@@ -2154,7 +2152,7 @@ SpriteMorph.prototype.setGraph = function(newGraph) {
     this.G = newGraph;
     if(wasActive) {
         if(currentGraph.parent_graph) {
-            this.showGraphSlice(sliceStart, sliceRadius);
+            this.showGraphSlice(this.sliceStart, this.sliceRadius);
         } else {
             this.setActiveGraph();
         }
