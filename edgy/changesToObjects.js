@@ -222,7 +222,8 @@ function saveLayout(el) {
             px: d.px,
             py: d.py,
             x: d.x,
-            y: d.y
+            y: d.y,
+            fixed: d.fixed
         };
     });
 }
@@ -238,21 +239,17 @@ function restoreLayout(el, layout) {
         d.x = p.x;
         d.y = p.y;
         // Fix the positions of the nodes temporarily.
-        d.fixed = true;
+        d.fixed |= 1;
     });
 
     // Need to run one tick of layout in order to update the positions so
-    // everything doesn't break when layout.stop() is called.
+    // the layout doesn't break.
     layout.tick();
-    // No need to do a complete relayout if start() was called, so just fix
-    // any broken constraints (e.g. overlapping nodes).
-    layout.stop();
-    layout.resume();
 
     // Restore the fixedness of the nodes and clean up.
     graphEl.selectAll(".node").each(function(d) {
         var n = d.G.node.get(d.node);
-        d.fixed = n.fixed || false;
+        d.fixed = n.__oldpos__.fixed;
         delete n.__oldpos__;
     });
 }
