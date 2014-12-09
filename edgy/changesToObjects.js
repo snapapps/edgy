@@ -1197,6 +1197,8 @@ var nodeAttributeHandlers = {
     }
 };
 
+var BUILTIN_NODE_ATTRS = Object.keys(nodeAttributeHandlers);
+
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
     if(!this.G.has_node(node)) {
@@ -1304,6 +1306,8 @@ var edgeAttributeHandlers = {
     }
 };
 
+var BUILTIN_EDGE_ATTRS = Object.keys(edgeAttributeHandlers);
+
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(!this.G.has_edge(a, b)) {
@@ -1357,8 +1361,6 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
             a.toString(), ",", b.toString(), ")"].join(""));
     }
 };
-
-var BUILTIN_EDGE_ATTRS = ['color', 'label', 'width'];
 
 SpriteMorph.prototype.getEdgeAttribDict = function(node) {
     var myself = this;
@@ -2851,8 +2853,6 @@ StageMorph.prototype.deleteNodeAttribute = SpriteMorph.prototype.deleteNodeAttri
     }
     return false;
 }
-
-var BUILTIN_NODE_ATTRS = ['color', 'scale', 'fixed', 'x', 'y'];
 
 // Provides attribute names for UI for node attribute blocks.
 InputSlotMorph.prototype.getNodeAttributeNames = function () {
