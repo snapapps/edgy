@@ -3298,7 +3298,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
                         delete data[k];
                     }
                 } else {
-                    this.addEdgeAttribute(k, false);
+                    myself.addEdgeAttribute(k, false);
                 }
             }
         }
