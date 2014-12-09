@@ -503,7 +503,7 @@ redrawGraph = function() {
 }
 
 
-function setGraphToDisplay (G) {
+function displayGraph (G) {
     // Remove the JSNetworkX mutator bindings from the current graph, so we
     // don't get mysterious slowdowns from unbound graphs floating around and
     // being laid out in the background.
@@ -652,7 +652,7 @@ SpriteMorph.prototype.init = (function init (oldInit) {
     return function (globals) {
         this.G = new jsnx.Graph();
         if(currentGraph === null) {
-            setGraphToDisplay(this.G);
+            displayGraph(this.G);
             currentGraphSprite = this;
         }
         this.nodeAttributes = [];
@@ -811,7 +811,7 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
     }
 
     if(G.number_of_nodes() <= maxVisibleNodes) {
-        setGraphToDisplay(G);
+        displayGraph(G);
         currentGraphSprite = this;
         hiddenCurrentGraph = null;
     } else {
@@ -872,7 +872,7 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
 };
 
 function hideGraph() {
-    setGraphToDisplay(jsnx.Graph());
+    displayGraph(jsnx.Graph());
     currentGraphSprite = null;
 }
 
