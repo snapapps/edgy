@@ -322,6 +322,10 @@ function EdgeNotInGraphError(edge) {
 EdgeNotInGraphError.prototype = new Error();
 EdgeNotInGraphError.prototype.constructor = EdgeNotInGraphError;
 
+function findNodeElement(node) {
+    return graphEl.selectAll(".node").filter(function(d) { return d.node === node; });
+}
+
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
@@ -1090,51 +1094,151 @@ SpriteMorph.prototype.getNeighbors = function(node) {
     return new List(this.G.neighbors(parseNode(node)));
 };
 
+var nodeAttributeHandlers = {
+    color: {
+        default: DEFAULT_NODE_COLOR,
+        set: function(node, data, val) {
+            if(this.isActiveGraph()) {
+                updateNodeDimensionsAndCostume(findNodeElement(node));
+            }
+        }
+    },
+    scale: {
+        default: 1,
+        set: function(node, data, val) {
+            if(this.isActiveGraph()) {
+                updateNodeDimensionsAndCostume(findNodeElement(node));
+            }
+        }
+    },
+    fixed: {
+        get: function(node, data) {
+            if(data.__d3datum__) {
+                // We should return the 'true' fixedness value here in case
+                // e.g. manual layout is being used.
+                return !!(data.__d3datum__.fixed & 1);
+            }
+        },
+        set: function(node, data, val) {
+            if(data.__d3datum__) {
+                if(val) {
+                    data.__d3datum__.fixed |= 1;
+                } else {
+                    data.__d3datum__.fixed &= ~1;
+                }
+            }
+
+            // If the node is not fixed, having fixed x and y does not make
+            // sense.
+            if(!val) {
+                delete data.x;
+                delete data.y;
+            }
+        }
+    },
+    x: {
+        get: function(node, data) {
+            if(data.__d3datum__) {
+                return data.__d3datum__.x;
+            }
+        },
+        set: function(node, data, val) {
+            if(data.__d3datum__) {
+                data.__d3datum__.x = data.__d3datum__.px = val;
+
+                // We need to run the layout for one tick with the node fixed,
+                // so it changes position. Then we can restore the fixedness
+                // to whatever it was before.
+                var fixed = data.__d3datum__.fixed;
+                data.__d3datum__.fixed |= 1;
+                layout.resume();
+                layout.tick();
+                data.__d3datum__.fixed = fixed;
+            }
+
+            // If the node is not fixed, having fixed x does not make sense.
+            if(!data.fixed) {
+                delete data.x;
+            }
+        }
+    },
+    y: {
+        get: function(node, data) {
+            if(data.__d3datum__) {
+                return data.__d3datum__.y;
+            }
+        },
+        set: function(node, data, val) {
+            if(data.__d3datum__) {
+                data.__d3datum__.y = data.__d3datum__.py = val;
+
+                // We need to run the layout for one tick with the node fixed,
+                // so it changes position. Then we can restore the fixedness
+                // to whatever it was before.
+                var fixed = data.__d3datum__.fixed;
+                data.__d3datum__.fixed |= 1;
+                layout.resume();
+                layout.tick();
+                data.__d3datum__.fixed = fixed;
+            }
+
+            // If the node is not fixed, having fixed y does not make sense.
+            if(!data.fixed) {
+                delete data.y;
+            }
+        }
+    }
+};
+
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
-    if(this.G.has_node(node)) {
-        // For consistency's sake, we use autoNumericize() to normalize
-        // attribute values since Snap's UI does not distinguish between the
-        // number 1 and the string "1".
-        if(attrib === "color" || attrib === "scale") {
-            var data = {};
-            data[attrib] = autoNumericize(val);
-            this.G.add_node(node, data);
-            if(this.isNodeDisplayed(node)) {
-                currentGraph.add_node(node, data);
-            }
-        } else if(attrib === "fixed") {
-            this.G.node.get(node).fixed = autoNumericize(val);
-            this.G.node.get(node).__d3datum__.fixed |= +(!!val);
-        } else if(attrib === "x" || attrib === "y") {
-            this.G.node.get(node)[attrib] = autoNumericize(val);
-            this.G.node.get(node).__d3datum__["p" + attrib] = autoNumericize(val);
-            this.G.node.get(node).__d3datum__[attrib] = autoNumericize(val);
-            this.resumeLayout();
-        } else {
-            this.G.node.get(node)[attrib] = autoNumericize(val);
-        }
+    if(!this.G.has_node(node)) {
+        throw new NodeNotInGraphError(node);
+    }
+
+    // For consistency's sake, we use autoNumericize() to normalize
+    // attribute values since Snap's UI does not distinguish between the
+    // number 1 and the string "1".
+    val = autoNumericize(val);
+
+    var data = this.G.node.get(node);
+    data[attrib] = val;
+
+    // Run any relevant special handlers.
+    if(nodeAttributeHandlers[attrib] && nodeAttributeHandlers[attrib].set) {
+        nodeAttributeHandlers[attrib].set.call(this, node, data, val);
     }
 };
 
 SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     node = parseNode(node);
-    if(this.G.has_node(node)) {
-        var val = this.G.node.get(node)[attrib];
-    } else {
+    if(!this.G.has_node(node)) {
         throw new NodeNotInGraphError(node);
     }
-    // Can't return undefined, since it is special to Snap, and will cause an
-    // infinite loop.
-    if(val === undefined) {
-        if(attrib === "color")
-            return DEFAULT_NODE_COLOR;
-        if(attrib === "scale")
-            return 1;
 
-        throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
-    } else {
+    var data = this.G.node.get(node);
+    var handler = nodeAttributeHandlers[attrib];
+    var val = data[attrib];
+
+    if(handler) {
+        // The getter takes priority if it exists and has a well-defined value
+        // now.
+        if(handler.get) {
+            var hval = handler.get.call(this, node, data);
+            if(hval !== undefined) {
+                val = hval;
+            }
+        } else if(val === undefined && handler.default) {
+            val = handler.default;
+        }
+    }
+
+    if(val !== undefined) {
         return val;
+    } else {
+        throw new Error([
+            "Undefined attribute '", attrib.toString(), "' on node '",
+            node.toString(), "'"].join(""));
     }
 };
 
