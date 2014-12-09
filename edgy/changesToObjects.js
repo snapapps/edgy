@@ -2718,7 +2718,8 @@ StageMorph.prototype.deleteNodeAttribute = SpriteMorph.prototype.deleteNodeAttri
 
 var BUILTIN_NODE_ATTRS = ['color', 'scale', 'fixed', 'x', 'y'];
 
-InputSlotMorph.prototype.getNodeAttrsDict = function () {
+// Provides attribute names for UI for node attribute blocks.
+InputSlotMorph.prototype.getNodeAttributeNames = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
         dict = {};
@@ -2776,7 +2777,8 @@ StageMorph.prototype.deleteEdgeAttribute = SpriteMorph.prototype.deleteEdgeAttri
     return false;
 }
 
-InputSlotMorph.prototype.getEdgeAttrsDict = function () {
+// Provides attribute names for UI for edge attribute blocks.
+InputSlotMorph.prototype.getEdgeAttributeNames = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
         dict = {};
