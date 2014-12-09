@@ -19,9 +19,7 @@ var graphEl = d3.select(document.body)
     hiddenCurrentGraph = null, // Last graph hidden.
     layout = null, // The d3.layout instance controlling the graph display.
     costumeIdMap = {},
-    numEdgePatterns = 0,
-    sliceStart,
-    sliceRadius;
+    numEdgePatterns = 0;
 
 graphEl.on("mousedown", function() {
     world.hand.processMouseDown(d3.event);
@@ -49,7 +47,7 @@ graphEl.on("mousedown", function() {
     d3.event.preventDefault();
 });
 
-function graphDisplayCostumesMenu() {
+function contextMenuCostumesList() {
     var rcvr = currentGraphSprite,
         dict = {};
     dict["default"] = "default";
@@ -64,32 +62,33 @@ function graphDisplayCostumesMenu() {
 graphEl.on("DOMNodeInserted", function() {
     var node = d3.select(d3.event.relatedNode);
     if(node.classed("node")) {
+        // Node context menu.
         node.on("mouseup", function() {
             var d = node.datum();
-            if(d3.event.ctrlKey || d3.event.button === 2)
-            {
+            if(d3.event.ctrlKey || d3.event.button === 2) {
                 var menu = new MenuMorph(this);
 
                 menu.addItem('ID: ' + d.node);
                 menu.addLine();
 
-                if(!d.G.parent_graph) {
-                    menu.addItem('delete', function () {
-                        d.G.remove_node(d.node);
-                    });
-                }
+                menu.addItem('delete', function () {
+                    currentGraphSprite.removeNode(d.node);
+                });
+
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
-                        d.data.color = autoNumericize(color);
-                        node.select(".node-shape").style("fill", LAYOUT_OPTS.node_style.fill);
-                    }).prompt('Node color', (d.data.color || DEFAULT_NODE_COLOR).toString(), world);
+                        currentGraphSprite.setNodeAttrib("color", d.node, color);
+                    }).prompt('Node color',
+                              currentGraphSprite.getNodeAttrib("color", d.node).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set scale', function () {
                     new DialogBoxMorph(null, function (scale) {
-                        d.data.scale = autoNumericize(scale);
-                        updateNodeDimensionsAndCostume(node);
-                    }).prompt('Node scale', (d.data.scale || 1).toString(), world);
+                        currentGraphSprite.setNodeAttrib("scale", d.node, scale);
+                    }).prompt('Node scale',
+                              currentGraphSprite.getNodeAttrib("scale", d.node).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set costume', function () {
@@ -99,7 +98,7 @@ graphEl.on("DOMNodeInserted", function() {
                               d.data.__costume__ ? d.data.__costume__.name : "",
                               world,
                               null,
-                              graphDisplayCostumesMenu,
+                              contextMenuCostumesList,
                               true);
                     world.worldCanvas.focus();
                 });
@@ -116,62 +115,63 @@ graphEl.on("DOMNodeInserted", function() {
                 });
                 menu.popUpAtHand(world);
             } else {
-                // Layout uses the fixed attribute for other things during
-                // dragging, so it would get overwritten if we tried to set it
-                // immediately. Wait until the layout is done dealing with
-                // the dragging before fixing the node position.
+                // Fix the node if manual (sticky) layout is on.
                 if(currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout) {
-                    setTimeout(function() {
-                        d.fixed = true;
-                    }, 0);
+                    d.fixed |= 1;
                 }
             }
         }).on("dblclick", function() {
+            // Trigger any "on node double-clicked" listeners.
             if(d3.event.button === 0) {
+                d3.event.stopPropagation();
+
+                // Get the listeners.
                 var hats = currentGraphSprite.scripts.children.filter(function (morph) {
                     return morph.selector === 'receiveNodeClick';
                 });
                 hats.forEach(function (block) {
+                    // Run the triggered block.
                     var stage = currentGraphSprite.parentThatIsA(StageMorph);
                     var proc = stage.threads.startProcess(block, stage.isThreadSafe);
                     proc.pushContext('doYield');
                     var uv = block.inputs()[0].evaluate();
-                    // console.log(proc, uv);
                     proc.context.outerContext.variables.addVar(uv, node.datum().node);
                 });
-                d3.event.stopPropagation();
             }
         });
     } else if(node.classed("edge")) {
+        // Edge context menu.
         node.on("mouseup", function() {
-            if(d3.event.ctrlKey || d3.event.button === 2)
-            {
+            if(d3.event.ctrlKey || d3.event.button === 2) {
                 var menu = new MenuMorph(this);
                 var d = node.datum();
 
-                if(!d.G.parent_graph) {
-                    menu.addItem('delete', function () {
-                        d.G.remove_edges_from([d.edge]);
-                    });
-                }
+                menu.addItem('delete', function () {
+                    currentGraphSprite.removeEdge(new List(d.edge));
+                });
+
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
-                        d.data.label = autoNumericize(label);
-                        node.select("text").node().textContent = label;
-                    }).prompt('Edge label', (d.data.label || '').toString(), world);
+                        currentGraphSprite.setEdgeAttrib("label", new List(d.edge), label);
+                    }).prompt('Edge label',
+                              currentGraphSprite.getEdgeAttrib("label", new List(d.edge)).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
-                        d.data.color = autoNumericize(color);
-                        node.select(".line").style("fill", LAYOUT_OPTS.edge_style.fill);
-                    }).prompt('Edge color', (d.data.color || DEFAULT_EDGE_COLOR).toString(), world);
+                        currentGraphSprite.setEdgeAttrib("color", new List(d.edge), color);
+                    }).prompt('Edge color',
+                              currentGraphSprite.getEdgeAttrib("color", new List(d.edge)).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set width', function () {
                     new DialogBoxMorph(null, function (width) {
-                        d.G.add_edge(d.edge[0], d.edge[1], {width: parseFloat(width)});
-                    }).prompt('Edge width', (d.data.width || 1).toString(), world);
+                        currentGraphSprite.setEdgeAttrib("width", new List(d.edge), width);
+                    }).prompt('Edge width',
+                              currentGraphSprite.getEdgeAttrib("width", new List(d.edge)).toString(),
+                              world);
                     world.worldCanvas.focus();
                 });
                 menu.addItem('set costume', function () {
@@ -181,7 +181,7 @@ graphEl.on("DOMNodeInserted", function() {
                               d.data.__costume__ ? d.data.__costume__.name : "",
                               world,
                               null,
-                              graphDisplayCostumesMenu,
+                              contextMenuCostumesList,
                               true);
                     world.worldCanvas.focus();
                 });
@@ -203,8 +203,7 @@ graphEl.on("DOMNodeInserted", function() {
 
         // Prevent panning of the graph if we've right clicked on an edge.
         node.on("mousedown", function() {
-            if(d3.event.ctrlKey || d3.event.button === 2)
-            {
+            if(d3.event.ctrlKey || d3.event.button === 2) {
                 d3.event.stopPropagation();
             }
         });
@@ -221,7 +220,8 @@ function saveLayout(el) {
             px: d.px,
             py: d.py,
             x: d.x,
-            y: d.y
+            y: d.y,
+            fixed: d.fixed
         };
     });
 }
@@ -237,27 +237,22 @@ function restoreLayout(el, layout) {
         d.x = p.x;
         d.y = p.y;
         // Fix the positions of the nodes temporarily.
-        d.fixed = true;
+        d.fixed |= 1;
     });
 
     // Need to run one tick of layout in order to update the positions so
-    // everything doesn't break when layout.stop() is called.
+    // the layout doesn't break.
     layout.tick();
-    // No need to do a complete relayout if start() was called, so just fix
-    // any broken constraints (e.g. overlapping nodes).
-    layout.stop();
-    layout.resume();
 
     // Restore the fixedness of the nodes and clean up.
     graphEl.selectAll(".node").each(function(d) {
         var n = d.G.node.get(d.node);
-        d.fixed = n.fixed || false;
+        d.fixed = n.__oldpos__.fixed;
         delete n.__oldpos__;
     });
 }
 
 function updateGraphDimensions(stage) {
-    // console.log("resizing graph element to %dx%d", stage.width(), stage.height());
     graphEl.style({
         top: stage.top() + "px",
         left: stage.left() + "px",
@@ -267,25 +262,22 @@ function updateGraphDimensions(stage) {
     graphEl.select("svg")
         .attr("width", stage.width())
         .attr("height", stage.height());
-    if(layout) // Make sure the layout has been initialized.
-    {
+    if(layout) { // Make sure the layout has been initialized.
         layout.size([stage.width(), stage.height()]);
         layout.resume(); // Reflow the graph.
     }
 }
 
-function getNodeElementType(d)
-{
+function getNodeElementType(d) {
     return d.data.__costume__ ? "use" : "rect";
 }
 
-function updateNodeDimensionsAndCostume(node) {
+function updateNodeAppearance(node) {
     // If the current type of the node element is not what it should be (e.g.
     // the node had a costume added), fix that.
 	var shape = getNodeElementType(node.datum());
     var shapeEl = node.select(shape);
-    if (shapeEl.size() == 0)
-    {
+    if (shapeEl.size() == 0) {
         node.selectAll(".node-shape").remove();
         shapeEl = node.insert(shape, "text").classed("node-shape", true);
     }
@@ -296,15 +288,47 @@ function updateNodeDimensionsAndCostume(node) {
     shapeEl.attr(LAYOUT_OPTS.node_attr);
 }
 
-function svgTextDimensions(text)
-{
-	var svgEl = graphEl.select("svg");
-	var appendedText = svgEl.append("text");
-	var appendedNode = appendedText.node();
-	appendedNode.textContent = text;
-	var retnVal = appendedNode.getBBox();
-	appendedText.remove();
-	return retnVal;
+function measureText(text) {
+	var svg = graphEl.select("svg");
+	var textEl = svg.append("text").text(text);
+	var bounds = textEl.node().getBBox();
+	textEl.remove();
+	return bounds;
+}
+
+function NodeNotInGraphError(node) {
+    this.name = "NodeNotInGraphError";
+    this.message = "The node '" + node.toString() + "' is not in the graph.";
+}
+NodeNotInGraphError.prototype = new Error();
+NodeNotInGraphError.prototype.constructor = NodeNotInGraphError;
+
+function NodeAlreadyInGraphError(node) {
+    this.name = "NodeAlreadyInGraphError";
+    this.message = "The node '" + node.toString() + "' is already in the graph.";
+}
+NodeAlreadyInGraphError.prototype = new Error();
+NodeAlreadyInGraphError.prototype.constructor = NodeAlreadyInGraphError;
+
+function EdgeNotInGraphError(edge) {
+    var a = edge.at(1),
+        b = edge.at(2);
+
+    this.name = "EdgeNotInGraphError";
+    this.message = ["Edge (", a.toString(), ", ", b.toString(), ") is not in the graph."].join("");
+}
+EdgeNotInGraphError.prototype = new Error();
+EdgeNotInGraphError.prototype.constructor = EdgeNotInGraphError;
+
+function findNodeElement(node) {
+    return graphEl.selectAll(".node").filter(function(d) { return d.node === node; });
+}
+
+function findEdgeElement(edge) {
+    var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
+    return graphEl.selectAll(".edge").filter(function(d) {
+        return d.edge[0] === a && d.edge[1] === b;
+    });
 }
 
 var DEFAULT_NODE_COLOR = "white",
@@ -321,8 +345,7 @@ var DEFAULT_NODE_COLOR = "white",
         with_edge_labels: true,
         layout_attr: {
             linkDistance: function(d) {
-				if (!d)
-				{
+				if (!d) {
 					//WebCOLA does not support different link-distances for different nodes.
 					return DEFAULT_LINK_DISTANCE;
 				}
@@ -354,19 +377,19 @@ var DEFAULT_NODE_COLOR = "white",
 			width: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-				var dim = svgTextDimensions(d.data.label || d.node);
+				var dim = measureText(d.data.label || d.node);
 				d.width = dim.width + 16;
 				return dim.width + 8;
 			},
 			height: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-				var dim = svgTextDimensions(d.data.label || d.node);
+				var dim = measureText(d.data.label || d.node);
 				d.height = dim.height + 16;
 				return dim.height + 8;
 			},
 			transform: function(d) {
-				var dim = svgTextDimensions(d.data.label || d.node);
+				var dim = measureText(d.data.label || d.node);
 				var scale = (d.data.scale || 1);
                 var transform = ['scale(', scale, ')'];
                 if(!d.data.__costume__) {
@@ -441,14 +464,16 @@ var DEFAULT_NODE_COLOR = "white",
     };
 
 redrawGraph = function() {
-    // console.log("redrawing graph")
     layout = jsnx.draw(currentGraph, LAYOUT_OPTS, true);
 
     if(layout.flowLayout && window.ide_ && window.ide_.useDownwardEdgeConstraint) {
+        // Activate downward edge (tree-like) layout.
         layout.flowLayout("y", DEFAULT_LINK_DISTANCE);
+        // Set iteration counts for edge constraints and start the layout.
         layout.start(10, 15, 20);
     }
 
+    // Follow stored fixedness, x and y values in layout.
     jsnx.forEach(currentGraph.nodes_iter(true), function(node) {
         var data = node[1];
         if(data.fixed) {
@@ -475,7 +500,7 @@ redrawGraph = function() {
 }
 
 
-function setGraphToDisplay (G) {
+function displayGraph (G) {
     // Remove the JSNetworkX mutator bindings from the current graph, so we
     // don't get mysterious slowdowns from unbound graphs floating around and
     // being laid out in the background.
@@ -494,17 +519,13 @@ function setGraphToDisplay (G) {
 
 StageMorph.prototype.changed = (function changed (oldChanged) {
     var graphNeedsRedraw = true;
-    return function ()
-    {
-        // console.log("stage changed");
+    return function () {
         var result = oldChanged.call(this);
         // HACK: work around spontaneous resizing due to transient StageMorphs
         // being created for e.g. loading blocks and calling changed()
-        if(this.parent !== null)
-        {
+        if(this.parent !== null) {
             updateGraphDimensions(this);
-            if(graphNeedsRedraw)
-            {
+            if(graphNeedsRedraw) {
                 redrawGraph();
                 graphNeedsRedraw = false;
             }
@@ -514,8 +535,7 @@ StageMorph.prototype.changed = (function changed (oldChanged) {
 }(StageMorph.prototype.changed));
 
 StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
-    return function ()
-    {
+    return function () {
         var ide = this.parentThatIsA(IDE_Morph),
             menu = new MenuMorph(this),
             myself = this,
@@ -544,127 +564,23 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
         }
 
         menu.addItem("export to file", function () {
+            var title = myself.parentThatIsA(IDE_Morph).projectName || "project";
+
             var submenu = new MenuMorph(myself);
             submenu.addItem("JSON", function() {
-                var data = JSON.stringify(graphToObject(currentGraph)),
-                    link = document.createElement('a');
-
-                link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
-                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                var json = JSON.stringify(graphToObject(currentGraph));
+                var blob = new Blob([json], {type: "application/json"});
+                saveAs(blob, title  + ".json");
             });
             submenu.addItem("comma-separated adjacency matrix", function() {
-                var G = currentGraph,
-                    nodes = G.nodes(),
-                    header = [""].concat(nodes),
-                    data = [header];
-
-                for (var i = 0; i < nodes.length; i++) {
-                    var row = [nodes[i]];
-                    for (var j = 0; j < nodes.length; j++) {
-                        if(G.has_edge(nodes[i], nodes[j])) {
-                            var label = G.edge.get(nodes[i]).get(nodes[j]).label;
-                            if(label) {
-                                row.push(label);
-                            } else {
-                                row.push(1);
-                            }
-                        } else {
-                            row.push("");
-                        }
-                    }
-                    data.push(row);
-                }
-
-                var csv = CSV.arrayToCsv(data);
-
-                var link = document.createElement('a');
-
-                link.setAttribute('href', 'data:text/csv,' + encodeURIComponent(csv));
-                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                var csv = graphToCSV(currentGraph);
+                var blob = new Blob([csv], {type: "text/csv"});
+                saveAs(blob, title + ".csv");
             });
             submenu.addItem("DOT format", function() {
-                var G = currentGraph,
-                    edgeout = "",
-                    graphtype = jsnx.is_directed(G) ? "digraph" : "graph",
-                    edgeseparator = jsnx.is_directed(G) ? "->" : "--";
-
-                function formatID(x) { return '"' + x.toString().replace('"', '\\"') + '"'; }
-                function formatAttrs(attrs) {
-                    var output = [];
-                    for(var k in attrs) {
-                        if(attrs.hasOwnProperty(k)) {
-                            output.push([k, "=", attrs[k]].join(""));
-                        }
-                    }
-                    if(output.length > 0) {
-                        return "[" + output.join(",") + "]";
-                    } else {
-                        return "";
-                    }
-                }
-
-                var nodeout = jsnx.toArray(jsnx.map(G.nodes_iter(true), function(x) {
-                    var node = x[0],
-                        data = x[1],
-                        dotattrs = {};
-                    for(var k in data) {
-                        if(data.hasOwnProperty(k)) {
-                            // We don't really have an option for radius
-                            // unless we force circular nodes and dot will
-                            // autosize the nodes anyway, so don't handle it.
-                            //
-                            // label is handled implicitly
-                            if(k === "__d3datum__" || k === "__costume__") {
-                                continue
-                            } else if(k === "color") {
-                                dotattrs["style"] = "filled";
-                                dotattrs["fillcolor"] = formatID(data[k]);
-                            } else {
-                                dotattrs[formatID(k)] = formatID(data[k]);
-                            }
-                        }
-                    }
-                    return [formatID(node), " ", formatAttrs(dotattrs),
-                            ";"].join("");
-                })).join("\n");
-
-                var edgeout = jsnx.toArray(jsnx.map(G.edges_iter(true), function(x) {
-                    var a = x[0],
-                        b = x[1],
-                        data = x[2],
-                        dotattrs = {};
-                    for(var k in data) {
-                        if(data.hasOwnProperty(k)) {
-                            // label and color are handled implicitly
-                            if(k === "__d3datum__" || k === "__costume__") {
-                                continue
-                            } else if(k === "width") {
-                                dotattrs["penwidth"] = formatID(data[k]);
-                            } else {
-                                dotattrs[formatID(k)] = formatID(data[k]);
-                            }
-                        }
-                    }
-                    return [formatID(a), " ", edgeseparator, " ",
-                            formatID(b), formatAttrs(dotattrs),
-                            ";"].join("");
-                })).join("\n");
-
-                var dot = [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
-
-                var link = document.createElement('a');
-
-                link.setAttribute('href', 'data:text/plain,' + encodeURIComponent(dot));
-                link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.dot');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                var dot = graphToDot(currentGraph);
+                var blob = new Blob([dot], {type: "text/plain"});
+                saveAs(blob, title + ".dot");
             });
             submenu.popUpAtHand(world);
         });
@@ -688,14 +604,12 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                     var frd = new FileReader();
                     var s = currentGraphSprite;
                     frd.onloadend = function(e) {
-                        // console.log(e);
                         try {
                             s.loadGraphFromString(e.target.result);
                         } catch(e) {
                             ide.showMessage("Error loading file: " + e.message);
                         }
                     }
-                    // console.log(inp.files);
                     for (var i = 0; i < inp.files.length; i += 1) {
                         frd.readAsText(inp.files[i]);
                     }
@@ -718,8 +632,7 @@ function serializeAttributes(serializer) {
 }
 
 StageMorph.prototype.init = (function init (oldInit) {
-    return function (globals)
-    {
+    return function (globals) {
         this.nodeAttributes = [];
         this.nodeAttributes.toXML = serializeAttributes;
         this.edgeAttributes = [];
@@ -730,11 +643,10 @@ StageMorph.prototype.init = (function init (oldInit) {
 
 
 SpriteMorph.prototype.init = (function init (oldInit) {
-    return function (globals)
-    {
+    return function (globals) {
         this.G = new jsnx.Graph();
         if(currentGraph === null) {
-            setGraphToDisplay(this.G);
+            displayGraph(this.G);
             currentGraphSprite = this;
         }
         this.nodeAttributes = [];
@@ -768,7 +680,7 @@ StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNo
         hiddenCurrentGraph = null;
     } else if (currentGraph.number_of_nodes() > num) {
         hiddenCurrentGraph = currentGraph;
-        justHideGraph();
+        hideGraph();
     }
 }
 
@@ -862,11 +774,7 @@ Costume.prototype.edit = (function edit(oldEdit) {
 }(Costume.prototype.edit));
 
 function autoNumericize(x) {
-    if(isNumeric(x)) {
-        return parseFloat(x);
-    }
-
-    return x;
+    return isNumeric(x) ? parseFloat(x) : x;
 }
 
 function parseNode(node) {
@@ -897,7 +805,7 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
     }
 
     if(G.number_of_nodes() <= maxVisibleNodes) {
-        setGraphToDisplay(G);
+        displayGraph(G);
         currentGraphSprite = this;
         hiddenCurrentGraph = null;
     } else {
@@ -926,16 +834,14 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         return;
     }
 
-    if(this.G.is_directed())
-    {
+    if(this.G.is_directed()) {
         var distancesA = jsnx.single_source_shortest_path_length(this.G, start, radius);
         this.G.reverse(false);
         var distancesB = jsnx.single_source_shortest_path_length(this.G, start, radius);
         this.G.reverse(false);
         G = this.G.subgraph(distancesA.keys().concat(distancesB.keys()));
     }
-    else
-    {
+    else {
         var distances = jsnx.single_source_shortest_path_length(this.G, start, radius);
         G = this.G.subgraph(distances.keys());
     }
@@ -955,12 +861,18 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         G.parent_graph = this.G;
         this.setGraphToDisplay2(G);
     }
-    sliceStart = start;
-    sliceRadius = radius;
+    this.sliceStart = start;
+    this.sliceRadius = radius;
 };
 
-function justHideGraph() {
-    setGraphToDisplay(jsnx.Graph());
+SpriteMorph.prototype.redrawGraphSlice = function() {
+    if(currentGraph.parent_graph === this.G) {
+        this.showGraphSlice(this.sliceStart, this.sliceRadius);
+    }
+}
+
+function hideGraph() {
+    displayGraph(jsnx.Graph());
     currentGraphSprite = null;
 }
 
@@ -976,7 +888,7 @@ SpriteMorph.prototype.resumeLayout = function() {
 
 SpriteMorph.prototype.hideActiveGraph = function() {
     if(this.isActiveGraph()) {
-        justHideGraph();
+        hideGraph();
     }
 };
 
@@ -1012,24 +924,22 @@ SpriteMorph.prototype.addNode = function(nodes) {
 
 SpriteMorph.prototype.removeNode = function(node) {
     this.G.remove_node(parseNode(node));
-    if(currentGraph.parent_graph === this.G) {
-        if(currentGraph.has_node(node)) {
-            this.showGraphSlice(sliceStart, sliceRadius);
-        }
+
+    if(currentGraph.has_node(node)) {
+        this.redrawGraphSlice();
     }
 };
 
 SpriteMorph.prototype.renameNode = function(from, to) {
     if(!this.hasNode(from)) {
-        throw new Error("The node '" + from + "' is not in the graph.");
+        throw new NodeNotInGraphError(from);
     }
 
     if(this.hasNode(to)) {
-        throw new Error("The node '" + to + "' is already in the graph.")
+        throw new NodeAlreadyInGraphError(to);
     }
 
-    try
-    {
+    try {
         saveLayout(graphEl);
 
         // The following doesn't work because jsnx.relabel.relabel_nodes()
@@ -1066,18 +976,16 @@ SpriteMorph.prototype.renameNode = function(from, to) {
 SpriteMorph.prototype.addEdge = function(edges) {
     edges = edges.asArray();
     this.G.add_edges_from(edges.map(function(x) { return x.asArray().map(parseNode); }));
-    if(currentGraph.parent_graph === this.G) {
-        this.showGraphSlice(sliceStart, sliceRadius);
-    }
+
+    this.redrawGraphSlice();
 };
 
 SpriteMorph.prototype.removeEdge = function(edge) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     this.G.remove_edge(a, b);
-    if(currentGraph.parent_graph === this.G) {
-        if(currentGraph.has_node(a) || currentGraph.has_node(b)) {
-            this.showGraphSlice(sliceStart, sliceRadius);
-        }
+
+    if(currentGraph.has_node(a) || currentGraph.has_node(b)) {
+        this.redrawGraphSlice();
     }
 };
 
@@ -1085,57 +993,159 @@ SpriteMorph.prototype.getNeighbors = function(node) {
     return new List(this.G.neighbors(parseNode(node)));
 };
 
+var NODE_ATTR_HANDLERS = {
+    color: {
+        default: DEFAULT_NODE_COLOR,
+        set: function(node, data, val) {
+            if(this.isActiveGraph()) {
+                updateNodeAppearance(findNodeElement(node));
+            }
+        }
+    },
+    scale: {
+        default: 1,
+        set: function(node, data, val) {
+            if(this.isActiveGraph()) {
+                updateNodeAppearance(findNodeElement(node));
+            }
+        }
+    },
+    fixed: {
+        get: function(node, data) {
+            if(data.__d3datum__) {
+                // We should return the 'true' fixedness value here in case
+                // e.g. manual layout is being used.
+                return !!(data.__d3datum__.fixed & 1);
+            }
+        },
+        set: function(node, data, val) {
+            if(data.__d3datum__) {
+                if(val) {
+                    data.__d3datum__.fixed |= 1;
+                } else {
+                    data.__d3datum__.fixed &= ~1;
+                }
+            }
+
+            // If the node is not fixed, having fixed x and y does not make
+            // sense.
+            if(!val) {
+                delete data.x;
+                delete data.y;
+            }
+        }
+    },
+    x: {
+        get: function(node, data) {
+            if(data.__d3datum__) {
+                return data.__d3datum__.x;
+            }
+        },
+        set: function(node, data, val) {
+            if(data.__d3datum__) {
+                data.__d3datum__.x = data.__d3datum__.px = val;
+
+                // We need to run the layout for one tick with the node fixed,
+                // so it changes position. Then we can restore the fixedness
+                // to whatever it was before.
+                var fixed = data.__d3datum__.fixed;
+                data.__d3datum__.fixed |= 1;
+                layout.resume();
+                layout.tick();
+                data.__d3datum__.fixed = fixed;
+            }
+
+            // If the node is not fixed, having fixed x does not make sense.
+            if(!data.fixed) {
+                delete data.x;
+            }
+        }
+    },
+    y: {
+        get: function(node, data) {
+            if(data.__d3datum__) {
+                return data.__d3datum__.y;
+            }
+        },
+        set: function(node, data, val) {
+            if(data.__d3datum__) {
+                data.__d3datum__.y = data.__d3datum__.py = val;
+
+                // We need to run the layout for one tick with the node fixed,
+                // so it changes position. Then we can restore the fixedness
+                // to whatever it was before.
+                var fixed = data.__d3datum__.fixed;
+                data.__d3datum__.fixed |= 1;
+                layout.resume();
+                layout.tick();
+                data.__d3datum__.fixed = fixed;
+            }
+
+            // If the node is not fixed, having fixed y does not make sense.
+            if(!data.fixed) {
+                delete data.y;
+            }
+        }
+    }
+};
+
+var BUILTIN_NODE_ATTRS = Object.keys(NODE_ATTR_HANDLERS);
+
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     node = parseNode(node);
-    if(this.G.has_node(node)) {
-        // For consistency's sake, we use autoNumericize() to normalize
-        // attribute values since Snap's UI does not distinguish between the
-        // number 1 and the string "1".
-        if(attrib === "color" || attrib === "scale") {
-            var data = {};
-            data[attrib] = autoNumericize(val);
-            this.G.add_node(node, data);
-            if(this.isNodeDisplayed(node)) {
-                currentGraph.add_node(node, data);
-            }
-        } else if(attrib === "fixed") {
-            this.G.node.get(node).fixed = autoNumericize(val);
-            this.G.node.get(node).__d3datum__.fixed |= +(!!val);
-        } else if(attrib === "x" || attrib === "y") {
-            this.G.node.get(node)[attrib] = autoNumericize(val);
-            this.G.node.get(node).__d3datum__["p" + attrib] = autoNumericize(val);
-            this.G.node.get(node).__d3datum__[attrib] = autoNumericize(val);
-            this.resumeLayout();
-        } else {
-            this.G.node.get(node)[attrib] = autoNumericize(val);
-        }
+    if(!this.G.has_node(node)) {
+        throw new NodeNotInGraphError(node);
+    }
+
+    // For consistency's sake, we use autoNumericize() to normalize
+    // attribute values since Snap's UI does not distinguish between the
+    // number 1 and the string "1".
+    val = autoNumericize(val);
+
+    var data = this.G.node.get(node);
+    data[attrib] = val;
+
+    // Run any relevant special handlers.
+    if(NODE_ATTR_HANDLERS[attrib] && NODE_ATTR_HANDLERS[attrib].set) {
+        NODE_ATTR_HANDLERS[attrib].set.call(this, node, data, val);
     }
 };
 
 SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     node = parseNode(node);
-    if(this.G.has_node(node)) {
-        var val = this.G.node.get(node)[attrib];
-    } else {
-        throw new Error("Node '" + node.toString() + "' does not exist.")
+    if(!this.G.has_node(node)) {
+        throw new NodeNotInGraphError(node);
     }
-    // Can't return undefined, since it is special to Snap, and will cause an
-    // infinite loop.
-    if(val === undefined) {
-        if(attrib === "color")
-            return DEFAULT_NODE_COLOR;
-        if(attrib === "scale")
-            return 1;
 
-        throw new Error("Undefined attribute " + attrib.toString() + " on node " + node);
-    } else {
+    var data = this.G.node.get(node);
+    var handler = NODE_ATTR_HANDLERS[attrib];
+    var val = data[attrib];
+
+    if(handler) {
+        // The getter takes priority if it exists and has a well-defined value
+        // now.
+        if(handler.get) {
+            var hval = handler.get.call(this, node, data);
+            if(hval !== undefined) {
+                val = hval;
+            }
+        } else if(val === undefined && handler.default !== undefined) {
+            val = handler.default;
+        }
+    }
+
+    if(val !== undefined) {
         return val;
+    } else {
+        throw new Error([
+            "Undefined attribute '", attrib.toString(), "' on node '",
+            node.toString(), "'"].join(""));
     }
 };
 
 SpriteMorph.prototype.getNodeAttribDict = function(node) {
     var myself = this;
-    var attribs = this.allNodeAttributes().concat(["color", "scale"]);
+    var attribs = this.allNodeAttributes().concat(BUILTIN_NODE_ATTRS);
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getNodeAttrib(attr, node)];
     }));
@@ -1151,33 +1161,62 @@ SpriteMorph.prototype.setNodeAttribsFromDict = function(node, dict) {
     });
 };
 
+var EDGE_ATTR_HANDLERS = {
+    color: {
+        default: DEFAULT_EDGE_COLOR,
+        set: function(edge, data, val) {
+            if(data.__d3datum__) {
+                findEdgeElement(edge).select(".line").style(LAYOUT_OPTS.edge_style);
+            }
+        }
+    },
+    width: {
+        default: 1,
+        set: function(edge, data, val) {
+            if(data.__d3datum__) {
+                // For flexibility (?) reasons, the stroke width is emulated
+                // in terms of polylines by the renderer, so we must make it
+                // redo the edge.
+                try {
+                    // Maintain the graph layout as it is.
+                    saveLayout(graphEl);
+                    var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
+                    this.G.add_edge(a, b, data);
+                } finally {
+                    restoreLayout(graphEl, layout);
+                }
+            }
+        }
+    },
+    label: {
+        default: "",
+        set: function(edge, data, val) {
+            if(data.__d3datum__) {
+                findEdgeElement(edge).select("text").text(val);
+            }
+        }
+    }
+};
+
+var BUILTIN_EDGE_ATTRS = Object.keys(EDGE_ATTR_HANDLERS);
+
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
-    if(this.G.has_edge(a, b)) {
-        // For consistency's sake, we use autoNumericize() to normalize
-        // attribute values since Snap's UI does not distinguish between the
-        // number 1 and the string "1".
-        if(attrib === "color" || attrib === "label" || attrib === "scale") {
-            var data = {};
-            data[attrib] = autoNumericize(val);
-            this.G.add_edge(a, b, data);
-            if(this.isNodeDisplayed(a) && this.isNodeDisplayed(b)) {
-                currentGraph.add_edge(a, b, data);
-            }
-        } else {
-            this.G.edge.get(a).get(b)[attrib] = autoNumericize(val);
-        }
+    if(!this.G.has_edge(a, b)) {
+        throw new EdgeNotInGraphError(edge);
+    }
 
-        // HACK: work around JSNetworkX bug with not updating labels.
-        if(attrib === "label" && this.isActiveGraph()) {
-            var edges = graphEl.selectAll(".edge");
-            edges.each(function(d, i) {
-                if(d.edge[0] === a && d.edge[1] === b) {
-                    var textEl = d3.select(edges[0][i]).select("text");
-                    textEl.node().textContent = val.toString();
-                }
-            });
-        }
+    // For consistency's sake, we use autoNumericize() to normalize attribute
+    // values since Snap's UI does not distinguish between the number 1 and
+    // the string "1".
+    val = autoNumericize(val);
+
+    var data = this.G.edge.get(a).get(b);
+    data[attrib] = val;
+
+    // Run any relevant special handlers.
+    if(EDGE_ATTR_HANDLERS[attrib] && EDGE_ATTR_HANDLERS[attrib].set) {
+        EDGE_ATTR_HANDLERS[attrib].set.call(this, edge, data, val);
     }
 };
 
@@ -1185,30 +1224,39 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     var a = parseNode(edge.at(1)),
         b = parseNode(edge.at(2));
 
-    if(this.G.has_edge(a, b)) {
-        var val = this.G.adj.get(a).get(b)[attrib];
-    } else {
-        throw new Error(["Edge (", a.toString(), ",", b.toString(), ") does not exist."].join(""));
+    if(!this.G.has_edge(a, b)) {
+        throw new EdgeNotInGraphError(edge);
     }
-    // Can't return undefined, since it is special to Snap, and will cause an
-    // infinite loop.
-    if(val === undefined) {
-        if(attrib === "color")
-            return DEFAULT_EDGE_COLOR;
-        if(attrib === "label")
-            return "";
-        if(attrib === "width")
-            return 1; // Width is normalized to 1; multiplied with EDGE_WIDTH_FACTOR.
 
-        throw new Error("Undefined attribute " + attrib.toString() + " on edge (" + a + ", " + b + ")");
-    } else {
+    var data = this.G.adj.get(a).get(b);
+    var handler = EDGE_ATTR_HANDLERS[attrib];
+    var val = data[attrib];
+
+    if(handler) {
+        // The getter takes priority if it exists and has a well-defined value
+        // now.
+        if(handler.get) {
+            var hval = handler.get.call(this, edge, data);
+            if(hval !== undefined) {
+                val = hval;
+            }
+        } else if(val === undefined && handler.default !== undefined) {
+            val = handler.default;
+        }
+    }
+
+    if(val !== undefined) {
         return val;
+    } else {
+        throw new Error([
+            "Undefined attribute '", attrib.toString(), "' on edge (",
+            a.toString(), ",", b.toString(), ")"].join(""));
     }
 };
 
 SpriteMorph.prototype.getEdgeAttribDict = function(node) {
     var myself = this;
-    var attribs = this.allEdgeAttributes().concat(["color", "label", "width"]);
+    var attribs = this.allEdgeAttributes().concat(BUILTIN_EDGE_ATTRS);
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getEdgeAttrib(attr, node)];
     }));
@@ -1229,24 +1277,21 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
     // elements with the same name, we are only able to get the first costume
     // with the given name. Other costumes which share the same name will be
     // unusable unless renamed.
-    var n = parseNode(node);
-    if(this.G.has_node(n)) {
-        var props = this.G.node.get(n);
-        if(costumename === "default") {
-            delete props.__costume__;
-        } else {
-            props.__costume__ = detect(this.costumes.asArray(), function(costume) {
-                return costume.name === costumename;
-            });
-        }
-        if(this.isActiveGraph()) {
-            var nodes = graphEl.selectAll(".node");
-            nodes.each(function(d, i) {
-                if(d.node === node) {
-                    updateNodeDimensionsAndCostume(d3.select(nodes[0][i]));
-                }
-            });
-        }
+    node = parseNode(node);
+    if(!this.G.has_node(node)) {
+        throw new NodeNotInGraphError(node);
+    }
+
+    var props = this.G.node.get(node);
+    if(costumename === "default") {
+        delete props.__costume__;
+    } else {
+        props.__costume__ = detect(this.costumes.asArray(), function(costume) {
+            return costume.name === costumename;
+        });
+    }
+    if(props.__d3datum__) {
+        updateNodeAppearance(findNodeElement(node));
     }
 };
 
@@ -1257,20 +1302,22 @@ SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
     // with the given name. Other costumes which share the same name will be
     // unusable unless renamed.
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
-    if(this.G.has_edge(a, b)) {
-        var props = this.G.edge.get(a).get(b);
-        if(costumename === "default") {
-            delete props.__costume__;
-        } else {
-            props.__costume__ = detect(this.costumes.asArray(), function(costume) {
-                return costume.name === costumename;
-            });
-        }
-        if(this.isActiveGraph()) {
-            graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
-            graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
-            layout.resume();
-        }
+    if(!this.G.has_edge(a, b)) {
+        throw new EdgeNotInGraphError(edge);
+    }
+
+    var props = this.G.edge.get(a).get(b);
+    if(costumename === "default") {
+        delete props.__costume__;
+    } else {
+        props.__costume__ = detect(this.costumes.asArray(), function(costume) {
+            return costume.name === costumename;
+        });
+    }
+    if(props.__d3datum__) {
+        graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
+        graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
+        layout.resume();
     }
 };
 
@@ -1280,22 +1327,16 @@ SpriteMorph.prototype.getNodes = function() {
 
 
 SpriteMorph.prototype.getNodesWithAttr = function(attr, val) {
-    var nodes = [],
-        myself = this;
-    jsnx.forEach(this.G.nodes_iter(), function (node) {
-        if (snapEquals(myself.getNodeAttrib(attr, node), val)) {
-            nodes.push(node);
-        }
-    });
-    return new List(nodes);
+    var myself = this;
+    return new List(jsnx.toArray(jsnx.filter(this.G.nodes_iter(), function(node) {
+        return snapEquals(myself.getNodeAttrib(attr, node), val);
+    })));
 };
 
 SpriteMorph.prototype.getEdges = function() {
-    var edges = [];
-    jsnx.forEach(this.G.edges_iter(), function (edge) {
-        edges.push(new List(edge));
-    });
-    return new List(edges);
+    return new List(jsnx.toArray(jsnx.map(this.G.edges_iter(), function (edge) {
+        return new List(edge);
+    })));
 };
 
 SpriteMorph.prototype.getDegree = function(node) {
@@ -1625,55 +1666,7 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
     }
 
     try {
-        var dotgraph = new DotGraph(DotParser.parse(string)),
-            graph;
-        dotgraph.walk();
-        if(dotgraph.rootGraph.type == "graph") {
-            graph = jsnx.Graph();
-        } else if(dotgraph.rootGraph.type == "digraph") {
-            graph = jsnx.DiGraph();
-        } else {
-            throw new Error("Invalid DOT graph type");
-        }
-        // console.log(dotgraph);
-        for(var node in dotgraph.nodes) {
-            if(dotgraph.nodes.hasOwnProperty(node)) {
-                var ournode = parseNode(node);
-                graph.add_node(ournode);
-                // console.log(ournode);
-                var attrs = dotgraph.nodes[node].attrs;
-                for(var attr in attrs) {
-                    if(attrs.hasOwnProperty(attr)) {
-                        if(attr === "fillcolor") {
-                            graph.node.get(ournode).color = attrs[attr];
-                        } else {
-                            graph.node.get(ournode)[attr] = attrs[attr];
-                        }
-                    }
-                }
-            }
-        }
-        for(var edgeid in dotgraph.edges) {
-            if(dotgraph.edges.hasOwnProperty(edgeid)) {
-                dotgraph.edges[edgeid].forEach(function(datum) {
-                    var edge = datum.edge;
-                    var a = parseNode(edge[0]), b = parseNode(edge[1]);
-                    graph.add_edge(a, b);
-                    // console.log(a, b);
-                    var attrs = datum.attrs;
-                    for(var attr in attrs) {
-                        if(attrs.hasOwnProperty(attr)) {
-                            if(attr === "penwidth") {
-                                graph.edge.get(a).get(b).width = attrs[attr];
-                            } else {
-                                graph.edge.get(a).get(b)[attr] = attrs[attr];
-                            }
-                        }
-                    }
-                });
-            }
-        }
-        this.importGraph(graph, true);
+        this.importGraph(parseDot(string), true);
         return;
     } catch(e) {
         if(!(e instanceof DotParser.SyntaxError)) {
@@ -1760,6 +1753,7 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
     return new List(edgesArr.map(function(x) { return new List(x); }));
 };
 
+// Efficient built-in for-each over lists, because loading tools.xml is slow.
 Process.prototype.doForEach = function(uv, list, body) {
     if(!list.length() || !body)
         return;
@@ -1787,6 +1781,7 @@ Process.prototype.doForEach = function(uv, list, body) {
     this.pushContext();
 }
 
+// Efficient built-in numeric for, because loading tools.xml is slow.
 Process.prototype.doNumericFor = function(uv, start, end, body) {
     if(!body)
         return;
@@ -1831,8 +1826,7 @@ Process.prototype.doNumericFor = function(uv, start, end, body) {
 Process.prototype.getLastfmFriends = function(username) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettinglastfmfriends)
-    {
+    if(!this.context.gettinglastfmfriends) {
         this.context.gettinglastfmfriends = true;
         this.context.lastfmfriends = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).lastfmAPIkey;
@@ -1848,8 +1842,7 @@ Process.prototype.getLastfmFriends = function(username) {
         });
     }
 
-    if(this.context.lastfmfriends)
-    {
+    if(this.context.lastfmfriends) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
@@ -1871,8 +1864,7 @@ Process.prototype.getLastfmFriends = function(username) {
 Process.prototype.getLastfmUserLovedTracks = function(username) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettinglastfmfriends)
-    {
+    if(!this.context.gettinglastfmfriends) {
         this.context.gettinglastfmfriends = true;
         this.context.lastfmfriends = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).lastfmAPIkey;
@@ -1888,8 +1880,7 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
         });
     }
 
-    if(this.context.lastfmfriends)
-    {
+    if(this.context.lastfmfriends) {
         var data = this.context.lastfmfriends;
         this.popContext();
         this.pushContext('doYield');
@@ -1913,8 +1904,7 @@ Process.prototype.getLastfmUserLovedTracks = function(username) {
 Process.prototype.getTMDBMoviesByTitle = function(title) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovies)
-    {
+    if(!this.context.gettingTMDBMovies) {
         this.context.gettingTMDBMovies = true;
         this.context.TMDBMovies = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -1930,8 +1920,7 @@ Process.prototype.getTMDBMoviesByTitle = function(title) {
         });
     }
 
-    if(this.context.TMDBMovies)
-    {
+    if(this.context.TMDBMovies) {
         var data = this.context.TMDBMovies;
         this.popContext();
         this.pushContext('doYield');
@@ -1951,8 +1940,7 @@ Process.prototype.getTMDBMoviesByTitle = function(title) {
 Process.prototype.getTMDBPeopleByName = function(name) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBPeople)
-    {
+    if(!this.context.gettingTMDBPeople) {
         this.context.gettingTMDBPeople = true;
         this.context.TMDBPeople = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -1968,8 +1956,7 @@ Process.prototype.getTMDBPeopleByName = function(name) {
         });
     }
 
-    if(this.context.TMDBPeople)
-    {
+    if(this.context.TMDBPeople) {
         var data = this.context.TMDBPeople;
         this.popContext();
         this.pushContext('doYield');
@@ -1989,8 +1976,7 @@ Process.prototype.getTMDBPeopleByName = function(name) {
 Process.prototype.getTMDBTitle = function(movie) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovieData)
-    {
+    if(!this.context.gettingTMDBMovieData) {
         this.context.gettingTMDBMovieData = true;
         this.context.TMDBMovieData = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -2005,8 +1991,7 @@ Process.prototype.getTMDBTitle = function(movie) {
         });
     }
 
-    if(this.context.TMDBMovieData)
-    {
+    if(this.context.TMDBMovieData) {
         var data = this.context.TMDBMovieData;
         this.popContext();
         this.pushContext('doYield');
@@ -2024,8 +2009,7 @@ Process.prototype.getTMDBTitle = function(movie) {
 Process.prototype.getTMDBCast = function(movie) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovieCredits)
-    {
+    if(!this.context.gettingTMDBMovieCredits) {
         this.context.gettingTMDBMovieCredits = true;
         this.context.TMDBMovieCredits = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -2040,8 +2024,7 @@ Process.prototype.getTMDBCast = function(movie) {
         });
     }
 
-    if(this.context.TMDBMovieCredits)
-    {
+    if(this.context.TMDBMovieCredits) {
         var data = this.context.TMDBMovieCredits;
         this.popContext();
         this.pushContext('doYield');
@@ -2061,8 +2044,7 @@ Process.prototype.getTMDBCast = function(movie) {
 Process.prototype.getTMDBMoviesByPerson = function(person) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovies)
-    {
+    if(!this.context.gettingTMDBMovies) {
         this.context.gettingTMDBMovies = true;
         this.context.TMDBMovies = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -2077,8 +2059,7 @@ Process.prototype.getTMDBMoviesByPerson = function(person) {
         });
     }
 
-    if(this.context.TMDBMovies)
-    {
+    if(this.context.TMDBMovies) {
         var data = this.context.TMDBMovies;
         this.popContext();
         this.pushContext('doYield');
@@ -2098,8 +2079,7 @@ Process.prototype.getTMDBMoviesByPerson = function(person) {
 Process.prototype.getTMDBPersonName = function(person) {
     var myself = this, url, api_key;
 
-    if(!this.context.gettingTMDBMovies)
-    {
+    if(!this.context.gettingTMDBMovies) {
         this.context.gettingTMDBMovies = true;
         this.context.TMDBMovies = null;
         api_key = this.homeContext.receiver.parentThatIsA(StageMorph).tmdbAPIkey;
@@ -2114,8 +2094,7 @@ Process.prototype.getTMDBPersonName = function(person) {
         });
     }
 
-    if(this.context.TMDBMovies)
-    {
+    if(this.context.TMDBMovies) {
         var data = this.context.TMDBMovies;
         this.popContext();
         this.pushContext('doYield');
@@ -2173,7 +2152,7 @@ SpriteMorph.prototype.setGraph = function(newGraph) {
     this.G = newGraph;
     if(wasActive) {
         if(currentGraph.parent_graph) {
-            this.showGraphSlice(sliceStart, sliceRadius);
+            this.showGraphSlice(this.sliceStart, this.sliceRadius);
         } else {
             this.setActiveGraph();
         }
@@ -2370,7 +2349,7 @@ SpriteMorph.prototype.newNode = function() {
         setEdgeAttribsFromDict: {
             type: 'command',
             category: 'edges',
-            spec: 'set attributes of %s from dict %l'
+            spec: 'set attributes of %l from dict %l'
         },
         setNodeCostume: {
             type: 'command',
@@ -2680,7 +2659,7 @@ StageMorph.prototype.allNodeAttributes = SpriteMorph.prototype.allNodeAttributes
 }
 
 StageMorph.prototype.isNodeAttrAvailable = SpriteMorph.prototype.isNodeAttrAvailable = function(name) {
-    var attrs = this.allNodeAttributes().concat(["color", "scale"]);
+    var attrs = this.allNodeAttributes().concat(BUILTIN_NODE_ATTRS);
     return attrs.indexOf(name) === -1;
 }
 
@@ -2714,9 +2693,8 @@ StageMorph.prototype.deleteNodeAttribute = SpriteMorph.prototype.deleteNodeAttri
     return false;
 }
 
-var BUILTIN_NODE_ATTRS = ['color', 'scale', 'fixed', 'x', 'y'];
-
-InputSlotMorph.prototype.getNodeAttrsDict = function () {
+// Provides attribute names for UI for node attribute blocks.
+InputSlotMorph.prototype.getNodeAttributeNames = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
         dict = {};
@@ -2740,7 +2718,7 @@ StageMorph.prototype.allEdgeAttributes = SpriteMorph.prototype.allEdgeAttributes
 }
 
 StageMorph.prototype.isEdgeAttrAvailable = SpriteMorph.prototype.isEdgeAttrAvailable = function(name) {
-    var attrs = this.allEdgeAttributes().concat(["label", "color", "width"]);
+    var attrs = this.allEdgeAttributes().concat(BUILTIN_EDGE_ATTRS);
     return attrs.indexOf(name) === -1;
 }
 
@@ -2774,10 +2752,12 @@ StageMorph.prototype.deleteEdgeAttribute = SpriteMorph.prototype.deleteEdgeAttri
     return false;
 }
 
-InputSlotMorph.prototype.getEdgeAttrsDict = function () {
+// Provides attribute names for UI for edge attribute blocks.
+InputSlotMorph.prototype.getEdgeAttributeNames = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
-        dict = {'color': 'color', 'label': 'label', 'width': 'width'};
+        dict = {};
+    BUILTIN_EDGE_ATTRS.forEach(function(v) { dict[v] = v; });
 
     if (!block) {
         return dict;
@@ -2803,8 +2783,7 @@ InputSlotMorph.prototype.costumesMenu2 = function () {
 };
 
 SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplates) {
-    return function (category)
-    {
+    return function (category) {
         // block() was copied from objects.js
         function block(selector) {
             if (StageMorph.prototype.hiddenPrimitives[selector]) {
@@ -2816,8 +2795,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         }
 
         var blocks = [], button, myself = this;
-        if(category === 'network')
-        {
+        if(category === 'network') {
             blocks.push(block('newGraph'));
             blocks.push(block('newDiGraph'));
             blocks.push(block('convertToGraph'));
@@ -3182,7 +3160,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
                     } else {
                         delete data[k];
                     }
-                } else if(BUILTIN_NODE_ATTRS.indexOf(k) === -1) {
+                } else {
                     myself.addNodeAttribute(k, false);
                 }
             }
@@ -3201,8 +3179,8 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
                     } else {
                         delete data[k];
                     }
-                } else if(k !== 'color' && k !== 'label') {
-                    this.addEdgeAttribute(k, false);
+                } else {
+                    myself.addEdgeAttribute(k, false);
                 }
             }
         }
@@ -3319,6 +3297,56 @@ function graphToObject(G) {
     return data;
 }
 
+function parseDot(string) {
+    var dotgraph = new DotGraph(DotParser.parse(string)),
+        graph;
+    dotgraph.walk();
+    if(dotgraph.rootGraph.type == "graph") {
+        graph = jsnx.Graph();
+    } else if(dotgraph.rootGraph.type == "digraph") {
+        graph = jsnx.DiGraph();
+    } else {
+        throw new Error("Invalid DOT graph type");
+    }
+    for(var node in dotgraph.nodes) {
+        if(dotgraph.nodes.hasOwnProperty(node)) {
+            var ournode = parseNode(node);
+            graph.add_node(ournode);
+            var attrs = dotgraph.nodes[node].attrs;
+            for(var attr in attrs) {
+                if(attrs.hasOwnProperty(attr)) {
+                    if(attr === "fillcolor") {
+                        graph.node.get(ournode).color = attrs[attr];
+                    } else {
+                        graph.node.get(ournode)[attr] = attrs[attr];
+                    }
+                }
+            }
+        }
+    }
+    for(var edgeid in dotgraph.edges) {
+        if(dotgraph.edges.hasOwnProperty(edgeid)) {
+            dotgraph.edges[edgeid].forEach(function(datum) {
+                var edge = datum.edge;
+                var a = parseNode(edge[0]), b = parseNode(edge[1]);
+                graph.add_edge(a, b);
+                var attrs = datum.attrs;
+                for(var attr in attrs) {
+                    if(attrs.hasOwnProperty(attr)) {
+                        if(attr === "penwidth") {
+                            graph.edge.get(a).get(b).width = attrs[attr];
+                        } else {
+                            graph.edge.get(a).get(b)[attr] = attrs[attr];
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    return graph;
+}
+
 function parseAdjacencyList (list) {
     var G = jsnx.DiGraph(),
         row;
@@ -3415,6 +3443,101 @@ function objectToGraph (data) {
     }
 
     return graph;
+}
+
+function graphToCSV(G) {
+    var nodes = G.nodes(),
+        header = [""].concat(nodes),
+        data = [header];
+
+    for (var i = 0; i < nodes.length; i++) {
+        var row = [nodes[i]];
+        for (var j = 0; j < nodes.length; j++) {
+            if(G.has_edge(nodes[i], nodes[j])) {
+                var label = G.edge.get(nodes[i]).get(nodes[j]).label;
+                if(label) {
+                    row.push(label);
+                } else {
+                    row.push(1);
+                }
+            } else {
+                row.push("");
+            }
+        }
+        data.push(row);
+    }
+
+    return CSV.arrayToCsv(data);
+}
+
+function graphToDot(G) {
+    var edgeout = "",
+        graphtype = jsnx.is_directed(G) ? "digraph" : "graph",
+        edgeseparator = jsnx.is_directed(G) ? "->" : "--";
+
+    function formatID(x) { return '"' + x.toString().replace('"', '\\"') + '"'; }
+    function formatAttrs(attrs) {
+        var output = [];
+        for(var k in attrs) {
+            if(attrs.hasOwnProperty(k)) {
+                output.push([k, "=", attrs[k]].join(""));
+            }
+        }
+        if(output.length > 0) {
+            return "[" + output.join(",") + "]";
+        } else {
+            return "";
+        }
+    }
+
+    var nodeout = jsnx.toArray(jsnx.map(G.nodes_iter(true), function(x) {
+        var node = x[0],
+            data = x[1],
+            dotattrs = {};
+        for(var k in data) {
+            if(data.hasOwnProperty(k)) {
+                // We don't really have an option for radius
+                // unless we force circular nodes and dot will
+                // autosize the nodes anyway, so don't handle it.
+                //
+                // label is handled implicitly
+                if(k === "__d3datum__" || k === "__costume__") {
+                    continue
+                } else if(k === "color") {
+                    dotattrs["style"] = "filled";
+                    dotattrs["fillcolor"] = formatID(data[k]);
+                } else {
+                    dotattrs[formatID(k)] = formatID(data[k]);
+                }
+            }
+        }
+        return [formatID(node), " ", formatAttrs(dotattrs),
+                ";"].join("");
+    })).join("\n");
+
+    var edgeout = jsnx.toArray(jsnx.map(G.edges_iter(true), function(x) {
+        var a = x[0],
+            b = x[1],
+            data = x[2],
+            dotattrs = {};
+        for(var k in data) {
+            if(data.hasOwnProperty(k)) {
+                // label and color are handled implicitly
+                if(k === "__d3datum__" || k === "__costume__") {
+                    continue
+                } else if(k === "width") {
+                    dotattrs["penwidth"] = formatID(data[k]);
+                } else {
+                    dotattrs[formatID(k)] = formatID(data[k]);
+                }
+            }
+        }
+        return [formatID(a), " ", edgeseparator, " ",
+                formatID(b), formatAttrs(dotattrs),
+                ";"].join("");
+    })).join("\n");
+
+    return [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
 }
 
 }());
