@@ -157,7 +157,7 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
                         d.data.label = autoNumericize(label);
-                        node.select("text").node().textContent = label;
+                        node.select("text").text(label);
                     }).prompt('Edge label', (d.data.label || '').toString(), world);
                     world.worldCanvas.focus();
                 });
@@ -298,13 +298,11 @@ function updateNodeDimensionsAndCostume(node) {
 
 function svgTextDimensions(text)
 {
-	var svgEl = graphEl.select("svg");
-	var appendedText = svgEl.append("text");
-	var appendedNode = appendedText.node();
-	appendedNode.textContent = text;
-	var retnVal = appendedNode.getBBox();
-	appendedText.remove();
-	return retnVal;
+	var svg = graphEl.select("svg");
+	var textEl = svg.append("text").text(text);
+	var bounds = textEl.node().getBBox();
+	textEl.remove();
+	return bounds;
 }
 
 var DEFAULT_NODE_COLOR = "white",
@@ -1174,7 +1172,7 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
             edges.each(function(d, i) {
                 if(d.edge[0] === a && d.edge[1] === b) {
                     var textEl = d3.select(edges[0][i]).select("text");
-                    textEl.node().textContent = val.toString();
+                    textEl.text(val);
                 }
             });
         }
