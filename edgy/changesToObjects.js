@@ -1135,7 +1135,7 @@ SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
 
 SpriteMorph.prototype.getNodeAttribDict = function(node) {
     var myself = this;
-    var attribs = this.allNodeAttributes().concat(["color", "scale"]);
+    var attribs = this.allNodeAttributes().concat(BUILTIN_NODE_ATTRS);
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getNodeAttrib(attr, node)];
     }));
@@ -1206,9 +1206,11 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     }
 };
 
+var BUILTIN_EDGE_ATTRS = ['color', 'label', 'width'];
+
 SpriteMorph.prototype.getEdgeAttribDict = function(node) {
     var myself = this;
-    var attribs = this.allEdgeAttributes().concat(["color", "label", "width"]);
+    var attribs = this.allEdgeAttributes().concat(BUILTIN_EDGE_ATTRS);
     return new Map(attribs.map(function(attr) {
         return [attr, myself.getEdgeAttrib(attr, node)];
     }));
@@ -2680,7 +2682,7 @@ StageMorph.prototype.allNodeAttributes = SpriteMorph.prototype.allNodeAttributes
 }
 
 StageMorph.prototype.isNodeAttrAvailable = SpriteMorph.prototype.isNodeAttrAvailable = function(name) {
-    var attrs = this.allNodeAttributes().concat(["color", "scale"]);
+    var attrs = this.allNodeAttributes().concat(BUILTIN_NODE_ATTRS);
     return attrs.indexOf(name) === -1;
 }
 
@@ -2740,7 +2742,7 @@ StageMorph.prototype.allEdgeAttributes = SpriteMorph.prototype.allEdgeAttributes
 }
 
 StageMorph.prototype.isEdgeAttrAvailable = SpriteMorph.prototype.isEdgeAttrAvailable = function(name) {
-    var attrs = this.allEdgeAttributes().concat(["label", "color", "width"]);
+    var attrs = this.allEdgeAttributes().concat(BUILTIN_EDGE_ATTRS);
     return attrs.indexOf(name) === -1;
 }
 
@@ -2777,7 +2779,8 @@ StageMorph.prototype.deleteEdgeAttribute = SpriteMorph.prototype.deleteEdgeAttri
 InputSlotMorph.prototype.getEdgeAttrsDict = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
-        dict = {'color': 'color', 'label': 'label', 'width': 'width'};
+        dict = {};
+    BUILTIN_EDGE_ATTRS.forEach(function(v) { dict[v] = v; });
 
     if (!block) {
         return dict;
@@ -3182,7 +3185,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
                     } else {
                         delete data[k];
                     }
-                } else if(BUILTIN_NODE_ATTRS.indexOf(k) === -1) {
+                } else {
                     myself.addNodeAttribute(k, false);
                 }
             }
@@ -3201,7 +3204,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
                     } else {
                         delete data[k];
                     }
-                } else if(k !== 'color' && k !== 'label') {
+                } else {
                     this.addEdgeAttribute(k, false);
                 }
             }
