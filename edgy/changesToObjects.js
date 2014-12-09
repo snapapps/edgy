@@ -1434,14 +1434,10 @@ SpriteMorph.prototype.getNodes = function() {
 
 
 SpriteMorph.prototype.getNodesWithAttr = function(attr, val) {
-    var nodes = [],
-        myself = this;
-    jsnx.forEach(this.G.nodes_iter(), function (node) {
-        if (snapEquals(myself.getNodeAttrib(attr, node), val)) {
-            nodes.push(node);
-        }
-    });
-    return new List(nodes);
+    var myself = this;
+    return new List(jsnx.toArray(jsnx.filter(this.G.nodes_iter(), function(node) {
+        return snapEquals(myself.getNodeAttrib(attr, node), val);
+    })));
 };
 
 SpriteMorph.prototype.getEdges = function() {
