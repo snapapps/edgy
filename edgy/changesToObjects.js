@@ -73,11 +73,10 @@ graphEl.on("DOMNodeInserted", function() {
                 menu.addItem('ID: ' + d.node);
                 menu.addLine();
 
-                if(!d.G.parent_graph) {
-                    menu.addItem('delete', function () {
-                        d.G.remove_node(d.node);
-                    });
-                }
+                menu.addItem('delete', function () {
+                    currentGraphSprite.removeNode(d.node);
+                });
+
                 menu.addItem('set color', function () {
                     new DialogBoxMorph(null, function (color) {
                         currentGraphSprite.setNodeAttrib("color", d.node, color);
@@ -149,11 +148,10 @@ graphEl.on("DOMNodeInserted", function() {
                 var menu = new MenuMorph(this);
                 var d = node.datum();
 
-                if(!d.G.parent_graph) {
-                    menu.addItem('delete', function () {
-                        d.G.remove_edges_from([d.edge]);
-                    });
-                }
+                menu.addItem('delete', function () {
+                    currentGraphSprite.removeEdge(new List(d.edge));
+                });
+
                 menu.addItem('set label', function () {
                     new DialogBoxMorph(null, function (label) {
                         currentGraphSprite.setEdgeAttrib("label", new List(d.edge), label);
