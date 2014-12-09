@@ -570,9 +570,9 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
         menu.addItem("export to file", function () {
             var submenu = new MenuMorph(myself);
             submenu.addItem("JSON", function() {
-                var data = JSON.stringify(graphToObject(currentGraph)),
-                    link = document.createElement('a');
+                var data = JSON.stringify(graphToObject(currentGraph));
 
+                var link = document.createElement('a');
                 link.setAttribute('href', 'data:application/json,' + encodeURIComponent(data));
                 link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.json');
                 document.body.appendChild(link);
@@ -580,32 +580,9 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                 document.body.removeChild(link);
             });
             submenu.addItem("comma-separated adjacency matrix", function() {
-                var G = currentGraph,
-                    nodes = G.nodes(),
-                    header = [""].concat(nodes),
-                    data = [header];
-
-                for (var i = 0; i < nodes.length; i++) {
-                    var row = [nodes[i]];
-                    for (var j = 0; j < nodes.length; j++) {
-                        if(G.has_edge(nodes[i], nodes[j])) {
-                            var label = G.edge.get(nodes[i]).get(nodes[j]).label;
-                            if(label) {
-                                row.push(label);
-                            } else {
-                                row.push(1);
-                            }
-                        } else {
-                            row.push("");
-                        }
-                    }
-                    data.push(row);
-                }
-
-                var csv = CSV.arrayToCsv(data);
+                var csv = graphToCSV(currentGraph);
 
                 var link = document.createElement('a');
-
                 link.setAttribute('href', 'data:text/csv,' + encodeURIComponent(csv));
                 link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.csv');
                 document.body.appendChild(link);
@@ -613,77 +590,9 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                 document.body.removeChild(link);
             });
             submenu.addItem("DOT format", function() {
-                var G = currentGraph,
-                    edgeout = "",
-                    graphtype = jsnx.is_directed(G) ? "digraph" : "graph",
-                    edgeseparator = jsnx.is_directed(G) ? "->" : "--";
-
-                function formatID(x) { return '"' + x.toString().replace('"', '\\"') + '"'; }
-                function formatAttrs(attrs) {
-                    var output = [];
-                    for(var k in attrs) {
-                        if(attrs.hasOwnProperty(k)) {
-                            output.push([k, "=", attrs[k]].join(""));
-                        }
-                    }
-                    if(output.length > 0) {
-                        return "[" + output.join(",") + "]";
-                    } else {
-                        return "";
-                    }
-                }
-
-                var nodeout = jsnx.toArray(jsnx.map(G.nodes_iter(true), function(x) {
-                    var node = x[0],
-                        data = x[1],
-                        dotattrs = {};
-                    for(var k in data) {
-                        if(data.hasOwnProperty(k)) {
-                            // We don't really have an option for radius
-                            // unless we force circular nodes and dot will
-                            // autosize the nodes anyway, so don't handle it.
-                            //
-                            // label is handled implicitly
-                            if(k === "__d3datum__" || k === "__costume__") {
-                                continue
-                            } else if(k === "color") {
-                                dotattrs["style"] = "filled";
-                                dotattrs["fillcolor"] = formatID(data[k]);
-                            } else {
-                                dotattrs[formatID(k)] = formatID(data[k]);
-                            }
-                        }
-                    }
-                    return [formatID(node), " ", formatAttrs(dotattrs),
-                            ";"].join("");
-                })).join("\n");
-
-                var edgeout = jsnx.toArray(jsnx.map(G.edges_iter(true), function(x) {
-                    var a = x[0],
-                        b = x[1],
-                        data = x[2],
-                        dotattrs = {};
-                    for(var k in data) {
-                        if(data.hasOwnProperty(k)) {
-                            // label and color are handled implicitly
-                            if(k === "__d3datum__" || k === "__costume__") {
-                                continue
-                            } else if(k === "width") {
-                                dotattrs["penwidth"] = formatID(data[k]);
-                            } else {
-                                dotattrs[formatID(k)] = formatID(data[k]);
-                            }
-                        }
-                    }
-                    return [formatID(a), " ", edgeseparator, " ",
-                            formatID(b), formatAttrs(dotattrs),
-                            ";"].join("");
-                })).join("\n");
-
-                var dot = [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
+                var dot = graphToDot(currentGraph);
 
                 var link = document.createElement('a');
-
                 link.setAttribute('href', 'data:text/plain,' + encodeURIComponent(dot));
                 link.setAttribute('download', (myself.parentThatIsA(IDE_Morph).projectName || 'project') + '.dot');
                 document.body.appendChild(link);
@@ -3550,6 +3459,101 @@ function objectToGraph (data) {
     }
 
     return graph;
+}
+
+function graphToCSV(G) {
+    var nodes = G.nodes(),
+        header = [""].concat(nodes),
+        data = [header];
+
+    for (var i = 0; i < nodes.length; i++) {
+        var row = [nodes[i]];
+        for (var j = 0; j < nodes.length; j++) {
+            if(G.has_edge(nodes[i], nodes[j])) {
+                var label = G.edge.get(nodes[i]).get(nodes[j]).label;
+                if(label) {
+                    row.push(label);
+                } else {
+                    row.push(1);
+                }
+            } else {
+                row.push("");
+            }
+        }
+        data.push(row);
+    }
+
+    return CSV.arrayToCsv(data);
+}
+
+function graphToDot(G) {
+    var edgeout = "",
+        graphtype = jsnx.is_directed(G) ? "digraph" : "graph",
+        edgeseparator = jsnx.is_directed(G) ? "->" : "--";
+
+    function formatID(x) { return '"' + x.toString().replace('"', '\\"') + '"'; }
+    function formatAttrs(attrs) {
+        var output = [];
+        for(var k in attrs) {
+            if(attrs.hasOwnProperty(k)) {
+                output.push([k, "=", attrs[k]].join(""));
+            }
+        }
+        if(output.length > 0) {
+            return "[" + output.join(",") + "]";
+        } else {
+            return "";
+        }
+    }
+
+    var nodeout = jsnx.toArray(jsnx.map(G.nodes_iter(true), function(x) {
+        var node = x[0],
+            data = x[1],
+            dotattrs = {};
+        for(var k in data) {
+            if(data.hasOwnProperty(k)) {
+                // We don't really have an option for radius
+                // unless we force circular nodes and dot will
+                // autosize the nodes anyway, so don't handle it.
+                //
+                // label is handled implicitly
+                if(k === "__d3datum__" || k === "__costume__") {
+                    continue
+                } else if(k === "color") {
+                    dotattrs["style"] = "filled";
+                    dotattrs["fillcolor"] = formatID(data[k]);
+                } else {
+                    dotattrs[formatID(k)] = formatID(data[k]);
+                }
+            }
+        }
+        return [formatID(node), " ", formatAttrs(dotattrs),
+                ";"].join("");
+    })).join("\n");
+
+    var edgeout = jsnx.toArray(jsnx.map(G.edges_iter(true), function(x) {
+        var a = x[0],
+            b = x[1],
+            data = x[2],
+            dotattrs = {};
+        for(var k in data) {
+            if(data.hasOwnProperty(k)) {
+                // label and color are handled implicitly
+                if(k === "__d3datum__" || k === "__costume__") {
+                    continue
+                } else if(k === "width") {
+                    dotattrs["penwidth"] = formatID(data[k]);
+                } else {
+                    dotattrs[formatID(k)] = formatID(data[k]);
+                }
+            }
+        }
+        return [formatID(a), " ", edgeseparator, " ",
+                formatID(b), formatAttrs(dotattrs),
+                ";"].join("");
+    })).join("\n");
+
+    return [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
 }
 
 }());
