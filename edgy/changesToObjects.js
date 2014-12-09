@@ -1384,24 +1384,21 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
     // elements with the same name, we are only able to get the first costume
     // with the given name. Other costumes which share the same name will be
     // unusable unless renamed.
-    var n = parseNode(node);
-    if(this.G.has_node(n)) {
-        var props = this.G.node.get(n);
-        if(costumename === "default") {
-            delete props.__costume__;
-        } else {
-            props.__costume__ = detect(this.costumes.asArray(), function(costume) {
-                return costume.name === costumename;
-            });
-        }
-        if(this.isActiveGraph()) {
-            var nodes = graphEl.selectAll(".node");
-            nodes.each(function(d, i) {
-                if(d.node === node) {
-                    updateNodeAppearance(d3.select(nodes[0][i]));
-                }
-            });
-        }
+    node = parseNode(node);
+    if(!this.G.has_node(node)) {
+        throw new NodeNotInGraphError(node);
+    }
+
+    var props = this.G.node.get(node);
+    if(costumename === "default") {
+        delete props.__costume__;
+    } else {
+        props.__costume__ = detect(this.costumes.asArray(), function(costume) {
+            return costume.name === costumename;
+        });
+    }
+    if(props.__d3datum__) {
+        updateNodeAppearance(findNodeElement(node));
     }
 };
 
@@ -1412,20 +1409,22 @@ SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
     // with the given name. Other costumes which share the same name will be
     // unusable unless renamed.
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
-    if(this.G.has_edge(a, b)) {
-        var props = this.G.edge.get(a).get(b);
-        if(costumename === "default") {
-            delete props.__costume__;
-        } else {
-            props.__costume__ = detect(this.costumes.asArray(), function(costume) {
-                return costume.name === costumename;
-            });
-        }
-        if(this.isActiveGraph()) {
-            graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
-            graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
-            layout.resume();
-        }
+    if(!this.G.has_edge(a, b)) {
+        throw new EdgeNotInGraphError(edge);
+    }
+
+    var props = this.G.edge.get(a).get(b);
+    if(costumename === "default") {
+        delete props.__costume__;
+    } else {
+        props.__costume__ = detect(this.costumes.asArray(), function(costume) {
+            return costume.name === costumename;
+        });
+    }
+    if(props.__d3datum__) {
+        graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
+        graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
+        layout.resume();
     }
 };
 
