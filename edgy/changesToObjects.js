@@ -469,14 +469,16 @@ var DEFAULT_NODE_COLOR = "white",
     };
 
 redrawGraph = function() {
-    // console.log("redrawing graph")
     layout = jsnx.draw(currentGraph, LAYOUT_OPTS, true);
 
     if(layout.flowLayout && window.ide_ && window.ide_.useDownwardEdgeConstraint) {
+        // Activate downward edge (tree-like) layout.
         layout.flowLayout("y", DEFAULT_LINK_DISTANCE);
+        // Set iteration counts for edge constraints and start the layout.
         layout.start(10, 15, 20);
     }
 
+    // Follow stored fixedness, x and y values in layout.
     jsnx.forEach(currentGraph.nodes_iter(true), function(node) {
         var data = node[1];
         if(data.fixed) {
