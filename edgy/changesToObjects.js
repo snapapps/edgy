@@ -49,7 +49,7 @@ graphEl.on("mousedown", function() {
     d3.event.preventDefault();
 });
 
-function graphDisplayCostumesMenu() {
+function contextMenuCostumesList() {
     var rcvr = currentGraphSprite,
         dict = {};
     dict["default"] = "default";
@@ -100,7 +100,7 @@ graphEl.on("DOMNodeInserted", function() {
                               d.data.__costume__ ? d.data.__costume__.name : "",
                               world,
                               null,
-                              graphDisplayCostumesMenu,
+                              contextMenuCostumesList,
                               true);
                     world.worldCanvas.focus();
                 });
@@ -183,7 +183,7 @@ graphEl.on("DOMNodeInserted", function() {
                               d.data.__costume__ ? d.data.__costume__.name : "",
                               world,
                               null,
-                              graphDisplayCostumesMenu,
+                              contextMenuCostumesList,
                               true);
                     world.worldCanvas.focus();
                 });
