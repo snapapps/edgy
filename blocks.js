@@ -1138,7 +1138,7 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
             part = new InputSlotMorph(
                 null,
                 false,
-                'getNodeAttrsDict',
+                'getNodeAttributeNames',
                 true
             );
             part.isStatic = true;
@@ -1147,7 +1147,7 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
             part = new InputSlotMorph(
                 null,
                 false,
-                'getEdgeAttrsDict',
+                'getEdgeAttributeNames',
                 true
             );
             part.isStatic = true;
