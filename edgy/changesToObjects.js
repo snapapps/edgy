@@ -1523,7 +1523,7 @@ SpriteMorph.prototype.isCyclic = function() {
 
 SpriteMorph.prototype.getMatrixEntry = function(a, b) {
     var edge = new List([a, b]);
-    if(this.G.hasEdge(edge)) {
+    if(this.hasEdge(edge)) {
         return 1;
     } else {
         return 0;
@@ -1552,12 +1552,10 @@ SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
 
 SpriteMorph.prototype.setMatrixEntryWeighted = function(a, b, weightKey, val) {
     var edge = new List([a, b]);
-    if(isFinite(val)) {
-        this.addEdge(new List([edge]));
-        this.setEdgeAttrib(weightKey, edge, val);
-    } else {
-        this.removeEdge(edge);
-    }
+    this.addEdge(new List([edge]));
+    this.setEdgeAttrib(weightKey, edge, val);
+
+
 };
 
 SpriteMorph.prototype.isEmpty = function() {
@@ -2451,7 +2449,7 @@ SpriteMorph.prototype.newNode = function() {
         setMatrixEntryWeighted: {
             type: 'command',
             category: 'network',
-            spec: 'set adj %s , %s %edgeAttr to %n'
+            spec: 'set adj %s , %s %edgeAttr to %s'
         },
         isEmpty: {
             type: 'predicate',
