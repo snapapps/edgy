@@ -1552,9 +1552,12 @@ SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
 
 SpriteMorph.prototype.setMatrixEntryWeighted = function(a, b, weightKey, val) {
     var edge = new List([a, b]);
-    this.addEdge(new List([edge]));
-    this.setEdgeAttrib(weightKey, edge, val);
-
+    if (val == Infinity) {
+        this.removeEdge(edge);
+    } else {
+        this.addEdge(new List([edge]));
+        this.setEdgeAttrib(weightKey, edge, val);
+    }
 
 };
 
