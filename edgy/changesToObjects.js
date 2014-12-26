@@ -1535,7 +1535,9 @@ SpriteMorph.prototype.setMatrixEntry = function(a, b, val) {
     if(val) {
         this.addEdge(new List([edge]));
     } else {
-        this.removeEdge(edge);
+        if (this.hasEdge(edge)) {
+            this.removeEdge(edge);
+        }
     }
 };
 
