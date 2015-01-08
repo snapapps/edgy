@@ -960,7 +960,7 @@ SpriteMorph.prototype.renameNode = function(from, to) {
         });
 
         if(this.G.is_directed()) {
-            edges = edges.concat(jsnx.map(this.G.in_edges(old, true), function(d) {
+            edges = edges.concat(jsnx.map(this.G.in_edges(from, true), function(d) {
                 return [d[0], to, d[2]];
             }));
         }
