@@ -13,3 +13,5 @@ TSP heuristics via MCST
 TMDB browser
 Tic-Tac-Toe
 FSM-based sentence generation
+2048
+Towers of Hanoi
