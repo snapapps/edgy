@@ -1340,15 +1340,15 @@ SpriteMorph.prototype.getEdges = function() {
 };
 
 SpriteMorph.prototype.getDegree = function(node) {
-    return this.G.degree(node);
+    return this.G.degree(parseNode(node));
 };
 
 SpriteMorph.prototype.getInDegree = function(node) {
-    return this.G.in_degree(node);
+    return this.G.in_degree(parseNode(node));
 };
 
 SpriteMorph.prototype.getOutDegree = function(node) {
-    return this.G.out_degree(node);
+    return this.G.out_degree(parseNode(node));
 };
 
 SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
