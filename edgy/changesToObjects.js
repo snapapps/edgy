@@ -378,19 +378,19 @@ var DEFAULT_NODE_COLOR = "white",
 			width: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-				var dim = measureText(d.data[currentGraph.displayAttribute] || d.node);
+				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
 				d.width = dim.width + 16;
 				return dim.width + 8;
 			},
 			height: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-				var dim = measureText(d.data[currentGraph.displayAttribute] || d.node);
+				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
 				d.height = dim.height + 16;
 				return dim.height + 8;
 			},
 			transform: function(d) {
-				var dim = measureText(d.data[currentGraph.displayAttribute] || d.node);
+				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
 				var scale = (d.data.scale || 1);
                 var transform = ['scale(', scale, ')'];
                 if(!d.data.__costume__) {
@@ -442,7 +442,7 @@ var DEFAULT_NODE_COLOR = "white",
         },
         label_style: {
             fill: function (d) {
-                var attr = currentGraph.displayAttribute;
+                var attr = currentGraph.nodeDisplayAttribute;
                 if ((d.data[attr] == undefined) && (attr !== 'label')) {
                     return SECONDARY_LABEL_COLOR;
                 } else {
@@ -457,8 +457,8 @@ var DEFAULT_NODE_COLOR = "white",
 			}
         },
         labels: function(d) {
-            var attr = currentGraph.displayAttribute;
-            if(d.data[attr]!==undefined) {
+            var attr = currentGraph.nodeDisplayAttribute;
+            if(d.data[attr] !== undefined) {
                 return d.data[attr].toString();
             } else {
                 return d.node.toString();
@@ -466,8 +466,9 @@ var DEFAULT_NODE_COLOR = "white",
         },
         edge_label_style: {fill: DEFAULT_LABEL_COLOR},
         edge_labels: function(d) {
-            if(d.data.label !== undefined) {
-                return d.data.label.toString();
+            var attr = currentGraph.edgeDisplayAttribute;
+            if(d.data[attr] !== undefined) {
+                return d.data[attr].toString();
             } else {
                 return '';
             }
@@ -526,7 +527,8 @@ function displayGraph (G) {
         layout.stop();
     }
     currentGraph = G;
-    currentGraph.displayAttribute = 'label';
+    currentGraph.nodeDisplayAttribute = 'label';
+    currentGraph.edgeDisplayAttribute = 'label';
     redrawGraph();
 }
 
@@ -1119,7 +1121,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     data[attrib] = val;
 
     // Handle situation where changed attribute is the one being displayed
-    if (attrib === currentGraph.displayAttribute) {
+    if (attrib === currentGraph.nodeDisplayAttribute) {
         if (data.__d3datum__) {
             findNodeElement(node).select('text').text(val);
             findNodeElement(node).select('text').style("fill" , "black");
@@ -2242,16 +2244,25 @@ SpriteMorph.prototype.newNode = function() {
     return node;
 };
 
-SpriteMorph.prototype.setDisplayAttrib = function (attr) {
+SpriteMorph.prototype.setNodeDisplayAttrib = function (attr) {
     if (attr != '' ) {
-        currentGraph.displayAttribute = attr;
+        currentGraph.nodeDisplayAttribute = attr;
     }
     else {
-        currentGraph.displayAttribute = 'label';
+        currentGraph.nodeDisplayAttribute = 'label';
     }
     redrawGraph();
 };
 
+SpriteMorph.prototype.setEdgeDisplayAttrib = function (attr) {
+    if (attr != '' ) {
+        currentGraph.edgeDisplayAttribute = attr;
+    }
+    else {
+        currentGraph.edgeDisplayAttribute = 'label';
+    }
+    redrawGraph();
+};
 
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
@@ -2363,10 +2374,15 @@ SpriteMorph.prototype.setDisplayAttrib = function (attr) {
             category: 'nodes',
             spec: 'set attributes of %s from dict %l'
         },
-        setDisplayAttrib: {
+        setNodeDisplayAttrib: {
             type: 'command',
             category: 'nodes',
-            spec: 'display %nodeAttr on nodes'
+            spec: 'display node attribute %nodeAttr'
+        },
+        setEdgeDisplayAttrib: {
+            type: 'command',
+            category: 'edges',
+            spec: 'display edge attribute %edgeAttr'
         },
         setEdgeAttrib: {
             type: 'command',
@@ -2932,7 +2948,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setNodeCostume'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('sortNodes'));
-            blocks.push(block('setDisplayAttrib'));
+            blocks.push(block('setNodeDisplayAttrib'));
             blocks.push('-');
             blocks.push(block('getNeighbors'));
             blocks.push(block('getOutgoing'));
@@ -3012,6 +3028,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setEdgeCostume'));
             blocks.push(block('getEdgesWithAttr'));
             blocks.push(block('sortEdges'));
+            blocks.push(block('setEdgeDisplayAttrib'));
             blocks.push('-');
             blocks.push(block('getNeighborEdges'));
             blocks.push(block('getOutgoingEdges'));
