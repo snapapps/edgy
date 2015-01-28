@@ -334,6 +334,7 @@ function findEdgeElement(edge) {
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
+    SECONDARY_LABEL_COLOR = "lightgray",
     EDGE_WIDTH_FACTOR = 8,
     DEFAULT_LINK_DISTANCE = 60,
     LAYOUT_OPTS = {
@@ -377,19 +378,19 @@ var DEFAULT_NODE_COLOR = "white",
 			width: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-				var dim = measureText(d.data.label || d.node);
+				var dim = measureText(d.data[currentGraph.displayAttribute] || d.node);
 				d.width = dim.width + 16;
 				return dim.width + 8;
 			},
 			height: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-				var dim = measureText(d.data.label || d.node);
+				var dim = measureText(d.data[currentGraph.displayAttribute] || d.node);
 				d.height = dim.height + 16;
 				return dim.height + 8;
 			},
 			transform: function(d) {
-				var dim = measureText(d.data.label || d.node);
+				var dim = measureText(d.data[currentGraph.displayAttribute] || d.node);
 				var scale = (d.data.scale || 1);
                 var transform = ['scale(', scale, ')'];
                 if(!d.data.__costume__) {
@@ -439,15 +440,26 @@ var DEFAULT_NODE_COLOR = "white",
                 return 1;
             }
         },
-        label_style: {fill: DEFAULT_LABEL_COLOR},
+        label_style: {
+            fill: function (d) {
+                var attr = currentGraph.displayAttribute;
+                if ((d.data[attr] == undefined) && (attr !== 'label')) {
+                    return SECONDARY_LABEL_COLOR;
+                } else {
+                    return DEFAULT_LABEL_COLOR;
+                }
+
+            }
+        },
         label_attr: {
 			transform: function(d) {
 				return 'scale(' + (d.data.scale || 1) + ')';
 			}
         },
         labels: function(d) {
-            if(d.data.label !== undefined) {
-                return d.data.label.toString();
+            var attr = currentGraph.displayAttribute;
+            if(d.data[attr]!==undefined) {
+                return d.data[attr].toString();
             } else {
                 return d.node.toString();
             }
@@ -514,6 +526,7 @@ function displayGraph (G) {
         layout.stop();
     }
     currentGraph = G;
+    currentGraph.displayAttribute = 'label';
     redrawGraph();
 }
 
@@ -1104,6 +1117,14 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
 
     var data = this.G.node.get(node);
     data[attrib] = val;
+
+    // Handle situation where changed attribute is the one being displayed
+    if (attrib === currentGraph.displayAttribute) {
+        if (data.__d3datum__) {
+            findNodeElement(node).select('text').text(val);
+            findNodeElement(node).select('text').style("fill" , "black");
+        }
+    }
 
     // Run any relevant special handlers.
     if(NODE_ATTR_HANDLERS[attrib] && NODE_ATTR_HANDLERS[attrib].set) {
@@ -2221,6 +2242,17 @@ SpriteMorph.prototype.newNode = function() {
     return node;
 };
 
+SpriteMorph.prototype.setDisplayAttrib = function (attr) {
+    if (attr != '' ) {
+        currentGraph.displayAttribute = attr;
+    }
+    else {
+        currentGraph.displayAttribute = 'label';
+    }
+    redrawGraph();
+};
+
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
@@ -2330,6 +2362,11 @@ SpriteMorph.prototype.newNode = function() {
             type: 'command',
             category: 'nodes',
             spec: 'set attributes of %s from dict %l'
+        },
+        setDisplayAttrib: {
+            type: 'command',
+            category: 'nodes',
+            spec: 'display %nodeAttr on nodes'
         },
         setEdgeAttrib: {
             type: 'command',
@@ -2895,6 +2932,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setNodeCostume'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('sortNodes'));
+            blocks.push(block('setDisplayAttrib'));
             blocks.push('-');
             blocks.push(block('getNeighbors'));
             blocks.push(block('getOutgoing'));
