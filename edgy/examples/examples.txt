@@ -15,3 +15,4 @@ Tic-Tac-Toe
 FSM-based sentence generation
 2048
 Towers of Hanoi
+Sim
