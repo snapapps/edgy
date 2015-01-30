@@ -1543,20 +1543,28 @@ SpriteMorph.prototype.setMatrixEntry = function(a, b, val) {
 
 SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
     var edge = new List([a, b]);
-    if(this.hasEdge(edge)) {
-        return this.getEdgeAttrib(weightKey, edge);
+    if (weightKey === '') {
+        throw new Error('Attribute parameter (drop-down box) cannot be empty')
     } else {
-        return Infinity;
+        if (this.hasEdge(edge)) {
+            return this.getEdgeAttrib(weightKey, edge);
+        } else {
+            return Infinity;
+        }
     }
 };
 
 SpriteMorph.prototype.setMatrixEntryWeighted = function(a, b, weightKey, val) {
     var edge = new List([a, b]);
-    if (val === Infinity) {
-        this.removeEdge(edge);
+    if (weightKey === '') {
+        throw new Error('Attribute parameter (drop-down box) cannot be empty')
     } else {
-        this.addEdge(new List([edge]));
-        this.setEdgeAttrib(weightKey, edge, val);
+        if (val === Infinity) {
+            this.removeEdge(edge);
+        } else {
+            this.addEdge(new List([edge]));
+            this.setEdgeAttrib(weightKey, edge, val);
+        }
     }
 
 };
