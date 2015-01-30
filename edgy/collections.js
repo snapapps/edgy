@@ -543,6 +543,15 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
     return dict.set(key, val);
 };
 
+SpriteMorph.prototype.keyInDict = function(dict, key) {
+    var val = dict.get(key);
+    return !(val === undefined);
+};
+
+SpriteMorph.prototype.removeFromDict = function(key, dict) {
+    return dict.delete(key);
+};
+
 (function() {
     var blocks = {
         reportNewDict: {
@@ -560,11 +569,21 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
             category: 'lists',
             spec: 'set %s in dict %map to %s',
         },
+        removeFromDict: {
+            type: 'command',
+            category: 'lists',
+            spec: 'remove %s from dict %map'
+        },
         reportDictLength: {
             type: 'reporter',
             category: 'lists',
             spec: 'length of dict %map',
         },
+        keyInDict: {
+            type: 'predicate',
+            category: 'lists',
+            spec: 'dict %map contains key %s'
+        }
     };
 
     // Add the new blocks.
