@@ -193,13 +193,25 @@ IDE_Morph.prototype.exportToZIP = function () {
 }
 
 IDE_Morph.prototype.toggleUseWebCola = function () {
-    if (edgyLayoutAlgorithm == d3.layout.force)
+    if (edgyLayoutAlgorithm != d3.layout.force)
     {
-        edgyLayoutAlgorithm = cola.d3adaptor;
+        edgyLayoutAlgorithm = d3.layout.force;
     }
     else
     {
-        edgyLayoutAlgorithm = d3.layout.force;
+        edgyLayoutAlgorithm = cola.d3adaptor;
+    }
+    redrawGraph();
+}
+
+IDE_Morph.prototype.toggleUseTree = function () {
+    if (edgyLayoutAlgorithm != d3.layout.tree)
+    {
+        edgyLayoutAlgorithm = d3.layout.tree;
+    }
+    else
+    {
+        edgyLayoutAlgorithm = cola.d3adaptor;
     }
     redrawGraph();
 }

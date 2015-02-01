@@ -975,7 +975,7 @@ SpriteMorph.prototype.renameNode = function(from, to) {
         });
 
         if(this.G.is_directed()) {
-            edges = edges.concat(jsnx.map(this.G.in_edges(old, true), function(d) {
+            edges = edges.concat(jsnx.map(this.G.in_edges(from, true), function(d) {
                 return [d[0], to, d[2]];
             }));
         }
@@ -1546,7 +1546,7 @@ SpriteMorph.prototype.isCyclic = function() {
 
 SpriteMorph.prototype.getMatrixEntry = function(a, b) {
     var edge = new List([a, b]);
-    if(this.G.hasEdge(edge)) {
+    if(this.hasEdge(edge)) {
         return 1;
     } else {
         return 0;
@@ -1558,27 +1558,38 @@ SpriteMorph.prototype.setMatrixEntry = function(a, b, val) {
     if(val) {
         this.addEdge(new List([edge]));
     } else {
-        this.removeEdge(edge);
+        if (this.hasEdge(edge)) {
+            this.removeEdge(edge);
+        }
     }
 };
 
 SpriteMorph.prototype.getMatrixEntryWeighted = function(a, b, weightKey) {
     var edge = new List([a, b]);
-    if(this.hasEdge(edge)) {
-        return this.getEdgeAttrib(weightKey, edge);
+    if (weightKey === '') {
+        throw new Error('Attribute parameter (drop-down box) cannot be empty')
     } else {
-        return Infinity;
+        if (this.hasEdge(edge)) {
+            return this.getEdgeAttrib(weightKey, edge);
+        } else {
+            return Infinity;
+        }
     }
 };
 
 SpriteMorph.prototype.setMatrixEntryWeighted = function(a, b, weightKey, val) {
     var edge = new List([a, b]);
-    if(isFinite(val)) {
-        this.addEdge(new List([edge]));
-        this.setEdgeAttrib(weightKey, edge, val);
+    if (weightKey === '') {
+        throw new Error('Attribute parameter (drop-down box) cannot be empty')
     } else {
-        this.removeEdge(edge);
+        if (val === Infinity) {
+            this.removeEdge(edge);
+        } else {
+            this.addEdge(new List([edge]));
+            this.setEdgeAttrib(weightKey, edge, val);
+        }
     }
+
 };
 
 SpriteMorph.prototype.isEmpty = function() {
@@ -1650,7 +1661,7 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
     // Grid graphs by default come with labels as [x, y], which blow up with
     // the renderer for some reason. Stringify the labels instead.
     grid = jsnx.relabel.relabel_nodes(grid, function(x) { return x.toString(); });
-    this.addGraph(G, grid);
+    this.addGraph(grid);
 };
 
 SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
@@ -2502,7 +2513,7 @@ SpriteMorph.prototype.setEdgeDisplayAttrib = function (attr) {
         setMatrixEntryWeighted: {
             type: 'command',
             category: 'network',
-            spec: 'set adj %s , %s %edgeAttr to %n'
+            spec: 'set adj %s , %s %edgeAttr to %s'
         },
         isEmpty: {
             type: 'predicate',
