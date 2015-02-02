@@ -16,3 +16,4 @@ FSM-based sentence generation
 2048
 Towers of Hanoi
 Sim
+Conway’s Game of Life
