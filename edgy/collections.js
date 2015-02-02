@@ -984,7 +984,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('reportNewDict'));
             blocks.push(block('getDict'));
             blocks.push(block('setDict'));
+            blocks.push(block('removeFromDict'));
             blocks.push(block('reportDictLength'));
+            blocks.push(block('keyInDict'));
             blocks.push('-');
             blocks.push(block('reportNewStack'));
             blocks.push(block('reportStackTop'));
