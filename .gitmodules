@@ -1,0 +1,4 @@
+[submodule "app"]
+	path = app
+	url = https://github.com/snapapps/edgy.git
+	branch = master
