@@ -327,7 +327,7 @@ function findNodeElement(node) {
 function findEdgeElement(edge) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     return graphEl.selectAll(".edge").filter(function(d) {
-        return d.edge[0] === a && d.edge[1] === b;
+        return ((d.edge[0] === a && d.edge[1] === b) || (!currentGraph.is_directed()) && (d.edge[0] === b && d.edge[1] === a));
     });
 }
 
@@ -1240,13 +1240,6 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     // Run any relevant special handlers.
     if(EDGE_ATTR_HANDLERS[attrib] && EDGE_ATTR_HANDLERS[attrib].set) {
         EDGE_ATTR_HANDLERS[attrib].set.call(this, edge, data, val);
-
-        // Run handlers to ensure that the edge can be inputted in either order
-        // in an undirected graph.
-        if (!this.G.is_directed()){
-            var edge2 = new List([b, a]);
-            EDGE_ATTR_HANDLERS[attrib].set.call(this, edge2, data, val);
-        }
     }
 };
 
