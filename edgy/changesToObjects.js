@@ -327,9 +327,11 @@ function findNodeElement(node) {
 function findEdgeElement(edge) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     return graphEl.selectAll(".edge").filter(function(d) {
-        return d.edge[0] === a && d.edge[1] === b;
+        return ((d.edge[0] === a && d.edge[1] === b) || (!currentGraph.is_directed()) && (d.edge[0] === b && d.edge[1] === a));
     });
 }
+
+
 
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
