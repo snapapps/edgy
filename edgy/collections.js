@@ -543,12 +543,8 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
     return dict.set(key, val);
 };
 
-SpriteMorph.prototype.entriesInDict = function(dict) {
-    return new List(dict.entries());
-};
-
 SpriteMorph.prototype.keysInDict = function(dict) {
-    return new List(dict.keys());
+    return Array.from(dict.keys());
 };
 
 SpriteMorph.prototype.keyInDict = function(dict, key) {
@@ -596,11 +592,6 @@ SpriteMorph.prototype.removeFromDict = function(key, dict) {
             type: 'reporter',
             category: 'lists',
             spec: 'keys in dict %map',
-        },
-        entriesInDict: {
-            type: 'reporter',
-            category: 'lists',
-            spec: 'entries in dict %map',
         }
     };
 
@@ -1006,7 +997,6 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('reportDictLength'));
             blocks.push(block('keyInDict'));
             blocks.push(block('keysInDict'));
-            blocks.push(block('entriesInDict'));
             blocks.push('-');
             blocks.push(block('reportNewStack'));
             blocks.push(block('reportStackTop'));
