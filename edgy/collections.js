@@ -544,11 +544,11 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
 };
 
 SpriteMorph.prototype.entriesInDict = function(dict) {
-    return dict.entries();
+    return new List(dict.entries());
 };
 
 SpriteMorph.prototype.keysInDict = function(dict) {
-    return dict.keys();
+    return new List(dict.keys());
 };
 
 SpriteMorph.prototype.keyInDict = function(dict, key) {
@@ -1005,6 +1005,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('removeFromDict'));
             blocks.push(block('reportDictLength'));
             blocks.push(block('keyInDict'));
+            blocks.push(block('keysInDict'));
+            blocks.push(block('entriesInDict'));
             blocks.push('-');
             blocks.push(block('reportNewStack'));
             blocks.push(block('reportStackTop'));
