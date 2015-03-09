@@ -544,7 +544,7 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
 };
 
 SpriteMorph.prototype.keysInDict = function(dict) {
-    return Array.from(dict.keys());
+    return new List(Array.from(dict.keys()));
 };
 
 SpriteMorph.prototype.keyInDict = function(dict, key) {
