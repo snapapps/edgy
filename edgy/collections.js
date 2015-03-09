@@ -543,6 +543,10 @@ SpriteMorph.prototype.setDict = function(key, dict, val) {
     return dict.set(key, val);
 };
 
+SpriteMorph.prototype.keysInDict = function(dict) {
+    return Array.from(dict.keys());
+};
+
 SpriteMorph.prototype.keyInDict = function(dict, key) {
     var val = dict.get(key);
     return !(val === undefined);
@@ -572,7 +576,7 @@ SpriteMorph.prototype.removeFromDict = function(key, dict) {
         removeFromDict: {
             type: 'command',
             category: 'lists',
-            spec: 'remove %s from dict %map'
+            spec: 'remove %s from dict %map',
         },
         reportDictLength: {
             type: 'reporter',
@@ -582,7 +586,12 @@ SpriteMorph.prototype.removeFromDict = function(key, dict) {
         keyInDict: {
             type: 'predicate',
             category: 'lists',
-            spec: 'dict %map contains key %s'
+            spec: 'dict %map contains key %s',
+        },
+        keysInDict: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'keys in dict %map',
         }
     };
 
@@ -984,7 +993,10 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('reportNewDict'));
             blocks.push(block('getDict'));
             blocks.push(block('setDict'));
+            blocks.push(block('removeFromDict'));
             blocks.push(block('reportDictLength'));
+            blocks.push(block('keyInDict'));
+            blocks.push(block('keysInDict'));
             blocks.push('-');
             blocks.push(block('reportNewStack'));
             blocks.push(block('reportStackTop'));
