@@ -2,6 +2,7 @@ Breadth-first search
 Critical path algorithm
 K7
 MCST
+Priority queue
 Shortening
 Sierpinski
 Topological sort
