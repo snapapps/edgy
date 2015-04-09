@@ -1011,6 +1011,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('pushQueue'));
             blocks.push(block('popQueue'));
             blocks.push(block('isQueueEmpty'));
+	    /*
             blocks.push('-');
             blocks.push(block('reportNewPQueue'));
             blocks.push(block('reportPQueueTop'));
@@ -1019,6 +1020,7 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('popPQueue'));
             blocks.push(block('replacePQueue'));
             blocks.push(block('isPQueueEmpty'));
+	    */
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
