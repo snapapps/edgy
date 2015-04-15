@@ -746,182 +746,113 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
 }());
 
 /**
-Integer priority queue implemented by a binary min-heap inside an array, head is the first element of the array.
+Priority queue
 */
 
-// modified from http://eloquentjavascript.net/appendix2.html
+// Inherits from binary heap
+var PriorityQueue = function(items, predicate) {
+    this.predicate = predicate || function(a, b) { return a > b; };
+    this.items = [null].concat(items || [null]);
+    this.count = items.length;
 
-var BinaryHeap = {
-    push: function(heap, element) {
-        heap.push(element);
-        // bubble up element
-        BinaryHeap.bubbleUp(heap, heap.length - 1);
-    },
-
-    pop: function(heap) {
-        // Store the first element so we can return it later.
-        var result = heap[0];
-        // Get the element at the end of the array.
-        var end = heap.pop();
-        // If there are any elements left, put the end element at the
-        // start, and let it sink down.
-        if (heap.length > 0) {
-            heap[0] = end;
-            BinaryHeap.sinkDown(heap, 0);
-        }
-        return result;
-    },
-
-    heapify: function(heap) {
-        for(var i=Math.floor(heap.length/2);i>=0;i--){
-            BinaryHeap.sinkDown(heap, i);
-        }
-    },
-
-    remove: function(heap, node) {
-        var length = heap.length;
-        // Find node by searching through the array.
-        var i = heap.indexOf(node);
-        if ( i == -1)
-            return;
-        // Use the last element to fill up the hole.
-        var end = heap.pop();
-        // If the element we popped was the one we needed to remove,
-        // we're done.
-        if (i == length - 1)
-            return;
-        // Otherwise, we replace the removed element with the popped
-        // one, and allow it to float up or sink down as appropriate.
-        heap[i] = end;
-        BinaryHeap.bubbleUp(heap, i);
-        BinaryHeap.sinkDown(heap, i);
-    },
-
-    replace: function(heap, node1, node2){
-        if (node1 == node2)
-            return;
-        // Find node by searching through the array.
-        var i = heap.indexOf(node1);
-        if ( i == -1)
-            return;
-        heap[i] = node2;
-        // Float up or sink down as appropriate.
-        BinaryHeap.bubbleUp(heap, i);
-        BinaryHeap.sinkDown(heap, i);
-    },
-
-    bubbleUp: function(heap, n) {
-        var element = heap[n];
-        // When at 0, an element can not go up any further.
-        while (n > 0) {
-            // Compute the parent element's index, and fetch it.
-            var parentN = Math.floor((n + 1) / 2) - 1,
-            parent = heap[parentN];
-            // If the parent has a lesser score, things are in order and we
-            // are done.
-            if (element >= parent)
-                break;
-
-            // Otherwise, swap the parent with the current element and
-            // continue.
-            heap[parentN] = element;
-            heap[n] = parent;
-            n = parentN;
-        }
-    },
-
-    sinkDown: function(heap, n) {
-        // Look up the target element and its score.
-        var length = heap.length, element = heap[n];
-
-        while(true) {
-            // Compute the indices of the child elements.
-            var child2N = (n + 1) * 2, child1N = child2N - 1;
-            // New position of element, if any.
-            var swap = null;
-            var child1, child2;
-            if (child1N < length) {
-                child1 = heap[child1N];
-                if (child1 < element)
-                    swap = child1N;
-            }
-            if (child2N < length) {
-                child2 = heap[child2N];
-                if (child2 < (swap === null ? element : child1))
-                    swap = child2N;
-            }
-
-            // No need to swap further, we are done.
-            if (swap === null)
-                break;
-
-            // Otherwise, swap and continue.
-            heap[n] = heap[swap];
-            heap[swap] = element;
-            n = swap;
-        }
+    for (var i = Math.floor(this.count / 2); i > 0; i--) {
+        this.downHeap(i);
     }
 };
 
-SpriteMorph.prototype.reportNewPQueue = function(list) {
-    //create new list otherwise we'll end up in an infinite loop
-    var res = new List();
-    var elements = list.asArray();
-    //convert all to ints
-    for(var i=0;i<elements.length;i++){
-        elements[i] = parseInt(elements[i]);
+PriorityQueue.prototype = new BinaryHeap();
+
+BinaryHeap.prototype.toString = function() {
+    if (this.length() > 0) {
+		return "Priority Queue: Top(" + this.top().toString() + ")";
+	}
+	return "Priority Queue: Empty";
+}
+
+PriorityQueue.prototype.toArray = function() {
+    var array = [];
+    for (var i = 1; i <= this.count; i++) {
+        array.push(this.items[i].element);
     }
-    BinaryHeap.heapify(elements);
-    res.contents = elements;
-    res.changed();
-    return res;
+    return array;
 };
 
-SpriteMorph.prototype.reportPQueueTop = function(list) {
-    return list.at(1);
+function Entry(element, priority) {
+    this.element = element;
+    this.priority = priority;
+}
+
+Entry.prototype.toString = function() {
+    return this.element.toString();
+}
+
+SpriteMorph.prototype.reportNewMaxPQueue = function(elements) {
+    var entries = [];
+    for (var i = 0; i < elements.contents.length; i += 2) {
+        entries.push(new Entry(elements.contents[i], parseFloat(elements.contents[i + 1])));
+    }
+    return new PriorityQueue(
+        entries,
+        function(a, b) {
+            return a.priority > b.priority;
+        }
+    );
 };
 
-SpriteMorph.prototype.reportPQueueLength = function (list) {
-    return list.length();
+SpriteMorph.prototype.reportNewMinPQueue = function(elements) {
+    var entries = [];
+    for (var i = 0; i < elements.contents.length; i += 2) {
+        entries.push(new Entry(elements.contents[i], parseFloat(elements.contents[i + 1])));
+    }
+    return new PriorityQueue(
+        entries,
+        function(a, b) {
+            return a.priority < b.priority;
+        }
+    );
 };
 
-SpriteMorph.prototype.pushPQueue = function (element, list) {
-    element = parseInt(element);
-    var elements = list.asArray();
-    BinaryHeap.push(elements, element);
-    list.contents = elements;
-    list.isLinked = false;
-    list.changed();
+SpriteMorph.prototype.reportPQueueTop = function(pqueue) {
+    return pqueue.top().element;
 };
 
-SpriteMorph.prototype.popPQueue = function (list) {
-    var elements = list.asArray();
-    BinaryHeap.pop(elements);
-    list.contents = elements;
-    list.isLinked = false;
-    list.changed();
+SpriteMorph.prototype.reportPQueueLength = function (pqueue) {
+    return pqueue.length();
 };
 
-SpriteMorph.prototype.replacePQueue = function (element1, element2, list) {
-    element1 = parseInt(element1);
-    element2 = parseInt(element2);
-    var elements = list.asArray();
-    BinaryHeap.replace(elements, element1, element2);
-    list.contents = elements;
-    list.isLinked = false;
-    list.changed();
+SpriteMorph.prototype.pushPQueue = function(element, pqueue, priority) {
+    pqueue.push(new Entry(element, parseFloat(priority)));
 };
 
-SpriteMorph.prototype.isPQueueEmpty = function (list) {
-    return list.length() === 0;
+SpriteMorph.prototype.popPQueue = function(pqueue) {
+    pqueue.pop();
+};
+
+SpriteMorph.prototype.updatePQueue = function(element, pqueue, priority) {
+    var index = pqueue.toArray().indexOf(element);
+    if (index >= 0) {
+        pqueue.items[index + 1].priority = parseFloat(priority);
+
+        pqueue.upHeap(index + 1);
+        pqueue.downHeap(index + 1);
+    }
+};
+
+SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
+    return pqueue.length() === 0;
 };
 
 (function() {
     var blocks = {
-        reportNewPQueue: {
+        reportNewMaxPQueue: {
             type: 'reporter',
             category: 'lists',
-            spec: 'pqueue %expN',
+            spec: 'max pqueue %exppairs',
+        },
+        reportNewMinPQueue: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'min pqueue %exppairs',
         },
         reportPQueueTop: {
             type: 'reporter',
@@ -936,17 +867,17 @@ SpriteMorph.prototype.isPQueueEmpty = function (list) {
         pushPQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'push %n to pqueue %l',
+            spec: 'push %s to pqueue %l with priority %s',
         },
         popPQueue: {
             type: 'command',
             category: 'lists',
             spec: 'pop from pqueue %l',
         },
-        replacePQueue: {
+        updatePQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'replace %n to %n in pqueue %l',
+            spec: 'update %s in pqueue %l to priority %n',
         },
         isPQueueEmpty: {
             type: 'predicate',
@@ -1011,16 +942,15 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('pushQueue'));
             blocks.push(block('popQueue'));
             blocks.push(block('isQueueEmpty'));
-	    /*
             blocks.push('-');
-            blocks.push(block('reportNewPQueue'));
+            blocks.push(block('reportNewMaxPQueue'));
+            blocks.push(block('reportNewMinPQueue'));
             blocks.push(block('reportPQueueTop'));
             blocks.push(block('reportPQueueLength'));
             blocks.push(block('pushPQueue'));
             blocks.push(block('popPQueue'));
-            blocks.push(block('replacePQueue'));
+            blocks.push(block('updatePQueue'));
             blocks.push(block('isPQueueEmpty'));
-	    */
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
