@@ -51,6 +51,12 @@ MultiArgPairsMorph.prototype.removeInput = function(contents) {
         this.removeChild(oldPart);
     }
 };
+MultiArgPairsMorph.prototype.toXML = function (serializer) {
+    return serializer.format(
+        '<pairs>%</pairs>',
+        serializer.store(this.inputs())
+    );
+};
 
 /**
 MapMorph, a morph representing Map object outputs.

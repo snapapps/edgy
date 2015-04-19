@@ -1053,6 +1053,23 @@ SnapSerializer.prototype.loadInput = function (model, input, block) {
             );
         });
         input.fixLayout();
+    } else if (model.tag === 'pairs') {
+        while (input.inputs().length > 0) {
+            input.removeInput();
+        }
+		var i = 0;
+        model.children.forEach(function (item) {
+            if (i % 2 == 0) {
+				input.addInput();
+            }
+			myself.loadInput(
+                item,
+                input.children[input.children.length - 3 + (i % 2)],
+                input
+            );
+			i++;
+        });
+        input.fixLayout();
     } else if (model.tag === 'block' || model.tag === 'custom-block') {
         block.silentReplaceInput(input, this.loadBlock(model, true));
     } else if (model.tag === 'color') {
