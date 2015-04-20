@@ -1153,6 +1153,27 @@ SnapSerializer.prototype.loadValue = function (model) {
             return myself.loadValue(value);
         });
         return v;
+    case 'map':
+        var res = new Map();
+        var myself = this;
+        keys = model.childrenNamed('key').map(function (item) {
+            var value = item.children[0];
+            if (!value) {
+                return 0;
+            }
+            return myself.loadValue(value);
+        });
+        values = model.childrenNamed('value').map(function (item) {
+            var value = item.children[0];
+            if (!value) {
+                return 0;
+            }
+            return myself.loadValue(value);
+        });
+        for (var i = 0; i < keys.length; i++) {
+            res.set(keys[i], values[i]);
+        }
+        return res;
     case 'sprite':
         v  = new SpriteMorph(myself.project.globalVariables);
         if (model.attributes.id) {
