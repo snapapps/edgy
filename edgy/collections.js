@@ -448,6 +448,10 @@ SyntaxElementMorph.prototype.showBubble = (function(){
             morphToShow = new MapMorph(value);
             morphToShow.isDraggable = false;
             isClickable = true;
+        } else if (value instanceof PriorityQueue) {
+            morphToShow = new PriorityQueueMorph(value);
+            morphToShow.isDraggable = false;
+            isClickable = true;
         } else {
             return oldShowBubble.call(this, value);
         }
@@ -477,7 +481,14 @@ CellMorph.prototype.drawNew = (function() {
             this.contentsMorph.isDraggable = false;
             this.contents = this.contentsMorph;
             oldDrawNew.call(this);
-        }else {
+        }
+        else if (this.contents instanceof PriorityQueue) {
+            this.contentsMorph = new PriorityQueueMorph(this.contents, this);
+            this.contentsMorph.isDraggable = false;
+            this.contents = this.contentsMorph;
+            oldDrawNew.call(this);
+        }
+        else {
             oldDrawNew.call(this);
         }
     };
@@ -756,23 +767,56 @@ Priority queue
 */
 
 // Inherits from binary heap
-var PriorityQueue = function(items, predicate) {
+var PriorityQueue;
+
+function PriorityQueue(items, predicate) {
     this.predicate = predicate || function(a, b) { return a > b; };
     this.items = [null].concat(items || [null]);
     this.count = items.length;
-
+    this.invalidated = true;
     for (var i = Math.floor(this.count / 2); i > 0; i--) {
         this.downHeap(i);
     }
-};
+}
 
 PriorityQueue.prototype = new BinaryHeap();
+PriorityQueue.prototype.constructor = PriorityQueue;
 
-BinaryHeap.prototype.toString = function() {
+PriorityQueue.prototype.upHeap = function(i) {
+    BinaryHeap.prototype.upHeap.call(this, i);
+    this.invalidated = true;
+}
+
+PriorityQueue.prototype.downHeap = function(i) {
+    BinaryHeap.prototype.downHeap.call(this, i);
+    this.invalidated = true;
+}
+
+PriorityQueue.prototype.top = function() {
+    if (this.isEmpty()) {
+        throw new Error("Priority queue is empty");
+    }
+    
+    return BinaryHeap.prototype.top.call(this).element;
+}
+
+PriorityQueue.prototype.pop = function() {
+    if (this.isEmpty()) {
+        throw new Error("Priority queue is empty");
+    }
+    
+    BinaryHeap.prototype.pop.call(this);
+}
+
+PriorityQueue.prototype.isEmpty = function() {
+    return this.length() === 0;
+}
+
+PriorityQueue.prototype.toString = function() {
     if (this.length() > 0) {
-		return "Priority Queue: Top(" + this.top().toString() + ")";
-	}
-	return "Priority Queue: Empty";
+        return "Priority Queue: Top(" + this.top().toString() + ")";
+    }
+    return "Priority Queue: Empty";
 }
 
 PriorityQueue.prototype.toArray = function() {
@@ -791,6 +835,143 @@ function Entry(element, priority) {
 Entry.prototype.toString = function() {
     return this.element.toString();
 }
+
+var PriorityQueueMorph;
+
+// PriorityQueueMorph watches a pqueue
+function PriorityQueueMorph(pqueue, parentCell) {
+    this.init(pqueue, parentCell);
+}
+
+// Inherits from BoxMorph
+PriorityQueueMorph.prototype = new BoxMorph();
+PriorityQueueMorph.prototype.constructor = PriorityQueueMorph;
+PriorityQueueMorph.uber = BoxMorph.prototype;
+
+// Default settings
+PriorityQueueMorph.prototype.cellColor =
+    SpriteMorph.prototype.blockColor.lists;
+
+PriorityQueueMorph.prototype.init = function(pqueue, parentCell) {
+    var myself = this;
+    this.pqueue = pqueue || new PriorityQueue();
+    this.parentCell = parentCell || null;
+    this.lengthLabel = new StringMorph(
+        localize('length: ') + this.pqueue.length(),
+        SyntaxElementMorph.prototype.fontSize,
+        null,
+        false,
+        false,
+        false,
+        MorphicPreferences.isFlat ? new Point() : new Point(1, 1),
+        new Color(255, 255, 255)
+    );
+    this.topLabel = new StringMorph(
+        localize('top: '),
+        SyntaxElementMorph.prototype.fontSize,
+        null,
+        false,
+        false,
+        false,
+        MorphicPreferences.isFlat ? new Point() : new Point(1, 1),
+        new Color(255, 255, 255)
+    );
+
+    this.cell = new CellMorph(
+        this.pqueue.isEmpty() ? "(Empty)" : this.pqueue.top(),
+        this.cellColor,
+        null,
+        this.parentCell
+    );
+
+    PriorityQueueMorph.uber.init.call(
+        this,
+        SyntaxElementMorph.prototype.rounding,
+        1.000001, // shadow bug in Chrome,
+        new Color(120, 120, 120)
+    );
+    this.color = new Color(220, 220, 220);
+    this.isDraggable = true;
+    this.setExtent(new Point(80, 70).multiplyBy(
+        SyntaxElementMorph.prototype.scale
+    ));
+
+    this.add(this.lengthLabel);
+    this.add(this.topLabel);
+    this.add(this.cell);
+    this.update();
+    this.fixLayout();
+}
+
+PriorityQueueMorph.prototype.update = function(anyway) {
+    if (!this.pqueue.invalidated && !anyway) {
+        return null;
+    }
+
+    var contents = this.pqueue.isEmpty() ? "(Empty)" : this.pqueue.top();
+    if (this.cell.contents != contents) {
+        this.cell.contents = contents;
+        this.cell.drawNew();
+    }
+
+    this.updateLength();
+    this.fixLayout();
+
+    this.pqueue.invalidated = false;
+}
+
+PriorityQueueMorph.prototype.updateLength = function(notDone) {
+    this.lengthLabel.text = localize('length: ') + this.pqueue.length();
+    if (notDone) {
+        this.lengthLabel.color = new Color(0, 0, 100);
+    }
+    else {
+        this.lengthLabel.color = new Color(0, 0, 0);
+    }
+    this.lengthLabel.drawNew();
+    this.lengthLabel.setCenter(this.center());
+    this.lengthLabel.setBottom(this.bottom() - 3);
+}
+
+PriorityQueueMorph.prototype.fixLayout = function () {
+    Morph.prototype.trackChanges = false;
+
+    this.topLabel.setLeft(this.left() + 6);
+    this.topLabel.setTop(this.top() + 6);
+    this.cell.setLeft(this.topLabel.right() + 3);
+    this.cell.setTop(this.top() + 3);
+    this.lengthLabel.setCenter(this.center());
+    this.lengthLabel.setBottom(this.bottom() - 3);
+    this.silentSetExtent(this.cell.extent()
+        .add(this.topLabel.extent())
+        .add(new Point(12, 12))
+    );
+    WatcherMorph.prototype.drawNew.call(this);
+    Morph.prototype.trackChanges = true;
+
+    this.changed();
+    if (this.parent && this.parent.fixLayout) {
+        this.parent.fixLayout();
+    }
+}
+
+PriorityQueueMorph.prototype.drawNew = function () {
+    WatcherMorph.prototype.drawNew.call(this);
+    this.fixLayout();
+};
+
+// Monkey patch WatcherMorph so it knows about our PriorityQueueMorph
+(function() {
+WatcherMorph.prototype.update = (function(oldUpdate) {
+    return function() {
+        var result = oldUpdate.call(this);
+        if (this.cellMorph.contentsMorph instanceof PriorityQueueMorph) {
+            this.cellMorph.contentsMorph.update();
+        }
+        return result;
+    };
+}(WatcherMorph.prototype.update));
+})();
 
 SpriteMorph.prototype.reportNewMaxPQueue = function(elements) {
     var entries = [];
@@ -819,7 +1000,7 @@ SpriteMorph.prototype.reportNewMinPQueue = function(elements) {
 };
 
 SpriteMorph.prototype.reportPQueueTop = function(pqueue) {
-    return pqueue.top().element;
+    return pqueue.top();
 };
 
 SpriteMorph.prototype.reportPQueueLength = function (pqueue) {
@@ -845,7 +1026,7 @@ SpriteMorph.prototype.updatePQueue = function(element, pqueue, priority) {
 };
 
 SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
-    return pqueue.length() === 0;
+    return pqueue.isEmpty();
 };
 
 (function() {
@@ -883,7 +1064,7 @@ SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
         updatePQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'update %s in pqueue %l to priority %n',
+            spec: 'update %s in pqueue %l to priority %s',
         },
         isPQueueEmpty: {
             type: 'predicate',
