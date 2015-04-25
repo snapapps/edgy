@@ -1,14 +1,15 @@
 Breadth-first search
 Critical path algorithm
 K7
+Max Tree
 MCST
+Most popular
 Priority queue
 Shortening
 Sierpinski
-Topological sort
-Most popular
 Slow max-flow
 Fast max-flow
+Topological sort
 Roads - Melbourne CBD, Coburg, Dandenong
 TSP heuristics via MCST
 TMDB browser
