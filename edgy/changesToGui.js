@@ -224,6 +224,9 @@ IDE_Morph.prototype.toggleUseManualLayout = function () {
         this.useManualLayout = false;
         this.currentSprite.resumeLayout();
     } else {
+        jsnx.forEach(currentGraph.nodes_iter(true), function(node) {
+            node[1].__d3datum__.fixed = true;
+        });
         this.useManualLayout = true;
     }
 }
