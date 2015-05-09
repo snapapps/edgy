@@ -1662,7 +1662,8 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
     var grid = jsnx.generators.classic.grid_2d_graph(w, h, false, new this.G.constructor());
     // Grid graphs by default come with labels as [x, y], which blow up with
     // the renderer for some reason. Stringify the labels instead.
-    grid = jsnx.relabel.relabel_nodes(grid, function(x) { return x.toString(); });
+    //   Update: add one to the x and y, to be consistent (#261)
+    grid = jsnx.relabel.relabel_nodes(grid, function(x) { return (x[0] + 1) + "," + (x[1] + 1); });
     this.addGraph(grid);
 };
 
