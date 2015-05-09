@@ -36,6 +36,9 @@ IDE_Morph.prototype.createStage = (function createStage (oldCreateStage) {
     return function () {
         var retval = oldCreateStage.call(this);
         this.emptyStageString = this.serializer.serialize(this.stage);
+        if (this.currentSprite instanceof SpriteMorph) {
+            this.currentSprite.setActiveGraph();
+        }
         return retval;
     }
 }(IDE_Morph.prototype.createStage));
