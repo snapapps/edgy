@@ -1060,16 +1060,16 @@ var NODE_ATTR_HANDLERS = {
         },
         set: function(node, data, val) {
             if(data.__d3datum__) {
-                data.__d3datum__.x = data.__d3datum__.px = val;
-
-                // We need to run the layout for one tick with the node fixed,
-                // so it changes position. Then we can restore the fixedness
-                // to whatever it was before.
-                var fixed = data.__d3datum__.fixed;
-                data.__d3datum__.fixed |= 1;
-                layout.resume();
-                layout.tick();
-                data.__d3datum__.fixed = fixed;
+                if (typeof val == "number") {
+                    data.__d3datum__.x = data.__d3datum__.px = val;
+                    data.__d3datum__.fixed = true;
+                    layout.resume();
+                }
+                else {
+                    data.__d3datum__.fixed = currentGraphSprite
+                        .parentThatIsA(IDE_Morph)
+                        .useManualLayout;
+                }
             }
 
             // If the node is not fixed, having fixed x does not make sense.
@@ -1086,16 +1086,16 @@ var NODE_ATTR_HANDLERS = {
         },
         set: function(node, data, val) {
             if(data.__d3datum__) {
-                data.__d3datum__.y = data.__d3datum__.py = val;
-
-                // We need to run the layout for one tick with the node fixed,
-                // so it changes position. Then we can restore the fixedness
-                // to whatever it was before.
-                var fixed = data.__d3datum__.fixed;
-                data.__d3datum__.fixed |= 1;
-                layout.resume();
-                layout.tick();
-                data.__d3datum__.fixed = fixed;
+                if (typeof val == "number") {
+                    data.__d3datum__.y = data.__d3datum__.px = val;
+                    data.__d3datum__.fixed = true;
+                    layout.resume();
+                }
+                else {
+                    data.__d3datum__.fixed = currentGraphSprite
+                        .parentThatIsA(IDE_Morph)
+                        .useManualLayout;
+                }
             }
 
             // If the node is not fixed, having fixed y does not make sense.
