@@ -602,39 +602,12 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             submenu.popUpAtHand(world);
         });
 
-        menu.addItem("import from file", function () {
-            var inp = document.createElement('input');
-            inp.type = 'file';
-            inp.style.color = "transparent";
-            inp.style.backgroundColor = "transparent";
-            inp.style.border = "none";
-            inp.style.outline = "none";
-            inp.style.position = "absolute";
-            inp.style.top = "0px";
-            inp.style.left = "0px";
-            inp.style.width = "0px";
-            inp.style.height = "0px";
-            inp.addEventListener(
-                "change",
-                function () {
-                    document.body.removeChild(inp);
-                    var frd = new FileReader();
-                    var s = currentGraphSprite;
-                    frd.onloadend = function(e) {
-                        try {
-                            s.loadGraphFromString(e.target.result);
-                        } catch(e) {
-                            ide.showMessage("Error loading file: " + e.message);
-                        }
-                    }
-                    for (var i = 0; i < inp.files.length; i += 1) {
-                        frd.readAsText(inp.files[i]);
-                    }
-                },
-                false
-            );
-            document.body.appendChild(inp);
-            inp.click();
+        menu.addItem("import graph from file", function () {
+            currentGraphSprite.loadGraphFromFile(false);
+        });
+        
+        menu.addItem("import subgraph from file", function () {
+            currentGraphSprite.loadGraphFromFile(true);
         });
 
         return menu;
@@ -1692,9 +1665,9 @@ SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
     });
 }
 
-SpriteMorph.prototype.loadGraphFromString = function(string) {
+SpriteMorph.prototype.loadGraphFromString = function(string, addTo) {
     try {
-        this.graphFromJSON(string, true);
+        this.graphFromJSON(string, addTo);
         return;
     } catch(e) {
         if(!(e instanceof SyntaxError)) {
@@ -1703,7 +1676,7 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
     }
 
     try {
-        this.importGraph(parseDot(string), true);
+        this.importGraph(parseDot(string), addTo);
         return;
     } catch(e) {
         if(!(e instanceof DotParser.SyntaxError)) {
@@ -1714,10 +1687,10 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
     var data = CSV.csvToArray(string);
     if(data[0][0] === '' || data[0][0] === null) {
         // Try parsing as adjacency matrix.
-        this.importGraph(parseAdjacencyMatrix(data), true);
+        this.importGraph(parseAdjacencyMatrix(data), addTo);
     } else {
         // Try parsing as adjacency list.
-        this.importGraph(parseAdjacencyList(data), true);
+        this.importGraph(parseAdjacencyList(data), addTo);
     }
 };
 
@@ -1726,11 +1699,46 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
     request.open('GET', url, false);
     request.send(null);
     if (request.status === 200) {
-        this.loadGraphFromString(request.responseText);
+        this.loadGraphFromString(request.responseText, true);
     } else {
         throw new Error("Could not load URL: " + request.statusText);
     }
 };
+
+SpriteMorph.prototype.loadGraphFromFile = function(addTo) {
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.style.color = "transparent";
+    inp.style.backgroundColor = "transparent";
+    inp.style.border = "none";
+    inp.style.outline = "none";
+    inp.style.position = "absolute";
+    inp.style.top = "0px";
+    inp.style.left = "0px";
+    inp.style.width = "0px";
+    inp.style.height = "0px";
+    inp.addEventListener(
+        "change",
+        function () {
+            document.body.removeChild(inp);
+            var frd = new FileReader();
+            var s = currentGraphSprite;
+            frd.onloadend = function(e) {
+                try {
+                    s.loadGraphFromString(e.target.result, addTo);
+                } catch(e) {
+                    throw new Error("Error loading file: " + e.message);
+                }
+            }
+            for (var i = 0; i < inp.files.length; i += 1) {
+                frd.readAsText(inp.files[i]);
+            }
+        },
+        false
+    );
+    document.body.appendChild(inp);
+    inp.click();
+}
 
 SpriteMorph.prototype.topologicalSort = function() {
     return new List(jsnx.algorithms.dag.topological_sort(this.G));

@@ -46,6 +46,11 @@
 			var clickstream = new ClickstreamLogger(JSON.parse(localStorage['-snap-clickstream'] || "{}"));
 			var world = new WorldMorph(document.getElementById('world'));
 			var ide_ = new IDE_Morph();
+			
+			window.onerror = function(errorMessage, url, lineNumber) {
+			    ide_.parentThatIsA(IDE_Morph).showMessage(errorMessage);
+			}
+			
 			clickstream.log("sessionstart");
 		</script>
 		<script type="text/javascript" id="replace-me-pre">
