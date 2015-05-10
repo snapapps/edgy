@@ -1,25 +1,31 @@
+# Edgy
 
-Snap! Build Your Own Blocks
+**[Try the app!](https://snapapps.github.io/edgy/app/edgy.html)**
 
-http://snap.berkeley.edu
+Edgy is a block-based programming language and an algorithm design environment that runs in a web browser. It provides a hands on interface to manipulate graphs via algorithms.
 
-a visual, blocks based programming language
-inspired by Scratch
+## Dependencies
+Edgy is powered by both [Snap!](http://snap.berkeley.edu/) (from UC Berkeley)  which allows you to snap blocks together to build programs, and [JSNetworkX](http://felix-kling.de/JSNetworkX/) to both visualise and provide functionality to work with graphs.
 
-written by Jens Mönig and Brian Harvey
-jens@moenig.org, bh@cs.berkeley.edu
+Currently Edgy has two force-directed layout algorithms. By default Edgy uses the [WebCoLa](http://marvl.infotech.monash.edu/webcola/examples/unconstrainedsmallworld.html) algorithm to arrange graphs, but you can switch to the original [D3.js](http://bl.ocks.org/mbostock/4062045) algorithm if it suits you better.
 
-Copyright (C) 2014 by Jens Mönig and Brian Harvey
+## Example
+Here is an example of minimal spanning tree, adapted from Tim Bell's CS Unplugged [Muddy City](http://csunplugged.org/sites/default/files/activity_pdfs_old/unplugged-09-minimal_spanning_trees-original.pdf) activity.
 
-Snap! is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, either version 3 of
-the License, or (at your option) any later version.
+![Muddy city code](https://snapapps.github.io/images/muddycitycode3.png)
+![Muddy city graph](https://snapapps.github.io/images/muddycity3.png)
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
+## Tutorials
+Not sure on where to start in using Edgy? Click one of the links below to start learning how to use this web application.
+* [Programming with Edgy (8 modules including screencasts)](https://www.alexandriarepository.org/syllabus/programming-with-edgy/)
+* [Screencast: drawing graphs](http://goo.gl/YV7Jko)
+* [Screencast: first program](http://goo.gl/7ElphI)
+* [Screencast: variables](http://goo.gl/MbI4A1)
+* [Screencast: loops](http://goo.gl/pCGdc3)
 
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+## TODO
+* Display graph in preview window when opening projects (Edgy currently displays it as a generic sprite).
+
+## Development
+
+Edgy has been developed by [Steven Bird](http://estive.net/) and students (Mak Nazečić-Andrlon, Jarred Gallina) at the University of Melbourne.
