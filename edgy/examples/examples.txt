@@ -17,3 +17,4 @@ FSM-based sentence generation
 Towers of Hanoi
 Sim
 Conway’s Game of Life
+Generate Maze
