@@ -477,20 +477,22 @@ CellMorph.prototype.drawNew = (function() {
 
     return function () {
         if (this.contents instanceof Map) {
+            if (this.contentsMorph) {
+                this.contentsMorph.destroy();
+            }
             this.contentsMorph = new MapMorph(this.contents, this);
             this.contentsMorph.isDraggable = false;
             this.contents = this.contentsMorph;
-            oldDrawNew.call(this);
         }
         else if (this.contents instanceof PriorityQueue) {
+            if (this.contentsMorph) {
+                this.contentsMorph.destroy();
+            }
             this.contentsMorph = new PriorityQueueMorph(this.contents, this);
             this.contentsMorph.isDraggable = false;
             this.contents = this.contentsMorph;
-            oldDrawNew.call(this);
         }
-        else {
-            oldDrawNew.call(this);
-        }
+        oldDrawNew.call(this);
     };
 })();
 
