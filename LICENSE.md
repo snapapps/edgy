@@ -1,16 +1,16 @@
-Snap! Build Your Own Blocks
+Edgy: Graph Algorithms for Everyone
 
-http://snap.berkeley.edu
+http://snapapps.github.io/
 
-a visual, blocks based programming language
-inspired by Scratch
+Edgy is a visual, blocks based programming language, extending Snap!
+(snap.berkeley.edu) to support the graph abstract data type.
 
-written by Jens Mönig and Brian Harvey
-jens@moenig.org, bh@cs.berkeley.edu
+developed by Steven Bird, Mak Nazečić-Andrlon, and Jarred Gallina.
+stevenbird1@gmail.com
 
-Copyright (C) 2015 by Jens Mönig and Brian Harvey
+Copyright (C) The Edgy Project
 
-Snap! is free software: you can redistribute it and/or modify
+Edgy is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
 published by the Free Software Foundation, either version 3 of
 the License, or (at your option) any later version.
