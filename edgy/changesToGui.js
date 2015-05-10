@@ -223,6 +223,8 @@ IDE_Morph.prototype.toggleUseManualLayout = function () {
     if(this.useManualLayout) {
         jsnx.forEach(currentGraph.nodes_iter(true), function(node) {
             node[1].__d3datum__.fixed = false;
+            delete node[1].__d3datum__.px;
+            delete node[1].__d3datum__.py;
         });
         this.useManualLayout = false;
         this.currentSprite.resumeLayout();
