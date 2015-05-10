@@ -1566,6 +1566,9 @@ IDE_Morph.prototype.droppedText = function (aString, name) {
     if (aString.indexOf('<blocks') === 0) {
         return this.openBlocksString(aString, lbl, true);
     }
+	if (aString.indexOf('<variables') === 0) {
+        return this.openVariablesString(aString);
+    }
     if (aString.indexOf('<sprites') === 0) {
         return this.openSpritesString(aString);
     }
@@ -2402,6 +2405,12 @@ IDE_Morph.prototype.projectMenu = function () {
         'Export blocks...',
         function () {myself.exportGlobalBlocks(); },
         'show global custom block definitions as XML\nin a new browser window'
+    );
+
+    menu.addItem(
+        'Export variables...',
+        function () { myself.exportGlobalVariables(); },
+        'show global variables in a new browser window'
     );
 
     if (shiftClicked) {
