@@ -40,6 +40,12 @@ CursorMorph.prototype.init = (function(oldInit) {
                 myself.processKeyDown(event);
                 this.value = myself.target.selection();
                 this.select();
+                
+                // Make sure tab prevents default
+                if (event.keyIdentifier === 'U+0009' || event.keyIdentifier === 'Tab') {
+                    myself.processKeyPress(event);
+                    event.preventDefault();
+                }
             },
             false
         );
