@@ -1156,14 +1156,14 @@ SnapSerializer.prototype.loadValue = function (model) {
     case 'map':
         var res = new Map();
         var myself = this;
-        keys = model.childrenNamed('key').map(function (item) {
+        var keys = model.childrenNamed('key').map(function (item) {
             var value = item.children[0];
             if (!value) {
                 return 0;
             }
             return myself.loadValue(value);
         });
-        values = model.childrenNamed('value').map(function (item) {
+        var values = model.childrenNamed('value').map(function (item) {
             var value = item.children[0];
             if (!value) {
                 return 0;
