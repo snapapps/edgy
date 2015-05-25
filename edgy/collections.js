@@ -80,28 +80,12 @@ MapMorph.prototype.init = function (map, parentCell) {
     var myself = this;
 
     this.map = map || new Map();
-    this.mapEntries = map.entries();
-    if(!(this.mapEntries instanceof Array)){
-        // convert iterator to array ([].slice.call doesn't work for firefox)
-        var mapEntries = [];
-        var iter = this.mapEntries;
-        while(true){
-            var nextValue = iter.next();
-            if(nextValue.done)
-                break;
-            mapEntries.push(nextValue.value);
-        }
-        this.mapEntries = mapEntries;
-    }
-    this.start = 1;
-    this.range = 100;
-    this.lastUpdated = Date.now();
-    this.lastCell = null;
     this.parentCell = parentCell || null; // for circularity detection
-
+    this.lastUpdated = Date.now();
+    
     // elements declarations
     this.label = new StringMorph(
-        localize('size: ') + this.map.size,
+        localize('length: ') + this.map.size,
         SyntaxElementMorph.prototype.fontSize,
         null,
         false,
@@ -110,42 +94,24 @@ MapMorph.prototype.init = function (map, parentCell) {
         MorphicPreferences.isFlat ? new Point() : new Point(1, 1),
         new Color(255, 255, 255)
     );
-    this.label.mouseClickLeft = function () {myself.startIndexMenu(); };
-
-
+    
     this.frame = new ScrollFrameMorph(null, 10);
     this.frame.alpha = 0;
     this.frame.acceptsDrops = false;
     this.frame.contents.acceptsDrops = false;
-
+    
+    this.column = new AlignmentMorph("column");
+    this.column.alignment = "left";
+    this.frame.contents.add(this.column);
+    
     this.handle = new HandleMorph(
         this,
-        80,
+        90,
         70,
         3,
         3
     );
     this.handle.setExtent(new Point(13, 13));
-
-    this.arrow = new ArrowMorph(
-        'down',
-        SyntaxElementMorph.prototype.fontSize
-    );
-    this.arrow.mouseClickLeft = function () {myself.startIndexMenu(); };
-    this.arrow.setRight(this.handle.right());
-    this.arrow.setBottom(this.handle.top());
-    this.handle.add(this.arrow);
-
-    this.plusButton = new PushButtonMorph(
-        this.map,
-        'add',
-        '+'
-    );
-    this.plusButton.padding = 0;
-    this.plusButton.edge = 0;
-    this.plusButton.outlineColor = this.color;
-    this.plusButton.drawNew();
-    this.plusButton.fixLayout();
 
     MapMorph.uber.init.call(
         this,
@@ -156,102 +122,65 @@ MapMorph.prototype.init = function (map, parentCell) {
 
     this.color = new Color(220, 220, 220);
     this.isDraggable = true;
-    this.setExtent(new Point(80, 70).multiplyBy(
+    this.setExtent(new Point(90, 70).multiplyBy(
         SyntaxElementMorph.prototype.scale
     ));
     this.add(this.label);
     this.add(this.frame);
-    this.add(this.plusButton);
     this.add(this.handle);
     this.handle.drawNew();
-    this.update();
+    this.update(true);
     this.fixLayout();
 };
 
-MapMorph.prototype.update = function () {
-    var i, idx, ceil, morphs, cell, cnts, label, button, max,
-        starttime, maxtime = 1000;
-
-    this.frame.contents.children.forEach(function (m) {
-
-        if (m instanceof CellMorph && m.contentsMorph instanceof MapMorph) {
-            m.contentsMorph.update();
+MapMorph.prototype.update = function (anyway) {
+    this.column.children.forEach(function(child) {
+        var key = child.children[1];
+        var value = child.children[2];
+        
+        if (key && key.contentsMorph.update) {
+            key.contentsMorph.update();
+        }
+        
+        if (value && value.contentsMorph.update) {
+            value.contentsMorph.update();
         }
     });
-
+    
+    if (this.lastUpdated > this.map.lastChanged && !anyway) {
+        return null;
+    }
+    
     this.updateLength(true);
-
-    // adjust start index to current mapEntries length
-    this.start = Math.max(
-        Math.min(
-            this.start,
-            Math.floor((this.map.size - 1) / this.range) * this.range + 1
-        ),
-        1
-    );
-
-    // refresh existing cells
-    // highest index shown:
-    max = Math.min(
-        this.start + this.range - 1,
-        this.map.size
-    );
-
-    // number of morphs available for refreshing
-    ceil = Math.min(
-        (max - this.start + 1) * 3,
-        this.frame.contents.children.length
-    );
-
-    for (i = 0; i < ceil; i += 3) {
-        idx = this.start + (i / 3);
-
-        cell = this.frame.contents.children[i];
-        label = this.frame.contents.children[i + 1];
-        button = this.frame.contents.children[i + 2];
-        cnts = this.mapEntries[idx];
-
-        if (cell.contents !== cnts) {
-            cell.contents = cnts;
-            cell.drawNew();
-            if (this.lastCell) {
-                cell.setLeft(this.lastCell.left());
+    
+    var myself = this;
+    // Rebuild contents
+    var i = 0;
+    this.map.forEach(function(value, key) {
+        var row = myself.column.children[i];
+        if (row) {
+            // Row already exists
+            var keyCell = row.children[1];
+            var valueCell = row.children[2];
+            
+            if (keyCell.contents != key) {
+                keyCell.contents = key;
+                keyCell.drawNew();
             }
-        }
-        this.lastCell = cell;
-
-        if (label.text !== idx.toString()) {
-            label.text = idx.toString();
-            label.drawNew();
-        }
-
-        button.action = idx;
-    }
-
-    // remove excess cells
-    // number of morphs to be shown
-    morphs = (max - this.start + 1) * 3;
-
-    while (this.frame.contents.children.length > morphs) {
-        this.frame.contents.children[morphs].destroy();
-    }
-
-    // add additional cells
-    ceil = morphs; //max * 3;
-    i = this.frame.contents.children.length;
-
-    starttime = Date.now();
-    if (ceil > i + 1) {
-        for (i; i < ceil; i += 3) {
-            if (Date.now() - starttime > maxtime) {
-                this.fixLayout();
-                this.frame.contents.adjustBounds();
-                this.frame.contents.setLeft(this.frame.left());
-                return null;
+            
+            if (valueCell.contents != value) {
+                valueCell.contents = value;
+                valueCell.drawNew();
             }
-            idx = this.start + (i / 3);
-            label = new StringMorph(
-                idx.toString(),
+            
+            row.drawNew();
+            row.fixLayout();
+        }
+        else {
+            // Row doesn't exist
+            var row = new AlignmentMorph("row", 2);
+            row.add(new StringMorph(
+                i + 1,
                 SyntaxElementMorph.prototype.fontSize,
                 null,
                 false,
@@ -259,41 +188,30 @@ MapMorph.prototype.update = function () {
                 false,
                 MorphicPreferences.isFlat ? new Point() : new Point(1, 1),
                 new Color(255, 255, 255)
-            );
-            cell = new CellMorph(
-                this.mapEntries[idx-1],
-                this.cellColor,
-                idx,
-                this.parentCell
-            );
-            button = new PushButtonMorph(
-                this.mapEntries.remove,
-                idx-1,
-                '-',
-                this.mapEntries
-            );
-            button.padding = 1;
-            button.edge = 0;
-            button.corner = 1;
-            button.outlineColor = this.color.darker();
-            button.drawNew();
-            button.fixLayout();
-
-            this.frame.contents.add(cell);
-            if (this.lastCell) {
-                cell.setPosition(this.lastCell.bottomLeft());
-            } else {
-                cell.setTop(this.frame.contents.top());
-            }
-            this.lastCell = cell;
-            label.setCenter(cell.center());
-            label.setRight(cell.left() - 2);
-            this.frame.contents.add(label);
-            this.frame.contents.add(button);
+            ));
+            row.add(new CellMorph(key, myself.cellColor, null, myself.parentCell));
+            row.add(new CellMorph(value, myself.cellColor, null, myself.parentCell));
+            myself.column.add(row);
+            row.drawNew();
+            var oldFixLayout = row.fixLayout;
+            row.fixLayout = function() {
+                oldFixLayout.call(this);
+                myself.fixLayout(true);
+            };
         }
+        i++;
+    });
+    
+    // Delete excess rows
+    while (this.map.size < this.column.children.length) {
+        this.column.children[this.map.size].destroy();
     }
-    this.lastCell = null;
 
+    this.column.drawNew();
+    this.column.fixLayout();
+    
+    this.lastUpdated = Date.now();
+    
     this.fixLayout();
     this.frame.contents.adjustBounds();
     this.frame.contents.setLeft(this.frame.left());
@@ -312,75 +230,41 @@ MapMorph.prototype.updateLength = function (notDone) {
     this.label.setBottom(this.bottom() - 3);
 };
 
-MapMorph.prototype.startIndexMenu = function () {
-    var i,
-        range,
-        myself = this,
-        items = Math.ceil(this.map.size / this.range),
-        menu = new MenuMorph(
-            function (idx) {myself.setStartIndex(idx); },
-            null,
-            myself
-        );
-    menu.addItem('1...', 1);
-    for (i = 1; i < items; i += 1) {
-        range = i * 100 + 1;
-        menu.addItem(range + '...', range);
-    }
-    menu.popUpAtHand(this.world());
-};
-
-MapMorph.prototype.setStartIndex = function (index) {
-    this.start = index;
-};
-
-MapMorph.prototype.fixLayout = function () {
+MapMorph.prototype.fixLayout = function (inside) {
     Morph.prototype.trackChanges = false;
+    
+    if (this.column) {
+        if (!inside) {
+            this.column.children.forEach(function(child) {
+                child.drawNew();
+                child.fixLayout();
+            });
+        }
+        
+        this.column.drawNew();
+        this.column.fixLayout();
+        this.column.silentSetPosition(this.frame.position());
+    }
+    
     if (this.frame) {
-        this.arrangeCells();
         this.frame.silentSetPosition(this.position().add(3));
-        this.frame.bounds.corner = this.bounds.corner.subtract(new Point(
-            3,
-            17
-        ));
+        this.frame.bounds.corner = this.bounds.corner.subtract(new Point(3, 17));
         this.frame.drawNew();
+        
+        this.frame.contents.setTop(this.frame.top());
+        this.frame.contents.setLeft(this.frame.left());
         this.frame.contents.adjustBounds();
     }
-
+    
     this.label.setCenter(this.center());
     this.label.setBottom(this.bottom() - 3);
-    this.plusButton.setLeft(this.left() + 3);
-    this.plusButton.setBottom(this.bottom() - 3);
-
+    
     Morph.prototype.trackChanges = true;
     this.changed();
 
     if (this.parent && this.parent.fixLayout) {
         this.parent.fixLayout();
     }
-};
-
-MapMorph.prototype.arrangeCells = function () {
-    var i, cell, label, button, lastCell,
-        end = this.frame.contents.children.length;
-    for (i = 0; i < end; i += 3) {
-        cell = this.frame.contents.children[i];
-        label = this.frame.contents.children[i + 1];
-        button = this.frame.contents.children[i + 2];
-        if (lastCell) {
-            cell.setTop(lastCell.bottom());
-        }
-        if (label) {
-            label.setTop(cell.center().y - label.height() / 2);
-            label.setRight(cell.left() - 2);
-        }
-        if (button) {
-            button.setCenter(cell.center());
-            button.setLeft(cell.right() + 2);
-        }
-        lastCell = cell;
-    }
-    this.frame.contents.adjustBounds();
 };
 
 // MapMorph hiding/showing:
@@ -396,6 +280,19 @@ MapMorph.prototype.drawNew = function () {
     WatcherMorph.prototype.drawNew.call(this);
     this.fixLayout();
 };
+
+// Monkey patch WatcherMorph so it knows about our MapMorph
+(function() {
+WatcherMorph.prototype.update = (function(oldUpdate) {
+    return function() {
+        var result = oldUpdate.call(this);
+        if (this.cellMorph.contentsMorph instanceof MapMorph) {
+            this.cellMorph.contentsMorph.update();
+        }
+        return result;
+    };
+}(WatcherMorph.prototype.update));
+})();
 
 // MultiArgPairsMorph input.
 
@@ -469,31 +366,81 @@ SyntaxElementMorph.prototype.showBubble = (function(){
     };
 })();
 
-// Show the result of maps in the output box.
+// Show the result of maps and priority queues in the output box.
 
 CellMorph.prototype.drawNew = (function() {
     // Draw snap's results.
     var oldDrawNew = CellMorph.prototype.drawNew;
 
     return function () {
-        if (this.contents instanceof Map) {
-            if (this.contentsMorph) {
-                this.contentsMorph.destroy();
-            }
-            this.contentsMorph = new MapMorph(this.contents, this);
-            this.contentsMorph.isDraggable = false;
-            this.contents = this.contentsMorph;
+        var fontSize = SyntaxElementMorph.prototype.fontSize,
+            isSameList = (this.contentsMorph instanceof ListWatcherMorph
+                && this.contentsMorph.list === this.contents);
+        
+        if (this.isBig) {
+            fontSize = fontSize * 1.5;
         }
-        else if (this.contents instanceof PriorityQueue) {
-            if (this.contentsMorph) {
-                this.contentsMorph.destroy();
-            }
-            this.contentsMorph = new PriorityQueueMorph(this.contents, this);
-            this.contentsMorph.isDraggable = false;
-            this.contents = this.contentsMorph;
+        
+        // re-build my contents
+        if (this.contentsMorph && !isSameList) {
+            this.contentsMorph.destroy();
         }
+        
+        if (this.contents instanceof Map || this.contents instanceof PriorityQueue) {
+            if (this.isCircular()) {
+                this.contents = new TextMorph(
+                    '(...)',
+                    fontSize,
+                    null,
+                    false, // bold
+                    true, // italic
+                    'center'
+                );
+                this.contents.setColor(new Color(255, 255, 255));
+            }
+            else {
+                if (this.contents instanceof Map) {
+                    this.contents = new MapMorph(this.contents, this);
+                    this.contents.isDraggable = false;
+                }
+                else if (this.contents instanceof PriorityQueue) {
+                    this.contents = new PriorityQueueMorph(this.contents, this);
+                    this.contents.isDraggable = false;
+                }
+            }
+        }
+        
         oldDrawNew.call(this);
     };
+})();
+
+(function() {
+CellMorph.prototype.isCircular = (function(oldIsCircular) {
+    return function(collection) {
+        if (!this.parentCell) { return false; }
+        if (collection instanceof Map || collection instanceof PriorityQueue) {
+            return this.contents === collection || this.parentCell.isCircular(collection);
+        }
+        return oldIsCircular.call(this, collection);
+    };
+}(CellMorph.prototype.isCircular));
+})();
+
+// Make list update pqueues and maps inside
+(function() {
+ListWatcherMorph.prototype.update = (function(oldUpdate) {
+    return function(anyway) {
+        this.frame.contents.children.forEach(function (m) {
+            if (m instanceof CellMorph && 
+                !(m.contentsMorph instanceof ListWatcherMorph) && 
+                m.contentsMorph.update) {
+                
+                m.contentsMorph.update();
+            }
+        });
+        return oldUpdate.call(this, anyway);
+    };
+}(ListWatcherMorph.prototype.update));
 })();
 
 /**
@@ -559,6 +506,7 @@ SpriteMorph.prototype.getDict = function(key, dict) {
 };
 
 SpriteMorph.prototype.setDict = function(key, dict, val) {
+    dict.lastChanged = Date.now();
     return dict.set(key, val);
 };
 
@@ -572,6 +520,7 @@ SpriteMorph.prototype.keyInDict = function(dict, key) {
 };
 
 SpriteMorph.prototype.removeFromDict = function(key, dict) {
+    dict.lastChanged = Date.now();
     return dict.delete(key);
 };
 
@@ -775,7 +724,7 @@ function PriorityQueue(items, predicate) {
     this.predicate = predicate || function(a, b) { return a > b; };
     this.items = [null].concat(items || [null]);
     this.count = items.length;
-    this.invalidated = true;
+    this.lastChanged = Date.now();
     for (var i = Math.floor(this.count / 2); i > 0; i--) {
         this.downHeap(i);
     }
@@ -786,12 +735,12 @@ PriorityQueue.prototype.constructor = PriorityQueue;
 
 PriorityQueue.prototype.upHeap = function(i) {
     BinaryHeap.prototype.upHeap.call(this, i);
-    this.invalidated = true;
+    this.lastChanged = Date.now();
 }
 
 PriorityQueue.prototype.downHeap = function(i) {
     BinaryHeap.prototype.downHeap.call(this, i);
-    this.invalidated = true;
+    this.lastChanged = Date.now();
 }
 
 PriorityQueue.prototype.top = function() {
@@ -816,7 +765,12 @@ PriorityQueue.prototype.isEmpty = function() {
 
 PriorityQueue.prototype.toString = function() {
     if (this.length() > 0) {
-        return "Priority Queue: Top(" + this.top().toString() + ")";
+        if (this.top() === this) {
+            return "Priority Queue: Top(...)";
+        }
+        else {
+            return "Priority Queue: Top(" + this.top().toString() + ")";
+        }
     }
     return "Priority Queue: Empty";
 }
@@ -906,7 +860,11 @@ PriorityQueueMorph.prototype.init = function(pqueue, parentCell) {
 }
 
 PriorityQueueMorph.prototype.update = function(anyway) {
-    if (!this.pqueue.invalidated && !anyway) {
+    if (this.cell.contentsMorph.update) {
+        this.cell.contentsMorph.update();
+    }
+    
+    if (this.lastUpdated > this.pqueue.lastChanged && !anyway) {
         return null;
     }
 
@@ -919,7 +877,7 @@ PriorityQueueMorph.prototype.update = function(anyway) {
     this.updateLength();
     this.fixLayout();
 
-    this.pqueue.invalidated = false;
+    this.lastUpdated = Date.now();
 }
 
 PriorityQueueMorph.prototype.updateLength = function(notDone) {
