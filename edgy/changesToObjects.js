@@ -3619,4 +3619,30 @@ function graphToDot(G) {
     return [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
 }
 
+StageMorph.prototype.thumbnail = (function(oldThumbnail) {
+	return function(extentPoint, excludedSprite) {
+        var canvas = oldThumbnail.call(this, extentPoint, excludedSprite);
+        // Also draw the graph on top of the thumbnail
+        var svgDiv = document.getElementById("graph-display");
+        if (svgDiv && svgDiv.childNodes.length == 1) {
+            // We have to set the xmlns of the <svg> or the browser doesn't know what to do
+            svgDiv.childNodes[0].setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            var img = new Image();
+            // Set the source to the data url of the svg
+            img.src = "data:image/svg+xml," + svgDiv.innerHTML;
+            // Make a canvas
+            var context = canvas.getContext("2d");
+            // Draw the image
+            var done = false;
+            try {
+                context.drawImage(img, 0, 0);
+            }
+            catch (e) {
+                // Didn't work, just go on like normal
+            }
+        }
+        return canvas;
+    };
+}(StageMorph.prototype.thumbnail));
+
 }());
