@@ -764,10 +764,14 @@ Process.prototype.reifyPredicate = function (topBlock, parameterNames) {
 };
 
 Process.prototype.reportJSFunction = function (parmNames, body) {
-    return Function.apply(
-        null,
-        parmNames.asArray().concat([body])
-    );
+    if (window.javascriptexecutionlevel === 'full') {
+        return Function.apply(
+            null,
+            parmNames.asArray().concat([body])
+        );
+    } else {
+        throw new Error('The current script attempted to execute JavaScript code at a higher privilege level than is currently allowed.\nCode execution was terminated.\nIf you trust the code within the JavaScript blocks and wish to execute it, set the "Execution level" setting to the appropriate level.');
+    }
 };
 
 Process.prototype.doRun = function (context, args, isCustomBlock) {

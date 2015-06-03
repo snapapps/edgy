@@ -1738,6 +1738,9 @@ IDE_Morph.prototype.applySavedSettings = function () {
         longform = this.getSetting('longform'),
         plainprototype = this.getSetting('plainprototype');
 
+    // Principle of least privilege: JavaScript block execution is disabled unless the user requires it for this particular session.
+    window.javascriptexecutionlevel = 'blocked';
+    
     // design
     if (design === 'flat') {
         this.setFlatDesign();
@@ -2137,6 +2140,7 @@ IDE_Morph.prototype.settingsMenu = function () {
         'Stage size...',
         'userSetStageSize'
     );
+    menu.addItem('Execution privileges...', 'javaScriptExecutionLevelMenu');
     menu.addLine();
     addPreference(
         'Blurred shadows',
@@ -3439,6 +3443,21 @@ IDE_Morph.prototype.languageMenu = function () {
     });
     menu.popup(world, pos);
 };
+
+IDE_Morph.prototype.javaScriptExecutionLevelMenu = function() {
+    var menu = new MenuMorph(this),
+        world = this.world(),
+        pos = this.controlBar.settingsButton.bottomLeft(),
+        myself = this;
+    menu.addItem((window.javascriptexecutionlevel === 'full' ? '\u2713 ' : '    ')+'full', function() {
+        alert('You have given the current project permission to execute code at the same level as Edgy itself -- code within "JavaScript function" blocks will have access to all Edgy functionality, including modifying local storage and accessing cloud storage credentials. If you do not trust the author of this project, set the "Execution privileges" permission setting to a lower value.');
+        window.javascriptexecutionlevel = 'full';
+    });
+    menu.addItem((window.javascriptexecutionlevel === 'blocked' ? '\u2713 ' : '    ')+'blocked', function() {
+        window.javascriptexecutionlevel = 'blocked'; }
+    );
+    menu.popup(world, pos);
+}
 
 IDE_Morph.prototype.setLanguage = function (lang, callback) {
     var translation = document.getElementById('language'),
