@@ -774,10 +774,12 @@ function parseNode(node) {
 // Graph block bindings
 
 SpriteMorph.prototype.newGraph = function() {
+    this.maximumNode = 0;
     this.setGraph(jsnx.Graph());
 };
 
 SpriteMorph.prototype.newDiGraph = function() {
+    this.maximumNode = 0;
     this.setGraph(jsnx.DiGraph());
 };
 
