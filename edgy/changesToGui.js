@@ -241,4 +241,43 @@ IDE_Morph.prototype.toggleWebColaDownwardEdgeConstraint = function () {
     redrawGraph();
 }
 
+IDE_Morph.prototype.exportGlobalBlocks = function () {
+    if (this.stage.globalBlocks.length > 0) {
+        new BlockExportDialogMorph(
+            this.serializer,
+            this.stage // Just pass the entire stage
+        ).popUp(this.world());
+    } else {
+        this.inform(
+            'Export blocks',
+            'this project doesn\'t have any\n'
+                + 'custom global blocks yet'
+        );
+    }
+};
+
+IDE_Morph.prototype.rawOpenBlocksString = (function(oldRawOpenBlocksString) {
+    return function(str, name, silently) {
+        oldRawOpenBlocksString.call(this, str, name, silently);
+        
+        var myself = this;
+        var model = this.serializer.parse(str);
+        
+        // Also load attributes
+        var nodeAttrs = model.childNamed('nodeattrs');
+        var edgeAttrs = model.childNamed('edgeattrs');
+        
+        if (nodeAttrs) {
+            nodeAttrs.children.forEach(function (attr) {
+                myself.stage.addNodeAttribute(attr.attributes.name);
+            });
+        }
+        if (edgeAttrs) {
+            edgeAttrs.children.forEach(function (attr) {
+                myself.stage.addEdgeAttribute(attr.attributes.name);
+            });
+        }
+    };
+}(IDE_Morph.prototype.rawOpenBlocksString));
+
 }());
