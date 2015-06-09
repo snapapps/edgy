@@ -1174,6 +1174,27 @@ SnapSerializer.prototype.loadValue = function (model) {
             res.set(keys[i], values[i]);
         }
         return res;
+    case 'pqueue':
+        var type = model.attributes.type;
+        var elements = model.childrenNamed('element').map(function (item) {
+            var value = item.children[0];
+            if (!value) {
+                return 0;
+            }
+            return myself.loadValue(value);
+        });
+        var priorities = model.childrenNamed('priority').map(function (item) {
+            var value = item.children[0];
+            if (!value) {
+                return 0;
+            }
+            return myself.loadValue(value);
+        });
+        var entries = [];
+        for (var i = 0; i < elements.length; i++) {
+            entries.push(new Entry(elements[i], priorities[i]));
+        }
+        return new PriorityQueue(entries, type);
     case 'sprite':
         v  = new SpriteMorph(myself.project.globalVariables);
         if (model.attributes.id) {
