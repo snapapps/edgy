@@ -720,8 +720,10 @@ Priority queue
 // Inherits from binary heap
 var PriorityQueue;
 
-function PriorityQueue(items, predicate) {
-    this.predicate = predicate || function(a, b) { return a > b; };
+function PriorityQueue(items, type) {
+    this.type = type || 'max';
+    this.predicate = this.type == 'max' ? function(a, b) { return a > b; } :
+        function(a, b) { return a < b; };
     this.items = [null].concat(items || [null]);
     this.count = items.length;
     this.lastChanged = Date.now();
@@ -781,6 +783,36 @@ PriorityQueue.prototype.toArray = function() {
         array.push(this.items[i].element);
     }
     return array;
+};
+
+PriorityQueue.prototype.toXML = function (serializer, mediaContext) {
+    var xml = '';
+    this.items.slice(1).forEach(function(entry) {
+        var element = entry.element;
+        var priority = entry.priority;
+        
+        var e = serializer.format(
+            '<element>%</element>',
+            typeof element === 'object' ?
+                    serializer.store(element, mediaContext)
+                    : typeof element === 'boolean' ?
+                            serializer.format('<bool>$</bool>', element)
+                            : serializer.format('<l>$</l>', element)
+        );
+        
+        var p = serializer.format(
+            '<priority>%</priority>',
+            typeof priority === 'object' ?
+                    serializer.store(priority, mediaContext)
+                    : typeof priority === 'boolean' ?
+                            serializer.format('<bool>$</bool>', priority)
+                            : serializer.format('<l>$</l>', priority)
+        );
+        
+        xml += e + p;
+    });
+    
+    return serializer.format('<pqueue type="@">%</pqueue>', this.type || 'max', xml);
 };
 
 function Entry(element, priority) {
@@ -940,9 +972,7 @@ SpriteMorph.prototype.reportNewMaxPQueue = function(elements) {
     }
     return new PriorityQueue(
         entries,
-        function(a, b) {
-            return a.priority > b.priority;
-        }
+        'max'
     );
 };
 
@@ -953,9 +983,7 @@ SpriteMorph.prototype.reportNewMinPQueue = function(elements) {
     }
     return new PriorityQueue(
         entries,
-        function(a, b) {
-            return a.priority < b.priority;
-        }
+        'min'
     );
 };
 
