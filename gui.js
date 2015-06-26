@@ -307,7 +307,7 @@ IDE_Morph.prototype.openIn = function (world) {
                 hash = decodeURIComponent(hash);
             }
             if (contains(
-                    ['project', 'blocks', 'sprites', 'snapdata'].map(
+                    ['project', 'blocks', 'sprites', 'snapdata', 'variables', 'script'].map(
                         function (each) {
                             return hash.substr(0, 8).indexOf(each);
                         }

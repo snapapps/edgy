@@ -280,4 +280,52 @@ IDE_Morph.prototype.rawOpenBlocksString = (function(oldRawOpenBlocksString) {
     };
 }(IDE_Morph.prototype.rawOpenBlocksString));
 
+IDE_Morph.prototype.openBlockSequenceString = function (str) {
+    var msg,
+        myself = this;
+    this.nextSteps([
+        function () {
+            msg = myself.showMessage('Opening block sequence...');
+        },
+        function () {
+            myself.rawOpenBlockSequenceString(str);
+        },
+        function () {
+            msg.destroy();
+        }
+    ]);
+};
+
+IDE_Morph.prototype.rawOpenBlockSequenceString = function (str) {
+    var myself = this;
+    var xml = this.serializer.parse(str);
+    var importSequence = function(model) {
+        var script = myself.serializer.loadScript(model);
+        script.pickUp(world);
+        world.hand.grabOrigin = {
+            origin: myself.palette,
+            position: myself.palette.center()
+        };
+    };
+    
+    if (Process.prototype.isCatchingErrors) {
+        try {
+            importSequence(xml);
+        } catch (err) {
+            this.showMessage('Load failed: ' + err);
+        }
+    } else {
+        importSequence(xml);
+    }
+};
+
+IDE_Morph.prototype.droppedText = (function(oldDroppedText) {
+    return function(aString, name) {
+        if (aString.indexOf('<script') === 0) {
+            return this.openBlockSequenceString(aString);
+        }
+        return oldDroppedText.call(this, aString, name);
+    };
+}(IDE_Morph.prototype.droppedText));
+
 }());

@@ -5,6 +5,8 @@ BlockExportDialogMorph.prototype.init = (function(oldInit) {
     return function(serializer, stage) {
         this.nodeAttributes = stage.nodeAttributes;
         this.edgeAttributes = stage.edgeAttributes;
+        this.stage = stage;
+        
         oldInit.call(this, serializer, stage.globalBlocks);
         
         this.fixLayout();
@@ -91,24 +93,54 @@ BlockExportDialogMorph.prototype.selectNone = function() {
 };
 
 BlockExportDialogMorph.prototype.exportBlocks = function () {
-    var str = this.serializer.serialize(this.blocks);
-    str += this.exportNodeAttrs ? '<nodeattrs>' + this.serializer.serialize(this.nodeAttributes) + '</nodeattrs>': ''
-    str += this.exportEdgeAttrs ? '<edgeattrs>' + this.serializer.serialize(this.edgeAttributes) + '</edgeattrs>' : '';
-    if (this.blocks.length > 0) {
-        window.open(encodeURI('data:text/xml,<blocks app="'
-            + this.serializer.app
-            + '" version="'
-            + this.serializer.version
-            + '">'
-            + str
-            + '</blocks>'));
-    } else {
-        new DialogBoxMorph().inform(
-            'Export blocks',
-            'no blocks were selected',
-            this.world()
+    var myself = this;
+    
+    var exportBlocks = function() {
+        var str = this.serializer.serialize(this.blocks);
+        str += this.exportNodeAttrs ? '<nodeattrs>' + this.serializer.serialize(this.nodeAttributes) + '</nodeattrs>': '';
+        str += this.exportEdgeAttrs ? '<edgeattrs>' + this.serializer.serialize(this.edgeAttributes) + '</edgeattrs>' : '';
+        if (this.blocks.length > 0) {
+            window.open(encodeURI('data:text/xml,<blocks app="'
+                + this.serializer.app
+                + '" version="'
+                + this.serializer.version
+                + '">'
+                + str
+                + '</blocks>'));
+        } else {
+            new DialogBoxMorph().inform(
+                'Export blocks',
+                'no blocks were selected',
+                this.world()
+            );
+        }
+    }.bind(this);
+    
+    var unmetDependencies = this.blocks.some(function(definition) {
+        var element = definition.body ? definition.body.expression : null;
+        var inc = function(d) {
+            return element.definition.spec == d.spec;
+        };
+        while (element instanceof BlockMorph) {
+            if (element.definition instanceof CustomBlockDefinition) {
+                var included = myself.blocks.some(inc);
+                if (!included)
+                    return true;
+            }
+            element = element.nextBlock ? element.nextBlock() : null;
+        }
+        return false;
+    });
+    
+    if (unmetDependencies)
+        this.stage.parentThatIsA(IDE_Morph).confirm(
+            "This export may lead to unmet custom block dependencies. Continue?",
+            "Block export",
+            exportBlocks
         );
-    }
+    else
+        exportBlocks();
+    
 };
 
 }());
