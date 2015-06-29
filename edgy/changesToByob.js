@@ -116,20 +116,36 @@ BlockExportDialogMorph.prototype.exportBlocks = function () {
         }
     }.bind(this);
     
-    var unmetDependencies = this.blocks.some(function(definition) {
-        var element = definition.body ? definition.body.expression : null;
-        var inc = function(d) {
-            return element.definition.spec == d.spec;
-        };
-        while (element instanceof BlockMorph) {
+    // Compare the specs of two custom block definitions
+    var compareSpec = function(d1, d2) {
+        return d1.spec == d2.spec;
+    };
+    
+    // Test if a particular block/morph contains/is a custom block
+    var testBlock = function(element) {
+        while (element) {
+            if (element.children.some(testBlock))
+                return true;
+            
             if (element.definition instanceof CustomBlockDefinition) {
-                var included = myself.blocks.some(inc);
+                // Check if we have elected to export this block
+                var included = myself.blocks.some(
+                    compareSpec.bind(null, element.definition)
+                );
                 if (!included)
                     return true;
             }
+            
+            // Also check the next block in a block sequence
             element = element.nextBlock ? element.nextBlock() : null;
         }
         return false;
+    };
+    
+    // Check if any of the blocks exported have unmet dependencies
+    var unmetDependencies = this.blocks.some(function(definition) {
+        var element = definition.body ? definition.body.expression : null;
+        return testBlock(element);
     });
     
     if (unmetDependencies)

@@ -64,18 +64,22 @@ BlockMorph.prototype.userMenu = (function(oldUserMenu) {
                         window.open("data:text/xml," + xml);
                     };
                     
-                    var block = myself.topBlock();
-                    var hasCustomBlock = false;
-                    
-                    while (block instanceof BlockMorph) {
-                        if (block instanceof CustomCommandBlockMorph || block instanceof CustomReporterBlockMorph) {
-                            hasCustomBlock = true;
-                            break;
+                    // Test if a block contains/is a custom block
+                    var testDependencies = function(element) {
+                        while (element) {
+                            if (element.children.some(testDependencies))
+                                return true;
+                            
+                            if (element.definition instanceof CustomBlockDefinition)
+                                return true;
+                            
+                            // Also check the next block in a block sequence
+                            element = element.nextBlock ? element.nextBlock() : null;
                         }
-                        block = block.nextBlock ? block.nextBlock() : null;
-                    }
-                    
-                    if (hasCustomBlock) {
+                        return false;
+                    };
+
+                    if (testDependencies(myself.topBlock())) {
                         this.parentThatIsA(IDE_Morph).confirm(
                             "This sequence contains a custom block whose definition will not be exported. Continue?",
                             "Block sequence export",
