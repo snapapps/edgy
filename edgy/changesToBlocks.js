@@ -49,4 +49,49 @@ PenMorph.prototype.drawNew = function (facing) {
     SymbolMorph.prototype.drawSymbolTurtle(this.image, this.color.toString());
 };
 
+BlockMorph.prototype.userMenu = (function(oldUserMenu) {
+    return function() {
+        var myself = this,
+            menu = oldUserMenu.call(this);
+        if (!this.isTemplate) {
+            menu.addLine();
+            menu.addItem(
+                "export...",
+                function () {
+                    var exportSequence = function() {
+                        var serializer = myself.parentThatIsA(IDE_Morph).serializer;
+                        var xml = myself.topBlock().toScriptXML(serializer);
+                        window.open("data:text/xml," + xml);
+                    };
+                    
+                    var block = myself.topBlock();
+                    var hasCustomBlock = false;
+                    
+                    while (block instanceof BlockMorph) {
+                        if (block instanceof CustomCommandBlockMorph || block instanceof CustomReporterBlockMorph) {
+                            hasCustomBlock = true;
+                            break;
+                        }
+                        block = block.nextBlock ? block.nextBlock() : null;
+                    }
+                    
+                    if (hasCustomBlock) {
+                        this.parentThatIsA(IDE_Morph).confirm(
+                            "This sequence contains a custom block whose definition will not be exported. Continue?",
+                            "Block sequence export",
+                            exportSequence
+                        );
+                    }
+                    else {
+                        exportSequence();
+                    }
+                   
+                },
+                'open a new window\nwith this block sequence as XML'
+            );
+        }
+        return menu;
+    };
+}(BlockMorph.prototype.userMenu));
+
 }());
