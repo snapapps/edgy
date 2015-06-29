@@ -2288,6 +2288,14 @@ SpriteMorph.prototype.setEdgeDisplayAttrib = function (attr) {
     redrawGraph();
 };
 
+SpriteMorph.prototype.saveGraph = function () {
+    return this.graphToJSON();
+};
+
+SpriteMorph.prototype.loadGraph = function (handle) {
+    this.graphFromJSON(handle);
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
@@ -2332,6 +2340,16 @@ SpriteMorph.prototype.setEdgeDisplayAttrib = function (attr) {
             type: 'command',
             category: 'network',
             spec: 'clear'
+        },
+        saveGraph: {
+            type: 'reporter',
+            category: 'network',
+            spec: 'save graph'
+        },
+        loadGraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'load graph %s'
         },
         numberOfNodes: {
             type: 'reporter',
@@ -2882,6 +2900,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setActiveGraph'));
             blocks.push(block('showGraphSlice'));
             blocks.push(block('hideActiveGraph'));
+            blocks.push('-');
+            blocks.push(block('saveGraph'));
+            blocks.push(block('loadGraph'));
             blocks.push('-');
             blocks.push(block('getMatrixEntry'));
             blocks.push(block('setMatrixEntry'));
@@ -3620,7 +3641,7 @@ function graphToDot(G) {
 }
 
 StageMorph.prototype.thumbnail = (function(oldThumbnail) {
-	return function(extentPoint, excludedSprite) {
+    return function(extentPoint, excludedSprite) {
         var canvas = oldThumbnail.call(this, extentPoint, excludedSprite);
         // Also draw the graph on top of the thumbnail
         var svgDiv = document.getElementById("graph-display");
