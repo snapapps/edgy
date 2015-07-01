@@ -1062,7 +1062,7 @@ var NODE_ATTR_HANDLERS = {
         set: function(node, data, val) {
             if(data.__d3datum__) {
                 if (typeof val == "number") {
-                    data.__d3datum__.y = data.__d3datum__.px = val;
+                    data.__d3datum__.y = data.__d3datum__.py = val;
                     data.__d3datum__.fixed = true;
                     layout.resume();
                 }
