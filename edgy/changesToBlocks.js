@@ -59,7 +59,7 @@ BlockMorph.prototype.userMenu = (function(oldUserMenu) {
                 "export...",
                 function () {
                     var exportSequence = function() {
-                        var serializer = myself.parentThatIsA(IDE_Morph).serializer;
+                        var serializer = new SnapSerializer();
                         var xml = myself.topBlock().toScriptXML(serializer);
                         window.open("data:text/xml," + xml);
                     };
@@ -79,8 +79,10 @@ BlockMorph.prototype.userMenu = (function(oldUserMenu) {
                         return false;
                     };
 
-                    if (testDependencies(myself.topBlock())) {
-                        this.parentThatIsA(IDE_Morph).confirm(
+                    var ide = this.parentThatIsA(IDE_Morph);
+                    var unmetDependencies = testDependencies(myself.topBlock());
+                    if (unmetDependencies && ide) {
+                        ide.confirm(
                             "This sequence contains a custom block whose definition will not be exported. Continue?",
                             "Block sequence export",
                             exportSequence
