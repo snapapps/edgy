@@ -50,6 +50,9 @@ var CSV = (function () {
 		if (s.charAt(s.length - 1) !== "\n") {
 			// Does not end with \n, just return string
 			return s;
+		} else if (s.substring(s.length - 2) === "\r\n") {
+			// Remove the \r\n
+			return s.substring(0, s.length - 2);
 		} else {
 			// Remove the \n
 			return s.substring(0, s.length - 1);
@@ -182,12 +185,12 @@ var CSV = (function () {
 			cur = s.charAt(i);
 
 			// If we are at a EOF or EOR
-			if (inQuote === false && (cur === ',' || cur === "\n")) {
+			if (inQuote === false && (cur === ',' || cur === "\r" || cur === "\n")) {
 				field = processField(field);
 				// Add the current field to the current row
 				row.push(field);
 				// If this is EOR append row to output and flush row
-				if (cur === "\n") {
+				if (cur === "\n" || (cur === "\r" && s.charAt(i + 1) === "\n")) {
 					out.push(row);
 					row = [];
 				}

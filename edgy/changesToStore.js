@@ -39,4 +39,31 @@ SnapSerializer.prototype.loadObject = (function loadObject (oldLoadObject) {
     };
 }(SnapSerializer.prototype.loadObject));
 
+Map.prototype.toXML = function (serializer, mediaContext) {
+    var xml = '';
+    this.forEach(function(value, key) {
+        var k = serializer.format(
+            '<key>%</key>',
+            typeof key === 'object' ?
+                    serializer.store(key, mediaContext)
+                    : typeof key === 'boolean' ?
+                            serializer.format('<bool>$</bool>', key)
+                            : serializer.format('<l>$</l>', key)
+        );
+        
+        var v = serializer.format(
+            '<value>%</value>',
+            typeof value === 'object' ?
+                    serializer.store(value, mediaContext)
+                    : typeof value === 'boolean' ?
+                            serializer.format('<bool>$</bool>', value)
+                            : serializer.format('<l>$</l>', value)
+        );
+        
+        xml += k + v;
+    });
+    
+    return serializer.format('<map>%</map>', xml);
+};
+
 }());

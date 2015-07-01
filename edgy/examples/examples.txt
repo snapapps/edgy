@@ -18,3 +18,4 @@ Towers of Hanoi
 Sim
 Conway’s Game of Life
 Generate Maze
+Jealous Husbands

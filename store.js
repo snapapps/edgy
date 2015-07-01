@@ -1053,6 +1053,23 @@ SnapSerializer.prototype.loadInput = function (model, input, block) {
             );
         });
         input.fixLayout();
+    } else if (model.tag === 'pairs') {
+        while (input.inputs().length > 0) {
+            input.removeInput();
+        }
+		var i = 0;
+        model.children.forEach(function (item) {
+            if (i % 2 == 0) {
+				input.addInput();
+            }
+			myself.loadInput(
+                item,
+                input.children[input.children.length - 3 + (i % 2)],
+                input
+            );
+			i++;
+        });
+        input.fixLayout();
     } else if (model.tag === 'block' || model.tag === 'custom-block') {
         block.silentReplaceInput(input, this.loadBlock(model, true));
     } else if (model.tag === 'color') {
@@ -1136,6 +1153,48 @@ SnapSerializer.prototype.loadValue = function (model) {
             return myself.loadValue(value);
         });
         return v;
+    case 'map':
+        var res = new Map();
+        var myself = this;
+        var keys = model.childrenNamed('key').map(function (item) {
+            var value = item.children[0];
+            if (!value) {
+                return 0;
+            }
+            return myself.loadValue(value);
+        });
+        var values = model.childrenNamed('value').map(function (item) {
+            var value = item.children[0];
+            if (!value) {
+                return 0;
+            }
+            return myself.loadValue(value);
+        });
+        for (var i = 0; i < keys.length; i++) {
+            res.set(keys[i], values[i]);
+        }
+        return res;
+    case 'pqueue':
+        var type = model.attributes.type;
+        var elements = model.childrenNamed('element').map(function (item) {
+            var value = item.children[0];
+            if (!value) {
+                return 0;
+            }
+            return myself.loadValue(value);
+        });
+        var priorities = model.childrenNamed('priority').map(function (item) {
+            var value = item.children[0];
+            if (!value) {
+                return 0;
+            }
+            return myself.loadValue(value);
+        });
+        var entries = [];
+        for (var i = 0; i < elements.length; i++) {
+            entries.push(new Entry(elements[i], priorities[i]));
+        }
+        return new PriorityQueue(entries, type);
     case 'sprite':
         v  = new SpriteMorph(myself.project.globalVariables);
         if (model.attributes.id) {

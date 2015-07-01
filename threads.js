@@ -764,10 +764,14 @@ Process.prototype.reifyPredicate = function (topBlock, parameterNames) {
 };
 
 Process.prototype.reportJSFunction = function (parmNames, body) {
-    return Function.apply(
-        null,
-        parmNames.asArray().concat([body])
-    );
+    if (window.javascriptexecutionlevel === 'full') {
+        return Function.apply(
+            null,
+            parmNames.asArray().concat([body])
+        );
+    } else {
+        throw new Error('The current script attempted to execute JavaScript code at a higher privilege level than is currently allowed.\nCode execution was terminated.\nIf you trust the code within the JavaScript blocks and wish to execute it, set the "Execution level" setting to the appropriate level.');
+    }
 };
 
 Process.prototype.doRun = function (context, args, isCustomBlock) {
@@ -781,10 +785,15 @@ Process.prototype.evaluate = function (
 ) {
     if (!context) {return null; }
     if (context instanceof Function) {
-        return context.apply(
-            this.homeContext.receiver,
-            args.asArray().concat([this])
-        );
+        // ALL calls to eval(), Function.apply() etc.. need to be handled this way, otherwise there will be a way to inject JS code..
+        if (window.javascriptexecutionlevel === 'full') {
+            return context.apply(
+                this.homeContext.receiver,
+                args.asArray().concat([this])
+            );
+        } else {
+            throw new Error('The current script attempted to execute JavaScript code at a higher privilege level than is currently allowed.\nCode execution was terminated.\nIf you trust the code within the JavaScript blocks and wish to execute it, set the "Execution level" setting to the appropriate level.');
+        }
     }
     if (context.isContinuation) {
         return this.runContinuation(context, args);
