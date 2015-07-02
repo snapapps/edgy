@@ -269,7 +269,17 @@ function updateGraphDimensions(stage) {
 }
 
 function getNodeElementType(d) {
-    return d.data.__costume__ ? "use" : "rect";
+    if (d.data.__costume__)
+        return "use";
+    
+    switch (d.data.shape) {
+        case "circle":
+            return "circle";
+        case "ellipse":
+            return "ellipse";
+        default:
+            return "rect";
+    }
 }
 
 function updateNodeAppearance(node) {
@@ -370,10 +380,15 @@ var DEFAULT_NODE_COLOR = "white",
                 return d.data.color || DEFAULT_NODE_COLOR;
             },
             'stroke-width': function(d) {
-                return 1 / (d.data.scale || 1);
+                var width = d.data["stroke-width"];
+                if (!width && width !== 0)
+                    width = 1;
+                return width / (d.data.scale || 1);
             },
             stroke: function(d) {
-                return d.data.__costume ? undefined : '#333333';
+                if (d.data.__costume)
+                    return undefined;
+                return d.data.stroke || '#333333';
             }
         },
         node_attr: {
@@ -381,25 +396,52 @@ var DEFAULT_NODE_COLOR = "white",
                 if (d.data.__costume__)
                     return undefined;
 				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
-				d.width = dim.width + 16;
+				d.width = dim.width + 8;
 				return dim.width + 8;
 			},
 			height: function(d) {
                 if (d.data.__costume__)
                     return undefined;
 				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
-				d.height = dim.height + 16;
+				d.height = dim.height + 8;
 				return dim.height + 8;
 			},
 			transform: function(d) {
-				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
 				var scale = (d.data.scale || 1);
                 var transform = ['scale(', scale, ')'];
                 if(!d.data.__costume__) {
-                    // No costume, adjust rectangle position.
-                    transform = transform.concat(['translate(', (-(dim.width + 8) / 2), ',', (-(dim.height + 8) / 2), ')']);
+                    // No costume
+                    switch (getNodeElementType(d)) {
+                        case "circle":
+                        case "ellipse":
+                            break;
+                        default:
+                            // Adjust rectangle position.
+                            transform = transform.concat(['translate(', (-(d.width) / 2), ',', (-(d.height) / 2), ')']);
+                    }
                 }
                 return transform.join('');
+			},
+            r: function(d) {
+                if (d.data.__costume__ || getNodeElementType(d) != "circle")
+                    return undefined;
+				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
+                d.width = d.height = dim.width + 16;
+				return (dim.width + 16) / 2;
+			},
+            rx: function(d) {
+                if (d.data.__costume__ || getNodeElementType(d) != "ellipse")
+                    return undefined;
+				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
+                d.width = dim.width + 16;
+				return (dim.width + 16) / 2;
+			},
+            ry: function(d) {
+                if (d.data.__costume__ || getNodeElementType(d) != "ellipse")
+                    return undefined;
+				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
+                d.height = dim.height + 16;
+				return (dim.height + 16) / 2;
 			},
             "xlink:href": function(d) {
                 if(d.data.__costume__) {
@@ -446,11 +488,10 @@ var DEFAULT_NODE_COLOR = "white",
             fill: function (d) {
                 var attr = currentGraph.nodeDisplayAttribute;
                 if ((d.data[attr] == undefined) && (attr !== 'label')) {
-                    return SECONDARY_LABEL_COLOR;
+                    return d.data["label-color"] || SECONDARY_LABEL_COLOR;
                 } else {
-                    return DEFAULT_LABEL_COLOR;
+                    return d.data["label-color"] || DEFAULT_LABEL_COLOR;
                 }
-
             }
         },
         label_attr: {
@@ -466,7 +507,11 @@ var DEFAULT_NODE_COLOR = "white",
                 return d.node.toString();
             }
         },
-        edge_label_style: {fill: DEFAULT_LABEL_COLOR},
+        edge_label_style: {
+            fill: function(d) {
+                return d.data["label-color"] || DEFAULT_LABEL_COLOR;
+            }
+        },
         edge_labels: function(d) {
             var attr = currentGraph.edgeDisplayAttribute;
             if(d.data[attr] !== undefined) {
@@ -474,6 +519,16 @@ var DEFAULT_NODE_COLOR = "white",
             } else {
                 return '';
             }
+        },
+        edge_offset: function(d) {
+            if (getNodeElementType(d.source) == "circle" &&
+                getNodeElementType(d.target) == "circle")
+                // If they're both circles, we can display digraphs better
+                return [
+                    (d.source.data.scale || 1) * d.source.width / 2,
+                    (d.target.data.scale || 1) * d.target.height / 2
+                ];
+            return [10, 10]; // This is the default
         },
         pan_zoom: {enabled: true}
     };
@@ -986,6 +1041,14 @@ SpriteMorph.prototype.getNeighbors = function(node) {
 };
 
 var NODE_ATTR_HANDLERS = {
+    shape: {
+        default: "rect",
+        set: function(node) {
+            if(this.isActiveGraph()) {
+                updateNodeAppearance(findNodeElement(node));
+            }
+        }
+    },
     color: {
         default: DEFAULT_NODE_COLOR,
         set: function(node, data, val) {
@@ -998,7 +1061,33 @@ var NODE_ATTR_HANDLERS = {
         default: 1,
         set: function(node, data, val) {
             if(this.isActiveGraph()) {
+                var nodeElement = findNodeElement(node);
+                updateNodeAppearance(nodeElement);
+                nodeElement.select("text").attr(LAYOUT_OPTS.label_attr);
+            }
+        }
+    },
+    stroke: {
+        default: "#333333",
+        set: function(node, data, val) {
+            if(this.isActiveGraph()) {
                 updateNodeAppearance(findNodeElement(node));
+            }
+        }
+    },
+    "stroke-width": {
+        default: 1,
+        set: function(node, data, val) {
+            if(this.isActiveGraph()) {
+                updateNodeAppearance(findNodeElement(node));
+            }
+        }
+    },
+    "label-color": {
+        default: DEFAULT_LABEL_COLOR,
+        set: function(node, data, val) {
+            if(this.isActiveGraph()) {
+                findNodeElement(node).select("text").style(LAYOUT_OPTS.label_style);
             }
         }
     },
@@ -1195,7 +1284,15 @@ var EDGE_ATTR_HANDLERS = {
                 findEdgeElement(edge).select("text").text(val);
             }
         }
-    }
+    },
+    "label-color": {
+        default: DEFAULT_LABEL_COLOR,
+        set: function(edge, data, val) {
+            if(data.__d3datum__) {
+                findEdgeElement(edge).select("text").style(LAYOUT_OPTS.edge_label_style);
+            }
+        }
+    },
 };
 
 var BUILTIN_EDGE_ATTRS = Object.keys(EDGE_ATTR_HANDLERS);
