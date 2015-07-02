@@ -1161,6 +1161,20 @@ SpriteMorph.prototype.setNodeAttribsFromDict = function(node, dict) {
     });
 };
 
+SpriteMorph.prototype.setGlobalNodeAttrib = function(attrib, value) {
+    var myself = this;
+    this.G.nodes().forEach(function(node) {
+        myself.setNodeAttrib(attrib, node, value);
+    });
+};
+
+SpriteMorph.prototype.setGlobalNodeAttribDict = function(dict) {
+    var myself = this;
+    this.G.nodes().forEach(function(node) {
+        myself.setNodeAttribsFromDict(node, dict);
+    });
+};
+
 var EDGE_ATTR_HANDLERS = {
     color: {
         default: DEFAULT_EDGE_COLOR,
@@ -1269,6 +1283,20 @@ SpriteMorph.prototype.setEdgeAttribsFromDict = function(edge, dict) {
     }
     dict.forEach(function(v, k) {
         myself.setEdgeAttrib(k, edge, v);
+    });
+};
+
+SpriteMorph.prototype.setGlobalEdgeAttrib = function(attrib, value) {
+    var myself = this;
+    this.getEdges().asArray().forEach(function(edge) {
+        myself.setEdgeAttrib(attrib, edge, value);
+    });
+};
+
+SpriteMorph.prototype.setGlobalEdgeAttribDict = function(dict) {
+    var myself = this;
+    this.getEdges().asArray().forEach(function(edge) {
+        myself.setEdgeAttribsFromDict(edge, dict);
     });
 };
 
@@ -2351,6 +2379,26 @@ SpriteMorph.prototype.loadGraph = function (handle) {
             category: 'network',
             spec: 'load graph %s'
         },
+        setGlobalNodeAttrib: {
+            type: 'command',
+            category: 'nodes',
+            spec: 'set %nodeAttr of all nodes to %s'
+        },
+        setGlobalNodeAttribDict: {
+            type: 'command',
+            category: 'nodes',
+            spec: 'set attributes of all nodes from dict %l'
+        },
+        setGlobalEdgeAttrib: {
+            type: 'command',
+            category: 'edges',
+            spec: 'set %nodeAttr of all edges to %s'
+        },
+        setGlobalEdgeAttribDict: {
+            type: 'command',
+            category: 'edges',
+            spec: 'set attributes of all edges from dict %l'
+        },
         numberOfNodes: {
             type: 'reporter',
             category: 'nodes',
@@ -2990,6 +3038,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNodeAttrib'));
             blocks.push(block('getNodeAttribDict'));
             blocks.push(block('setNodeAttribsFromDict'));
+            blocks.push(block('setGlobalNodeAttrib'));
+            blocks.push(block('setGlobalNodeAttribDict'));
             blocks.push(block('setNodeCostume'));
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('sortNodes'));
@@ -3070,6 +3120,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getEdgeAttrib'));
             blocks.push(block('getEdgeAttribDict'));
             blocks.push(block('setEdgeAttribsFromDict'));
+            blocks.push(block('setGlobalEdgeAttrib'));
+            blocks.push(block('setGlobalEdgeAttribDict'));
             blocks.push(block('setEdgeCostume'));
             blocks.push(block('getEdgesWithAttr'));
             blocks.push(block('sortEdges'));
