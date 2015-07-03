@@ -1083,6 +1083,13 @@ var NODE_ATTR_HANDLERS = {
             }
         }
     },
+    label: {
+        default: "",
+        set: function(node, data, val) {
+            if (val == "")
+                delete data.label;
+        }
+    },
     "label-color": {
         default: DEFAULT_LABEL_COLOR,
         set: function(node, data, val) {
@@ -1186,17 +1193,20 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     var data = this.G.node.get(node);
     data[attrib] = val;
 
-    // Handle situation where changed attribute is the one being displayed
-    if (attrib === currentGraph.nodeDisplayAttribute) {
-        if (data.__d3datum__) {
-            findNodeElement(node).select('text').text(val);
-            findNodeElement(node).select('text').style("fill" , "black");
-        }
-    }
-
     // Run any relevant special handlers.
     if(NODE_ATTR_HANDLERS[attrib] && NODE_ATTR_HANDLERS[attrib].set) {
         NODE_ATTR_HANDLERS[attrib].set.call(this, node, data, val);
+    }
+    
+    // Handle situation where changed attribute is the one being displayed
+    if (attrib === currentGraph.nodeDisplayAttribute) {
+        if (data.__d3datum__) {
+            var nodeElement = findNodeElement(node);
+            updateNodeAppearance(nodeElement);
+            nodeElement.select('text')
+                .text(data[attrib] || node)
+                .style(LAYOUT_OPTS.label_style);
+        }
     }
 };
 
