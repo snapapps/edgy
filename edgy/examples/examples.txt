@@ -20,3 +20,4 @@ Conway’s Game of Life
 Generate Maze
 Jealous Husbands
 PageRank
+Atlas
