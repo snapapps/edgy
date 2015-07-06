@@ -473,12 +473,17 @@ SpriteMorph.prototype.reportCounterCount = function(key, counter) {
         },
     };
 
-    // Add the new blocks.
-    for (var blockName in blocks) {
-        if(blocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
-        }
-    }
+    SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+        return function() {
+            oldInitBlocks.call(this);
+            // Add the new blocks.
+            for (blockName in blocks) {
+                if(blocks.hasOwnProperty(blockName)) {
+                    SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+                }
+            }
+        };
+    }(SpriteMorph.prototype.initBlocks));
 }());
 
 /**
@@ -563,12 +568,17 @@ SpriteMorph.prototype.removeFromDict = function(key, dict) {
         }
     };
 
-    // Add the new blocks.
-    for (var blockName in blocks) {
-        if(blocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
-        }
-    }
+    SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+        return function() {
+            oldInitBlocks.call(this);
+            // Add the new blocks.
+            for (blockName in blocks) {
+                if(blocks.hasOwnProperty(blockName)) {
+                    SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+                }
+            }
+        };
+    }(SpriteMorph.prototype.initBlocks));
 }());
 
 /**
@@ -634,12 +644,17 @@ SpriteMorph.prototype.isStackEmpty = function (list) {
         },
     };
 
-    // Add the new blocks.
-    for (var blockName in blocks) {
-        if(blocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
-        }
-    }
+    SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+        return function() {
+            oldInitBlocks.call(this);
+            // Add the new blocks.
+            for (blockName in blocks) {
+                if(blocks.hasOwnProperty(blockName)) {
+                    SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+                }
+            }
+        };
+    }(SpriteMorph.prototype.initBlocks));
 }());
 
 /**
@@ -705,12 +720,17 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
         },
     };
 
-    // Add the new blocks.
-    for (var blockName in blocks) {
-        if(blocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
-        }
-    }
+    SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+        return function() {
+            oldInitBlocks.call(this);
+            // Add the new blocks.
+            for (blockName in blocks) {
+                if(blocks.hasOwnProperty(blockName)) {
+                    SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+                }
+            }
+        };
+    }(SpriteMorph.prototype.initBlocks));
 }());
 
 /**
@@ -1061,12 +1081,17 @@ SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
         },
     };
 
-    // Add the new blocks.
-    for (var blockName in blocks) {
-        if(blocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
-        }
-    }
+    SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+        return function() {
+            oldInitBlocks.call(this);
+            // Add the new blocks.
+            for (blockName in blocks) {
+                if(blocks.hasOwnProperty(blockName)) {
+                    SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+                }
+            }
+        };
+    }(SpriteMorph.prototype.initBlocks));
 }());
 
 /**
@@ -1076,6 +1101,7 @@ Add the collection categories.
 (function() {
     SpriteMorph.prototype.categories.push('collections');
     SpriteMorph.prototype.blockColor.collections = new Color(74, 108, 212);
+    SpriteMorph.prototype.initBlocks();
 }());
 
 SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplates) {

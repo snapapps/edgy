@@ -2896,12 +2896,20 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         }
     };
 
-    // Add the new blocks.
-    for (blockName in networkBlocks) {
-        if(networkBlocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = networkBlocks[blockName];
-        }
-    }
+    SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+        return function() {
+            oldInitBlocks.call(this);
+            // Add the new blocks.
+            for (blockName in networkBlocks) {
+                if(networkBlocks.hasOwnProperty(blockName)) {
+                    SpriteMorph.prototype.blocks[blockName] = networkBlocks[blockName];
+                }
+            }
+        };
+    }(SpriteMorph.prototype.initBlocks));
+    
+    SpriteMorph.prototype.initBlocks();
+    
 }());
 
 StageMorph.prototype.allNodeAttributes = SpriteMorph.prototype.allNodeAttributes = function() {

@@ -1730,7 +1730,6 @@ IDE_Morph.prototype.refreshIDE = function () {
 // IDE_Morph settings persistance
 
 IDE_Morph.prototype.applySavedSettings = function () {
-    this.removeSetting('zoom'); //FIXME: This is part of a quick fix for the zoom bug (Issue #240) , remove this line once the issue is properly dealt with.
     var design = this.getSetting('design'),
         zoom = this.getSetting('zoom'),
         language = this.getSetting('language'),
@@ -2132,10 +2131,10 @@ IDE_Morph.prototype.settingsMenu = function () {
     );
     menu.addLine();
     menu.addItem('Language...', 'languageMenu');
-    /*menu.addItem(
+    menu.addItem(
         'Zoom blocks...',
         'userSetBlocksScale'
-    );*/ // FIXME: This is just a part of a quick solution to the zooming bug (Issue #240). Once properly dealt with, un-comment this call.
+    );
     menu.addItem(
         'Stage size...',
         'userSetStageSize'
