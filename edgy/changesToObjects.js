@@ -3499,6 +3499,7 @@ function clone(obj){
 // graph format.
 function graphToObject(G) {
     var multigraph = G.is_multigraph();
+    var manual = currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout;
 
     var mapping = {};
     var i = 0;
@@ -3509,6 +3510,7 @@ function graphToObject(G) {
     var data = {};
     data.directed = G.is_directed();
     data.multigraph = multigraph;
+    data.manual = manual;
     var costumes = {};
     data.graph = [["__costumes__", costumes]];
     for(var k in G.graph) {
@@ -3521,6 +3523,11 @@ function graphToObject(G) {
     jsnx.forEach(G.nodes_iter(true), function(node) {
         var d = {id: node[0]};
         mergeObjectIn(d, node[1]);
+        if (d.__d3datum__.fixed) {
+            // Store positions if necessary
+            d.x = d.__d3datum__.x;
+            d.y = d.__d3datum__.y;
+        }
         delete d.__d3datum__; // Don't serialize the D3 gunk.
         if(d.__costume__) {
             var name = d.__costume__.name;
@@ -3664,6 +3671,7 @@ function parseAdjacencyMatrix (mat) {
 function objectToGraph (data) {
     var multigraph = data.multigraph,
         directed = data.directed,
+        manual = data.manual,
         mapping = [],
         graph, d, node, nodedata, link_data, source, target, edgedata;
 
@@ -3676,6 +3684,8 @@ function objectToGraph (data) {
     if(directed) {
         graph = graph.to_directed();
     }
+
+    currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout = manual;
 
     if(data.graph) {
         for (var i = 0; i < data.graph.length; i++) {
@@ -3695,6 +3705,9 @@ function objectToGraph (data) {
         mapping.push(node);
         nodedata = clone(d);
         delete nodedata.id;
+        if (nodedata.x || nodedata.y) {
+            nodedata.fixed = true;
+        }
         graph.add_node(node, nodedata);
     }
 
