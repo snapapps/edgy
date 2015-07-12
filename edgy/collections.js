@@ -696,7 +696,7 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
         reportQueueTop: {
             type: 'reporter',
             category: 'lists',
-            spec: 'top of queue %l',
+            spec: 'head of queue %l',
         },
         reportQueueLength: {
             type: 'reporter',
@@ -706,12 +706,12 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
         pushQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'push %s to queue %l',
+            spec: 'enqueue %s to queue %l',
         },
         popQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'pop from queue %l',
+            spec: 'dequeue from queue %l',
         },
         isQueueEmpty: {
             type: 'predicate',
@@ -875,7 +875,7 @@ PriorityQueueMorph.prototype.init = function(pqueue, parentCell) {
         new Color(255, 255, 255)
     );
     this.topLabel = new StringMorph(
-        localize('top: '),
+        localize('head: '),
         SyntaxElementMorph.prototype.fontSize,
         null,
         false,
@@ -1052,7 +1052,7 @@ SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
         reportPQueueTop: {
             type: 'reporter',
             category: 'lists',
-            spec: 'top of pqueue %l',
+            spec: 'head of pqueue %l',
         },
         reportPQueueLength: {
             type: 'reporter',
@@ -1062,12 +1062,12 @@ SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
         pushPQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'push %s to pqueue %l with priority %s',
+            spec: 'enqueue %s to pqueue %l with priority %s',
         },
         popPQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'pop from pqueue %l',
+            spec: 'dequeue from pqueue %l',
         },
         updatePQueue: {
             type: 'command',
