@@ -696,7 +696,7 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
         reportQueueTop: {
             type: 'reporter',
             category: 'lists',
-            spec: 'top of queue %l',
+            spec: 'head of queue %l',
         },
         reportQueueLength: {
             type: 'reporter',
@@ -706,12 +706,12 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
         pushQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'push %s to queue %l',
+            spec: 'enqueue %s to queue %l',
         },
         popQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'pop from queue %l',
+            spec: 'dequeue from queue %l',
         },
         isQueueEmpty: {
             type: 'predicate',
