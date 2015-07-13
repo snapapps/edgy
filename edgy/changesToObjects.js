@@ -3846,4 +3846,129 @@ StageMorph.prototype.thumbnail = (function(oldThumbnail) {
     };
 }(StageMorph.prototype.thumbnail));
 
+WatcherMorph.prototype.userMenu = (function (oldUserMenu) {
+    return function() {
+        var myself = this;
+        var menu = oldUserMenu.call(this);
+        
+        function readList(aFile) {
+            var frd = new FileReader();
+            frd.onloadend = function (e) {
+                var array = CSV.csvToArray(e.target.result);
+                var list = new List(
+                    array.map(function(v) {
+                        if (v.length > 1) {
+                            return new List(v);
+                        }
+                        else
+                            return v;
+                    })
+                );
+                
+                myself.target.setVar(
+                    myself.getter,
+                    list
+                );
+            };
+
+            frd.readAsText(aFile);
+        }
+        
+        function readMap(aFile) {
+            var frd = new FileReader();
+            frd.onloadend = function (e) {
+                var array = CSV.csvToArray(e.target.result);
+                var map = new Map();
+                array.forEach(function(v) {
+                    map.set(v[0], v[1]);
+                });
+                
+                myself.target.setVar(
+                    myself.getter,
+                    map
+                );
+            };
+
+            frd.readAsText(aFile);
+        }
+        
+        function getFile(onchange) {
+            var inp = document.createElement('input'),
+                ide = myself.parentThatIsA(IDE_Morph);
+            if (ide.filePicker) {
+                document.body.removeChild(ide.filePicker);
+                ide.filePicker = null;
+            }
+            inp.type = 'file';
+            inp.style.color = "transparent";
+            inp.style.backgroundColor = "transparent";
+            inp.style.border = "none";
+            inp.style.outline = "none";
+            inp.style.position = "absolute";
+            inp.style.top = "0px";
+            inp.style.left = "0px";
+            inp.style.width = "0px";
+            inp.style.height = "0px";
+            inp.addEventListener(
+                "change",
+                function () {
+                    var file;
+                    document.body.removeChild(inp);
+                    ide.filePicker = null;
+                    if (inp.files.length > 0) {
+                        file = inp.files[inp.files.length - 1];
+                        onchange(file);
+                    }
+                },
+                false
+            );
+            document.body.appendChild(inp);
+            ide.filePicker = inp;
+            inp.click();
+        }
+        
+        menu.addItem(
+            'import list...',
+            getFile.bind(this, readList)
+        );
+        
+        menu.addItem(
+            'import dictionary...',
+            getFile.bind(this, readMap)
+        );
+        
+        var isList = this.currentValue instanceof List;
+        var isMap = this.currentValue instanceof Map;
+        
+        if (this.target instanceof VariableFrame && (isList || isMap)) {
+            menu.addItem(
+                'export CSV...',
+                function () {
+                    var value;
+                    if (isList) {
+                        value = this.currentValue.asArray().map(function(v) {
+                            if (v instanceof List) {
+                                // Change 2D list into 2D CSV
+                                return v.asArray();
+                            }
+                            return v;
+                        });
+                    }
+                    else {
+                        value = Array.from(this.currentValue.entries());
+                    }
+                    window.open(
+                        'data:text/plain;charset=utf-8,' +
+                        encodeURIComponent(
+                            CSV.arrayToCsv(value)
+                        )
+                    );
+                }
+            );
+        }
+        
+        return menu;
+    };
+}(WatcherMorph.prototype.userMenu));
+
 }());
