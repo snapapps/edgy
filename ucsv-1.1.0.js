@@ -190,9 +190,14 @@ var CSV = (function () {
 				// Add the current field to the current row
 				row.push(field);
 				// If this is EOR append row to output and flush row
-				if (cur === "\n" || (cur === "\r" && s.charAt(i + 1) === "\n")) {
+				if (cur === "\n") {
 					out.push(row);
 					row = [];
+				}
+				else if ((cur === "\r" && s.charAt(i + 1) === "\n")) {
+					out.push(row);
+					row = [];
+					i++; // \r\n required two characters
 				}
 				// Flush the field buffer
 				field = '';
