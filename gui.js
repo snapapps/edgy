@@ -2121,14 +2121,16 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check to lock node positions after dragging',
         false
     );
-    addPreference(
-        'Lay out with downward edges',
-        'toggleWebColaDownwardEdgeConstraint',
-        this.useDownwardEdgeConstraint,
-        'uncheck to remove constraints',
-        'check to add downward edge\nconstraints',
-        false
-    );
+    if (edgyLayoutAlgorithm == cola.d3adaptor) {
+        addPreference(
+            'Lay out with downward edges',
+            'toggleWebColaDownwardEdgeConstraint',
+            this.useDownwardEdgeConstraint,
+            'uncheck to remove constraints',
+            'check to add downward edge\nconstraints',
+            false
+        );
+    }
     menu.addLine();
     menu.addItem('Language...', 'languageMenu');
     menu.addItem(
