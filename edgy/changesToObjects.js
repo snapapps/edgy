@@ -2394,7 +2394,7 @@ SpriteMorph.prototype.hideEdgeInSubgraph = function(edge) {
     if(this.isActiveGraph() && currentGraph.parent_graph == this.G) {
         var a = parseNode(edge.at(1)),
             b = parseNode(edge.at(2));
-        currentGraph.remove_nodes_from([a, b]);
+        currentGraph.remove_edge(a, b);
     }
 };
 
