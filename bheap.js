@@ -50,7 +50,7 @@ BinaryHeap.prototype.pop = function() {
     
     /* shrink array if necessary */
     if (this.count === this.items.length / 4) {
-        resize(this.count * 2 + 1);
+        this.resize(this.count * 2 + 1);
     }
 };
 
