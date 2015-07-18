@@ -742,8 +742,9 @@ var PriorityQueue;
 
 function PriorityQueue(items, type) {
     this.type = type || 'max';
-    this.predicate = this.type == 'max' ? function(a, b) { return a > b; } :
-        function(a, b) { return a < b; };
+    this.predicate = this.type == 'max' ? 
+        function(a, b) { return a.priority > b.priority; } :
+            function(a, b) { return a.priority < b.priority; };
     this.items = [null].concat(items || [null]);
     this.count = items.length;
     this.lastChanged = Date.now();
@@ -1028,8 +1029,8 @@ SpriteMorph.prototype.updatePQueue = function(element, pqueue, priority) {
     if (index >= 0) {
         pqueue.items[index + 1].priority = parseFloat(priority);
 
-        pqueue.upHeap(index + 1);
-        pqueue.downHeap(index + 1);
+        pqueue.upHeap(index);
+        pqueue.downHeap(index);
     }
 };
 
