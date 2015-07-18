@@ -3991,4 +3991,49 @@ WatcherMorph.prototype.userMenu = (function (oldUserMenu) {
     };
 }(WatcherMorph.prototype.userMenu));
 
+(function() {
+    var alternatives = {
+        newGraph: ["newDiGraph", "convertToGraph", "convertToDigraph"],
+        newDiGraph: ["newGraph", "convertToGraph", "convertToDigraph"],
+        convertToDigraph: ["convertToGraph", "newGraph", "newDiGraph"],
+        convertToGraph: ["convertToDigraph", "newGraph", "newDiGraph"],
+        setActiveGraph: ["hideActiveGraph"],
+        hideActiveGraph: ["setActiveGraph"],
+        isEmpty: ["isCyclic", "isConnected", "isStronglyConnected", "isWeaklyConnected"],
+        isCyclic: ["isEmpty", "isConnected", "isStronglyConnected", "isWeaklyConnected"],
+        isConnected: ["isCyclic", "isEmpty", "isStronglyConnected", "isWeaklyConnected"],
+        isStronglyConnected: ["isCyclic", "isConnected", "isEmpty", "isWeaklyConnected"],
+        isWeaklyConnected: ["isCyclic", "isConnected", "isStronglyConnected", "isEmpty"],
+        startNode: ["endNode"],
+        endNode: ["startNode"],
+        addNode: ["addEdge"],
+        removeNode: ["removeEdge"],
+        addEdge: ["addNode"],
+        removeEdge: ["removeNode"],
+        numberOfNodes: ["numberOfEdges", "getNodes"],
+        numberOfEdges: ["numberOfNodes", "getEdges"],
+        getNodes: ["getEdges", "numberOfNodes"],
+        getEdges: ["getNodes", "numberOfEdges"],
+        getNeighbors: ["getIncoming", "getOutgoing"],
+        getOutgoing: ["getNeighbors", "getIncoming"],
+        getIncoming: ["getNeighbors", "getOutgoing"],
+        getNeighborEdges: ["getIncomingEdges", "getOutgoingEdges"],
+        getIncomingEdges: ["getNeighborEdges", "getOutgoingEdges"],
+        getOutgoingEdges: ["getNeighborEdges", "getIncomingEdges"],
+        getDegree: ["getInDegree", "getOutDegree"],
+        getInDegree: ["getDegree", "getOutDegree"],
+        getOutDegree: ["getDegree", "getInDegree"],
+        setNodeAttrib: ["setEdgeAttrib"],
+        setEdgeAttrib: ["setNodeAttrib"],
+        getNodeAttrib: ["getEdgeAttrib"],
+        getEdgeAttrib: ["getNodeAttrib"]
+    };
+    
+    for (var block in alternatives) {
+        if (alternatives.hasOwnProperty(block)) {
+            SpriteMorph.prototype.blockAlternatives[block] = alternatives[block];
+        }
+    }
+}());
+
 }());
