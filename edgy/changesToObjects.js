@@ -2513,7 +2513,7 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         setGlobalEdgeAttrib: {
             type: 'command',
             category: 'edges',
-            spec: 'set %nodeAttr of all edges to %s'
+            spec: 'set %edgeAttr of all edges to %s'
         },
         setGlobalEdgeAttribDict: {
             type: 'command',
