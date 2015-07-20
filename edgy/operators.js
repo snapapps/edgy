@@ -36,12 +36,12 @@ SpriteMorph.prototype.isFinite = function(x) {
         reportMaxValue: {
             type: 'reporter',
             category: 'operators',
-            spec: 'max of %exp',
+            spec: 'max of %l',
         },
         reportMinValue: {
             type: 'reporter',
             category: 'operators',
-            spec: 'min of %exp',
+            spec: 'min of %l',
         },
         reportInfinity: {
             type: 'reporter',
