@@ -69,6 +69,15 @@
 			function loop() {
 				world.doOneCycle();
 			}
+
+			window.onInteractiveLoad = function() {
+				window.onbeforeunload = function() { };
+				var project = getInteractiveParameter('project');
+				if (project !== undefined) {
+					ide_.rawOpenProjectString(project);
+					ide_.toggleAppMode(true);
+				}
+			}
 		</script>
     </body>
 </html>
