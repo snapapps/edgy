@@ -341,7 +341,16 @@ function findEdgeElement(edge) {
     });
 }
 
-
+function getNodeLabel(d) {
+    var attr = currentGraph.nodeDisplayAttribute;
+    if (attr == '') {
+        return '';
+    }
+    if (d.data[attr] !== undefined) {
+        return d.data[attr].toString();
+    }
+    return d.node.toString();
+}
 
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
@@ -395,20 +404,14 @@ var DEFAULT_NODE_COLOR = "white",
 			width: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-                if (currentGraph.hideLabels) {
-                    d.width = d.height = 8;
-                    return 8;
-                }
-				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
+				var dim = measureText(getNodeLabel(d));
 				d.width = dim.width + 8;
 				return dim.width + 8;
 			},
 			height: function(d) {
                 if (d.data.__costume__)
                     return undefined;
-                if (currentGraph.hideLabels)
-                    return 8;
-				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
+				var dim = measureText(getNodeLabel(d));
 				d.height = dim.height + 8;
 				return dim.height + 8;
 			},
@@ -431,33 +434,21 @@ var DEFAULT_NODE_COLOR = "white",
             r: function(d) {
                 if (d.data.__costume__ || getNodeElementType(d) != "circle")
                     return undefined;
-                if (currentGraph.hideLabels) {
-                    d.width = d.height = 8;
-                    return 4;
-                }
-				var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
+				var dim = measureText(getNodeLabel(d));
                 d.width = d.height = dim.width + 16;
 				return (dim.width + 16) / 2;
 			},
             rx: function(d) {
                 if (d.data.__costume__ || getNodeElementType(d) != "ellipse")
                     return undefined;
-                if (currentGraph.hideLabels) {
-                    d.width = d.height = 8;
-                    return 4;
-                }
-                var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
+				var dim = measureText(getNodeLabel(d));
                 d.width = dim.width + 16;
 				return (dim.width + 16) / 2;
 			},
             ry: function(d) {
                 if (d.data.__costume__ || getNodeElementType(d) != "ellipse")
                     return undefined;
-                if (currentGraph.hideLabels) {
-                    d.width = d.height = 8;
-                    return 4;
-                }
-                var dim = measureText(d.data[currentGraph.nodeDisplayAttribute] || d.node);
+				var dim = measureText(getNodeLabel(d));
                 d.height = dim.height + 16;
 				return (dim.height + 16) / 2;
 			},
@@ -505,7 +496,7 @@ var DEFAULT_NODE_COLOR = "white",
         label_style: {
             fill: function (d) {
                 var attr = currentGraph.nodeDisplayAttribute;
-                if ((d.data[attr] == undefined) && (attr !== '')) {
+                if ((d.data[attr] == undefined) && (attr !== 'id')) {
                     return d.data["label-color"] || SECONDARY_LABEL_COLOR;
                 } else {
                     return d.data["label-color"] || DEFAULT_LABEL_COLOR;
@@ -518,14 +509,7 @@ var DEFAULT_NODE_COLOR = "white",
 			}
         },
         labels: function(d) {
-            if (currentGraph.hideLabels)
-                return "";
-            var attr = currentGraph.nodeDisplayAttribute;
-            if(d.data[attr] !== undefined) {
-                return d.data[attr].toString();
-            } else {
-                return d.node.toString();
-            }
+            return getNodeLabel(d);
         },
         edge_label_style: {
             fill: function(d) {
@@ -604,7 +588,7 @@ function displayGraph (G) {
         layout.stop();
     }
     currentGraph = G;
-    currentGraph.nodeDisplayAttribute = '';
+    currentGraph.nodeDisplayAttribute = 'id';
     currentGraph.edgeDisplayAttribute = 'label';
     redrawGraph();
 }
@@ -1103,6 +1087,11 @@ var NODE_ATTR_HANDLERS = {
             }
         }
     },
+    id: {
+        get: function(node, data) {
+            return node;
+        }
+    },
     "label-color": {
         default: DEFAULT_LABEL_COLOR,
         set: function(node, data, val) {
@@ -1193,6 +1182,10 @@ var NODE_ATTR_HANDLERS = {
 var BUILTIN_NODE_ATTRS = Object.keys(NODE_ATTR_HANDLERS);
 
 SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
+    if (attrib == '') {
+        throw new Error("No attribute selected.");
+    }
+    
     node = parseNode(node);
     if(!this.G.has_node(node)) {
         throw new NodeNotInGraphError(node);
@@ -2417,13 +2410,7 @@ SpriteMorph.prototype.newNode = function() {
 };
 
 SpriteMorph.prototype.setNodeDisplayAttrib = function (attr) {
-    currentGraph.hideLabels = false;
     currentGraph.nodeDisplayAttribute = attr;
-    redrawGraph();
-};
-
-SpriteMorph.prototype.hideNodeDisplayAttrib = function () {
-    currentGraph.hideLabels = true;
     redrawGraph();
 };
 
@@ -2588,12 +2575,7 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         setNodeDisplayAttrib: {
             type: 'command',
             category: 'nodes',
-            spec: 'display node attribute %nodeAttr'
-        },
-        hideNodeDisplayAttrib: {
-            type: 'command',
-            category: 'nodes',
-            spec: 'hide node attribute'
+            spec: 'display node attribute %allNodeAttr'
         },
         setEdgeDisplayAttrib: {
             type: 'command',
@@ -2972,6 +2954,13 @@ StageMorph.prototype.deleteNodeAttribute = SpriteMorph.prototype.deleteNodeAttri
 
 // Provides attribute names for UI for node attribute blocks.
 InputSlotMorph.prototype.getNodeAttributeNames = function () {
+    var dict = this.getAllNodeAttributeNames();
+    delete dict.id;
+    return dict;
+};
+
+// Provides attribute names for UI for node attribute blocks.
+InputSlotMorph.prototype.getAllNodeAttributeNames = function () {
     var block = this.parentThatIsA(BlockMorph),
         sprite,
         dict = {};
@@ -3178,7 +3167,6 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getNodesWithAttr'));
             blocks.push(block('sortNodes'));
             blocks.push(block('setNodeDisplayAttrib'));
-            blocks.push(block('hideNodeDisplayAttrib'));
             blocks.push('-');
             blocks.push(block('getNeighbors'));
             blocks.push(block('getOutgoing'));
