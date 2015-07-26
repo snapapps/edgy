@@ -346,9 +346,27 @@ function getNodeLabel(d) {
     if (attr == '') {
         return '';
     }
-    if (d.data[attr] !== undefined) {
-        return d.data[attr].toString();
+    var handler = NODE_ATTR_HANDLERS[attr];
+    var val = d.data[attr];
+    
+    if (handler) {
+        // There is a get handler
+        if (handler.get) {
+            var hval = handler.get.call(this, d.node, d.data);
+            if (hval !== undefined) {
+                val = hval;
+            }
+        }
+        // There is a default value handler
+        else if (val === undefined && handler.default !== undefined) {
+            val = handler.default;
+        }
     }
+    
+    if (val !== undefined) {
+        return val.toString();
+    }
+    
     return d.node.toString();
 }
 
@@ -1210,7 +1228,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
             var nodeElement = findNodeElement(node);
             updateNodeAppearance(nodeElement);
             nodeElement.select('text')
-                .text(data[attrib] || node)
+                .text(getNodeLabel({data: data, node: node}))
                 .style(LAYOUT_OPTS.label_style);
         }
     }
