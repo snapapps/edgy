@@ -27,51 +27,56 @@ SpriteMorph.prototype.isFinite = function(x) {
 };
 
 (function() {
-    var blocks = {
-        reportPower: {
-            type: 'reporter',
-            category: 'operators',
-            spec: '%n to power %n',
-        },
-        reportMaxValue: {
-            type: 'reporter',
-            category: 'operators',
-            spec: 'max of %l',
-        },
-        reportMinValue: {
-            type: 'reporter',
-            category: 'operators',
-            spec: 'min of %l',
-        },
-        reportInfinity: {
-            type: 'reporter',
-            category: 'operators',
-            spec: 'infinity',
-        },
-        reportPi: {
-            type: 'reporter',
-            category: 'operators',
-            spec: 'pi',
-        },
-        reportE: {
-            type: 'reporter',
-            category: 'operators',
-            spec: 'e',
-        },
-        isFinite: {
-            type: 'predicate',
-            category: 'operators',
-            spec: 'is %n finite?',
-        },
-    };
 
-    // Add the new blocks.
-    for (var blockName in blocks) {
-        if(blocks.hasOwnProperty(blockName)) {
-            SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+var blocks = {
+    reportPower: {
+        type: 'reporter',
+        category: 'operators',
+        spec: '%n to power %n',
+    },
+    reportMaxValue: {
+        type: 'reporter',
+        category: 'operators',
+        spec: 'max of %l',
+    },
+    reportMinValue: {
+        type: 'reporter',
+        category: 'operators',
+        spec: 'min of %l',
+    },
+    reportInfinity: {
+        type: 'reporter',
+        category: 'operators',
+        spec: 'infinity',
+    },
+    reportPi: {
+        type: 'reporter',
+        category: 'operators',
+        spec: 'pi',
+    },
+    reportE: {
+        type: 'reporter',
+        category: 'operators',
+        spec: 'e',
+    },
+    isFinite: {
+        type: 'predicate',
+        category: 'operators',
+        spec: 'is %n finite?',
+    },
+};
+
+SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+    return function() {
+        oldInitBlocks.call(this);
+        // Add the new blocks.
+        for (blockName in blocks) {
+            if(blocks.hasOwnProperty(blockName)) {
+                SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+            }
         }
-    }
-}());
+    };
+}(SpriteMorph.prototype.initBlocks));
 
 SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplates) {
     return function (category) {
@@ -105,9 +110,6 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
         return blocks;
     };
 }(SpriteMorph.prototype.blockTemplates));
-
-
-(function() {
 
 Process.prototype.reportMonadic = (function(oldReportMonadic) {
     return function (fname, n) {
@@ -165,5 +167,7 @@ SyntaxElementMorph.prototype.labelPart = (function(oldLabelPart) {
         return part;
     };
 }(SyntaxElementMorph.prototype.labelPart));
+
+SpriteMorph.prototype.initBlocks();
 
 }());
