@@ -465,11 +465,13 @@ SpriteMorph.prototype.reportCounterCount = function(key, counter) {
             type: 'reporter',
             category: 'lists',
             spec: 'counter %exppairs',
+            defaults: ['item', 3]
         },
         reportCounterCount: {
             type: 'reporter',
             category: 'lists',
             spec: 'count %s in %map',
+            defaults: ['item']
         },
     };
 
@@ -535,21 +537,25 @@ SpriteMorph.prototype.removeFromDict = function(key, dict) {
             type: 'reporter',
             category: 'lists',
             spec: 'dict %exppairs',
+            defaults: ['key', 'value']
         },
         getDict: {
             type: 'reporter',
             category: 'lists',
             spec: 'get %s in dict %map',
+            defaults: ['key']
         },
         setDict: {
             type: 'command',
             category: 'lists',
             spec: 'set %s in dict %map to %s',
+            defaults: ['key', null, 'value']
         },
         removeFromDict: {
             type: 'command',
             category: 'lists',
             spec: 'remove %s from dict %map',
+            defaults: ['key']
         },
         reportDictLength: {
             type: 'reporter',
@@ -560,6 +566,7 @@ SpriteMorph.prototype.removeFromDict = function(key, dict) {
             type: 'predicate',
             category: 'lists',
             spec: 'dict %map contains key %s',
+            defaults: [null, 'key']
         },
         keysInDict: {
             type: 'reporter',
@@ -631,6 +638,7 @@ SpriteMorph.prototype.isStackEmpty = function (list) {
             type: 'command',
             category: 'lists',
             spec: 'push %s to stack %l',
+            defaults: ['item']
         },
         popStack: {
             type: 'command',
@@ -707,6 +715,7 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
             type: 'command',
             category: 'lists',
             spec: 'enqueue %s to queue %l',
+            defaults: ['item']
         },
         popQueue: {
             type: 'command',
@@ -1044,11 +1053,13 @@ SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
             type: 'reporter',
             category: 'lists',
             spec: 'max pqueue %exppairs',
+            defaults: ['item', 1]
         },
         reportNewMinPQueue: {
             type: 'reporter',
             category: 'lists',
             spec: 'min pqueue %exppairs',
+            defaults: ['item', 1]
         },
         reportPQueueTop: {
             type: 'reporter',
@@ -1064,6 +1075,7 @@ SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
             type: 'command',
             category: 'lists',
             spec: 'enqueue %s to pqueue %l with priority %s',
+            defaults: ['item', null, 1]
         },
         popPQueue: {
             type: 'command',
@@ -1074,6 +1086,7 @@ SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
             type: 'command',
             category: 'lists',
             spec: 'update %s in pqueue %l to priority %s',
+            defaults: ['item', null, 1]
         },
         isPQueueEmpty: {
             type: 'predicate',

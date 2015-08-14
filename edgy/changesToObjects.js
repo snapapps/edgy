@@ -2483,7 +2483,8 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         showGraphSlice: {
             type: 'command',
             category: 'network',
-            spec: 'show subgraph from node %s of depth %n'
+            spec: 'show subgraph from node %s of depth %n',
+            defaults: [1, 3]
         },
         hideActiveGraph: {
             type: 'command',
@@ -2508,7 +2509,8 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         setGlobalNodeAttrib: {
             type: 'command',
             category: 'nodes',
-            spec: 'set %nodeAttr of all nodes to %s'
+            spec: 'set %nodeAttr of all nodes to %s',
+            defaults: ['shape', 'circle']
         },
         setGlobalNodeAttribDict: {
             type: 'command',
@@ -2518,7 +2520,8 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         setGlobalEdgeAttrib: {
             type: 'command',
             category: 'edges',
-            spec: 'set %edgeAttr of all edges to %s'
+            spec: 'set %edgeAttr of all edges to %s',
+            defaults: ['label', 'value']
         },
         setGlobalEdgeAttribDict: {
             type: 'command',
@@ -2538,7 +2541,8 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         addNode: {
             type: 'command',
             category: 'nodes',
-            spec: 'add node %exp'
+            spec: 'add node %exp',
+            defaults: [1]
         },
         newNode: {
             type: 'reporter',
@@ -2548,12 +2552,14 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         removeNode: {
             type: 'command',
             category: 'nodes',
-            spec: 'remove node %s'
+            spec: 'remove node %s',
+            defaults: [1]
         },
         renameNode: {
             type: 'command',
             category: 'nodes',
-            spec: 'rename node %s to %s'
+            spec: 'rename node %s to %s',
+            defaults: [1, 2]
         },
         addEdge: {
             type: 'command',
@@ -2568,47 +2574,56 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         getNeighbors: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'neighbors of %s'
+            spec: 'neighbors of %s',
+            defaults: [1]
         },
         setNodeAttrib: {
             type: 'command',
             category: 'nodes',
-            spec: 'set %nodeAttr of node %s to %s'
+            spec: 'set %nodeAttr of node %s to %s',
+            defaults: ['shape', 1, 'circle']
         },
         getNodeAttrib: {
             type: 'reporter',
             category: 'nodes',
-            spec: '%nodeAttr of node %s'
+            spec: '%nodeAttr of node %s',
+            defaults: ['shape', 1]
         },
         getNodeAttribDict: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'all attributes of %s'
+            spec: 'all attributes of %s',
+            defaults: [1]
         },
         setNodeAttribsFromDict: {
             type: 'command',
             category: 'nodes',
-            spec: 'set attributes of %s from dict %l'
+            spec: 'set attributes of %s from dict %l',
+            defaults: [1]
         },
         setNodeDisplayAttrib: {
             type: 'command',
             category: 'nodes',
-            spec: 'display node attribute %allNodeAttr'
+            spec: 'display node attribute %allNodeAttr',
+            defaults: ['shape']
         },
         setEdgeDisplayAttrib: {
             type: 'command',
             category: 'edges',
-            spec: 'display edge attribute %edgeAttr'
+            spec: 'display edge attribute %edgeAttr',
+            defaults: ['label']
         },
         setEdgeAttrib: {
             type: 'command',
             category: 'edges',
-            spec: 'set %edgeAttr of edge %l to %s'
+            spec: 'set %edgeAttr of edge %l to %s',
+            defaults: ['label', null, 'value']
         },
         getEdgeAttrib: {
             type: 'reporter',
             category: 'edges',
-            spec: '%edgeAttr of edge %l'
+            spec: '%edgeAttr of edge %l',
+            defaults: ['shape']
         },
         getEdgeAttribDict: {
             type: 'reporter',
@@ -2623,12 +2638,14 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         setNodeCostume: {
             type: 'command',
             category: 'nodes',
-            spec: 'set costume of node %s to %cst2'
+            spec: 'set costume of node %s to %cst2',
+            defaults: [1, 'default']
         },
         setEdgeCostume: {
             type: 'command',
             category: 'edges',
-            spec: 'set costume of edge %l to %cst2'
+            spec: 'set costume of edge %l to %cst2',
+            defaults: [null, 'default']
         },
         getNodes: {
             type: 'reporter',
@@ -2638,7 +2655,8 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         getNodesWithAttr: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'nodes with %nodeAttr equal to %s'
+            spec: 'nodes with %nodeAttr equal to %s',
+            defaults: ['shape', 'circle']
         },
         getEdges: {
             type: 'reporter',
@@ -2648,27 +2666,32 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         getDegree: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'degree of %s'
+            spec: 'degree of %s',
+            defaults: [1]
         },
         getInDegree: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'in-degree of %s'
+            spec: 'in-degree of %s',
+            defaults: [1]
         },
         getOutDegree: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'out-degree of %s'
+            spec: 'out-degree of %s',
+            defaults: [1]
         },
         getEdgesWithAttr: {
             type: 'reporter',
             category: 'edges',
-            spec: 'edges with %edgeAttr equal to %s'
+            spec: 'edges with %edgeAttr equal to %s',
+            defaults: ['label', 'value']
         },
         hasNode: {
             type: 'predicate',
             category: 'nodes',
-            spec: 'node %s exists'
+            spec: 'node %s exists',
+            defaults: [1]
         },
         hasEdge: {
             type: 'predicate',
@@ -2678,47 +2701,56 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         getOutgoing: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'outgoing nodes of %s'
+            spec: 'outgoing nodes of %s',
+            defaults: [1]
         },
         getIncoming: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'incoming nodes of %s'
+            spec: 'incoming nodes of %s',
+            defaults: [1]
         },
         getNeighborEdges: {
             type: 'reporter',
             category: 'edges',
-            spec: 'edges of %s'
+            spec: 'edges of %s',
+            defaults: [1]
         },
         getOutgoingEdges: {
             type: 'reporter',
             category: 'edges',
-            spec: 'outgoing edges of %s'
+            spec: 'outgoing edges of %s',
+            defaults: [1]
         },
         getIncomingEdges: {
             type: 'reporter',
             category: 'edges',
-            spec: 'incoming edges of %s'
+            spec: 'incoming edges of %s',
+            defaults: [1]
         },
         getMatrixEntry: {
             type: 'reporter',
             category: 'network',
-            spec: 'adj %s , %s'
+            spec: 'adj %s , %s',
+            defaults: [1, 2]
         },
         setMatrixEntry: {
             type: 'command',
             category: 'network',
-            spec: 'set adj %s , %s to %n'
+            spec: 'set adj %s , %s to %n',
+            defaults: [1, 2, 1]
         },
         getMatrixEntryWeighted: {
             type: 'reporter',
             category: 'network',
-            spec: 'adj %s , %s %edgeAttr'
+            spec: 'adj %s , %s %edgeAttr',
+            defaults: [1, 2, 'label']
         },
         setMatrixEntryWeighted: {
             type: 'command',
             category: 'network',
-            spec: 'set adj %s , %s %edgeAttr to %s'
+            spec: 'set adj %s , %s %edgeAttr to %s',
+            defaults: [1, 2, 'label', 'value']
         },
         isEmpty: {
             type: 'predicate',
@@ -2748,27 +2780,32 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         generateBalancedTree: {
             type: 'command',
             category: 'network',
-            spec: 'generate balanced tree of degree %n and height %n numbered from %n'
+            spec: 'generate balanced tree of degree %n and height %n numbered from %n',
+            defaults: [2, 3, 1]
         },
         generateCycleGraph: {
             type: 'command',
             category: 'network',
-            spec: 'generate cycle graph of length %n numbered from %n'
+            spec: 'generate cycle graph of length %n numbered from %n',
+            defaults: [5, 1]
         },
         generateCompleteGraph: {
             type: 'command',
             category: 'network',
-            spec: 'generate complete graph on %n vertices numbered from %n'
+            spec: 'generate complete graph on %n vertices numbered from %n',
+            defaults: [5, 1]
         },
         generatePathGraph: {
             type: 'command',
             category: 'network',
-            spec: 'generate path graph of length %n numbered from %n'
+            spec: 'generate path graph of length %n numbered from %n',
+            defaults: [5, 1]
         },
         generateGridGraph: {
             type: 'command',
             category: 'network',
-            spec: 'generate a %n by %n 2D grid graph'
+            spec: 'generate a %n by %n 2D grid graph',
+            defaults: [4, 4]
         },
         loadGraphFromURL: {
             type: 'command',
@@ -2783,7 +2820,8 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         reportEdge: {
             type: 'reporter',
             category: 'edges',
-            spec: 'edge %s %s'
+            spec: 'edge %s %s',
+            defaults: [1, 2]
         },
         startNode: {
             type: 'reporter',
@@ -2798,72 +2836,86 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         sortNodes: {
             type: 'reporter',
             category: 'nodes',
-            spec: 'nodes %l sorted by %nodeAttr %ascdesc'
+            spec: 'nodes %l sorted by %nodeAttr %ascdesc',
+            defaults: [null, 'shape', 'ascending']
         },
         sortEdges: {
             type: 'reporter',
             category: 'edges',
-            spec: 'edges %l sorted by %edgeAttr %ascdesc'
+            spec: 'edges %l sorted by %edgeAttr %ascdesc',
+            defaults: [null, 'shape', 'ascending']
         },
         getLastfmFriends: {
             type: 'reporter',
             category: 'external',
-            spec: 'friends of %txt'
+            spec: 'friends of %txt',
+            defaults: ['user']
         },
         getLastfmUserLovedTracks: {
             type: 'reporter',
             category: 'external',
-            spec: 'loved tracks of %txt'
+            spec: 'loved tracks of %txt',
+            defaults: ['user']
         },
         getWordNetNounHypernyms: {
             type: 'reporter',
             category: 'external',
-            spec: 'hypernyms of %txt'
+            spec: 'hypernyms of %txt',
+            defaults: ['hello']
         },
         getWordNetNounHyponyms: {
             type: 'reporter',
             category: 'external',
-            spec: 'hyponyms of %txt'
+            spec: 'hyponyms of %txt',
+            defaults: ['hello']
         },
         getWordNetSynsets: {
             type: 'reporter',
             category: 'external',
-            spec: 'synsets of %txt'
+            spec: 'synsets of %txt',
+            defaults: ['hello']
         },
         getWordNetDefinition: {
             type: 'reporter',
             category: 'external',
-            spec: 'definition of %txt'
+            spec: 'definition of %txt',
+            defaults: ['hello']
         },
         getTMDBMoviesByTitle: {
             type: 'reporter',
             category: 'external',
-            spec: 'movie #s where title has %txt'
+            spec: 'movie #s where title has %txt',
+            defaults: ['hello world']
         },
         getTMDBPeopleByName: {
             type: 'reporter',
             category: 'external',
-            spec: 'person #s where name has %txt'
+            spec: 'person #s where name has %txt',
+            defaults: ['hello world']
         },
         getTMDBTitle: {
             type: 'reporter',
             category: 'external',
-            spec: 'title of movie %n'
+            spec: 'title of movie %n',
+            defaults: [1]
         },
         getTMDBCast: {
             type: 'reporter',
             category: 'external',
-            spec: 'cast of movie %n'
+            spec: 'cast of movie %n',
+            defaults: [1]
         },
         getTMDBMoviesByPerson: {
             type: 'reporter',
             category: 'external',
-            spec: 'movies with person %n'
+            spec: 'movies with person %n',
+            defaults: [1]
         },
         getTMDBPersonName: {
             type: 'reporter',
             category: 'external',
-            spec: 'name of person %n'
+            spec: 'name of person %n',
+            defaults: [1]
         },
         convertToDigraph: {
             type: 'command',
@@ -2896,12 +2948,14 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         isNodeDisplayed: {
             type: 'predicate',
             category: 'nodes',
-            spec: 'is %s displayed'
+            spec: 'is %s displayed',
+            defaults: [1]
         },
         hideNodeInSubgraph: {
             type: 'command',
             category: 'nodes',
-            spec: 'hide %s in subgraph'
+            spec: 'hide %s in subgraph',
+            defaults: [1]
         },
         showEdgeInSubgraph: {
             type: 'command',
