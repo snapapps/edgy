@@ -370,6 +370,35 @@ function getNodeLabel(d) {
     return d.node.toString();
 }
 
+function getEdgeLabel(d) {
+    var attr = currentGraph.edgeDisplayAttribute;
+    if (attr == '') {
+        return '';
+    }
+    var handler = EDGE_ATTR_HANDLERS[attr];
+    var val = d.data[attr];
+    
+    if (handler) {
+        // There is a get handler
+        if (handler.get) {
+            var hval = handler.get.call(this, d.edge, d.data);
+            if (hval !== undefined) {
+                val = hval;
+            }
+        }
+        // There is a default value handler
+        else if (val === undefined && handler.default !== undefined) {
+            val = handler.default;
+        }
+    }
+    
+    if (val !== undefined) {
+        return val.toString();
+    }
+    
+    return d.data.label.toString();
+}
+
 var DEFAULT_NODE_COLOR = "white",
     DEFAULT_EDGE_COLOR = "black",
     DEFAULT_LABEL_COLOR = "black",
@@ -535,12 +564,7 @@ var DEFAULT_NODE_COLOR = "white",
             }
         },
         edge_labels: function(d) {
-            var attr = currentGraph.edgeDisplayAttribute;
-            if(d.data[attr] !== undefined) {
-                return d.data[attr].toString();
-            } else {
-                return '';
-            }
+            return getEdgeLabel(d);
         },
         edge_offset: function(d) {
             if (getNodeElementType(d.source) == "circle" &&
@@ -1326,12 +1350,7 @@ var EDGE_ATTR_HANDLERS = {
         }
     },
     label: {
-        default: "",
-        set: function(edge, data, val) {
-            if(data.__d3datum__) {
-                findEdgeElement(edge).select("text").text(val);
-            }
-        }
+        default: ""
     },
     "label-color": {
         default: DEFAULT_LABEL_COLOR,
@@ -1346,6 +1365,10 @@ var EDGE_ATTR_HANDLERS = {
 var BUILTIN_EDGE_ATTRS = Object.keys(EDGE_ATTR_HANDLERS);
 
 SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
+    if (attrib == '') {
+        throw new Error("No attribute selected.");
+    }
+    
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     if(!this.G.has_edge(a, b)) {
         throw new EdgeNotInGraphError(edge);
@@ -1362,6 +1385,10 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     // Run any relevant special handlers.
     if(EDGE_ATTR_HANDLERS[attrib] && EDGE_ATTR_HANDLERS[attrib].set) {
         EDGE_ATTR_HANDLERS[attrib].set.call(this, edge, data, val);
+    }
+    
+    if (attrib == currentGraph.edgeDisplayAttribute) {
+        findEdgeElement(edge).select("text").text(getEdgeLabel({edge: edge, data: data}));
     }
 };
 
@@ -2433,12 +2460,7 @@ SpriteMorph.prototype.setNodeDisplayAttrib = function (attr) {
 };
 
 SpriteMorph.prototype.setEdgeDisplayAttrib = function (attr) {
-    if (attr != '' ) {
-        currentGraph.edgeDisplayAttribute = attr;
-    }
-    else {
-        currentGraph.edgeDisplayAttribute = 'label';
-    }
+    currentGraph.edgeDisplayAttribute = attr;
     redrawGraph();
 };
 
