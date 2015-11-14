@@ -294,8 +294,8 @@ function updateNodeAppearance(node) {
 
     // Reapply styles and attributes to reflect any changes (e.g. label
     // changed).
-    shapeEl.style(LAYOUT_OPTS.node_style);
-    shapeEl.attr(LAYOUT_OPTS.node_attr);
+    shapeEl.style(LAYOUT_OPTS.nodeStyle);
+    shapeEl.attr(LAYOUT_OPTS.nodeAttr);
 }
 
 function measureText(text) {
@@ -337,7 +337,7 @@ function findNodeElement(node) {
 function findEdgeElement(edge) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
     return graphEl.selectAll(".edge").filter(function(d) {
-        return ((d.edge[0] === a && d.edge[1] === b) || (!currentGraph.is_directed()) && (d.edge[0] === b && d.edge[1] === a));
+        return ((d.edge[0] === a && d.edge[1] === b) || (!currentGraph.isDirected()) && (d.edge[0] === b && d.edge[1] === a));
     });
 }
 
@@ -410,9 +410,9 @@ var DEFAULT_NODE_COLOR = "white",
 			return edgyLayoutAlgorithm();  /* See changesToGui.js... change it if you want! */
 		},
         element: graphEl.node(),
-        with_labels: true,
-        with_edge_labels: true,
-        layout_attr: {
+        withLabels: true,
+        withEdgeLabels: true,
+        layoutAttr: {
             linkDistance: function(d) {
 				if (!d) {
 					//WebCOLA does not support different link-distances for different nodes.
@@ -428,10 +428,10 @@ var DEFAULT_NODE_COLOR = "white",
             },
 			avoidOverlaps: true
         },
-        node_shape: function(d) {
+        nodeShape: function(d) {
             return this.ownerDocument.createElementNS(this.namespaceURI, getNodeElementType(d));
         },
-        node_style: {
+        nodeStyle: {
             fill: function(d) {
                 return d.data.color || DEFAULT_NODE_COLOR;
             },
@@ -447,7 +447,7 @@ var DEFAULT_NODE_COLOR = "white",
                 return d.data.stroke || '#333333';
             }
         },
-        node_attr: {
+        nodeAttr: {
 			width: function(d) {
                 if (d.data.__costume__)
                     return undefined;
@@ -508,7 +508,7 @@ var DEFAULT_NODE_COLOR = "white",
                 }
             }
         },
-        edge_style: {
+        edgeStyle: {
             fill: function(d) {
                 if(d.data.__costume__) {
                     // Display edge pattern if there one is set.
@@ -526,21 +526,21 @@ var DEFAULT_NODE_COLOR = "white",
                 }
             },
         },
-        edge_attr: {
+        edgeAttr: {
             transform: function(d) {
                 if(d.data.__costume__) {
                     return "scale(" + (d.data.width || 1) + ")";
                 }
             }
         },
-        edge_len: function(d) {
+        edgeLen: function(d) {
             if(d.data.__costume__) {
                 return 1 / (d.data.width || 1);
             } else {
                 return 1;
             }
         },
-        label_style: {
+        labelStyle: {
             fill: function (d) {
                 var attr = currentGraph.nodeDisplayAttribute;
                 if ((d.data[attr] == undefined) && (attr !== 'id')) {
@@ -550,7 +550,7 @@ var DEFAULT_NODE_COLOR = "white",
                 }
             }
         },
-        label_attr: {
+        labelAttr: {
 			transform: function(d) {
 				return 'scale(' + (d.data.scale || 1) + ')';
 			}
@@ -558,15 +558,15 @@ var DEFAULT_NODE_COLOR = "white",
         labels: function(d) {
             return getNodeLabel(d);
         },
-        edge_label_style: {
+        edgeLabelStyle: {
             fill: function(d) {
                 return d.data["label-color"] || DEFAULT_LABEL_COLOR;
             }
         },
-        edge_labels: function(d) {
+        edgeLabels: function(d) {
             return getEdgeLabel(d);
         },
-        edge_offset: function(d) {
+        edgeOffset: function(d) {
             if (getNodeElementType(d.source) == "circle" &&
                 getNodeElementType(d.target) == "circle")
                 // If they're both circles, we can display digraphs better
@@ -576,7 +576,7 @@ var DEFAULT_NODE_COLOR = "white",
                 ];
             return [10, 10]; // This is the default
         },
-        pan_zoom: {enabled: true}
+        panZoom: {enabled: true}
     };
 
 redrawGraph = function() {
@@ -590,7 +590,7 @@ redrawGraph = function() {
     }
 
     // Follow stored fixedness, x and y values in layout.
-    jsnx.forEach(currentGraph.nodes_iter(true), function(node) {
+    jsnx.forEach(currentGraph.nodesIter(true), function(node) {
         var data = node[1];
         if(data.fixed) {
             data.__d3datum__.fixed |= 1;
@@ -620,12 +620,12 @@ function displayGraph (G) {
     // Remove the JSNetworkX mutator bindings from the current graph, so we
     // don't get mysterious slowdowns from unbound graphs floating around and
     // being laid out in the background.
-    if(currentGraph) {
+    /*if(currentGraph) {
         jsnx.unbind(currentGraph, true);
     }
     if(hiddenCurrentGraph) {
         jsnx.unbind(hiddenCurrentGraph, true);
-    }
+    }*/
     if(layout) {
         layout.stop();
     }
@@ -659,10 +659,10 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             myself = this,
             world = this.world();
 
-        if(!currentGraph.parent_graph && !hiddenCurrentGraph && currentGraphSprite) {
+        if(!currentGraph.parentGraph && !hiddenCurrentGraph && currentGraphSprite) {
             menu.addItem("add node", function () {
                 new DialogBoxMorph(null, function (name) {
-                    currentGraph.add_node(parseNode(name));
+                    currentGraph.addNode(parseNode(name));
                 }).prompt('Node name', '', world);
                 world.worldCanvas.focus();
             });
@@ -673,7 +673,7 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                     // new DialogBoxMorph while the previous one still exists.
                     setTimeout(function() {
                         new DialogBoxMorph(null, function (end) {
-                            currentGraph.add_edge(parseNode(start), parseNode(end));
+                            currentGraph.addEdge(parseNode(start), parseNode(end));
                         }).prompt('End node', '', world);
                     }, 0);
                 }).prompt('Start node', '', world);
@@ -762,14 +762,14 @@ SpriteMorph.prototype.loadCostumesAsPatterns = function() {
 
 StageMorph.prototype.maxVisibleNodesChanged = SpriteMorph.prototype.maxVisibleNodesChanged = function(num) {
     if(hiddenCurrentGraph &&
-       num >= hiddenCurrentGraph.number_of_nodes()) {
+       num >= hiddenCurrentGraph.numberOfNodes()) {
         try {
             this.setGraphToDisplay2(hiddenCurrentGraph);
         } catch(e) {
             this.parentThatIsA(IDE_Morph).showMessage(e.message);
         }
         hiddenCurrentGraph = null;
-    } else if (currentGraph.number_of_nodes() > num) {
+    } else if (currentGraph.numberOfNodes() > num) {
         hiddenCurrentGraph = currentGraph;
         hideGraph();
     }
@@ -876,12 +876,12 @@ function parseNode(node) {
 
 SpriteMorph.prototype.newGraph = function() {
     this.maximumNode = 0;
-    this.setGraph(jsnx.Graph());
+    this.setGraph(new jsnx.Graph());
 };
 
 SpriteMorph.prototype.newDiGraph = function() {
     this.maximumNode = 0;
-    this.setGraph(jsnx.DiGraph());
+    this.setGraph(new jsnx.DiGraph());
 };
 
 function formatTooManyNodesMessage(n, max) {
@@ -897,13 +897,13 @@ StageMorph.prototype.setGraphToDisplay2 = SpriteMorph.prototype.setGraphToDispla
         maxVisibleNodes = ide.maxVisibleNodes;
     }
 
-    if(G.number_of_nodes() <= maxVisibleNodes) {
+    if(G.numberOfNodes() <= maxVisibleNodes) {
         displayGraph(G);
         currentGraphSprite = this;
         hiddenCurrentGraph = null;
     } else {
         hiddenCurrentGraph = G;
-        var msg = formatTooManyNodesMessage(G.number_of_nodes(), maxVisibleNodes);
+        var msg = formatTooManyNodesMessage(G.numberOfNodes(), maxVisibleNodes);
         if(ide) {
             throw new Error(msg);
         } else {
@@ -922,36 +922,36 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
     var start = parseNode(start),
         G;
 
-    if(!this.G.has_node(start)) {
+    if(!this.G.hasNode(start)) {
         this.setGraphToDisplay2(new this.G.constructor())
         return;
     }
 
-    if(this.G.is_directed()) {
-        var distancesA = jsnx.single_source_shortest_path_length(this.G, start, radius);
+    if(this.G.isDirected()) {
+        var distancesA = jsnx.singleSourceShortestPathLength(this.G, start, radius);
         this.G.reverse(false);
-        var distancesB = jsnx.single_source_shortest_path_length(this.G, start, radius);
+        var distancesB = jsnx.singleSourceShortestPathLength(this.G, start, radius);
         this.G.reverse(false);
         G = this.G.subgraph(distancesA.keys().concat(distancesB.keys()));
     }
     else {
-        var distances = jsnx.single_source_shortest_path_length(this.G, start, radius);
+        var distances = jsnx.singleSourceShortestPathLength(this.G, start, radius);
         G = this.G.subgraph(distances.keys());
     }
 
-    if(currentGraph.parent_graph === this.G) {
-        currentGraph.add_nodes_from(G);
-        currentGraph.add_edges_from(G.edges(true, null));
+    if(currentGraph.parentGraph === this.G) {
+        currentGraph.addNodesFrom(G);
+        currentGraph.addEdgesFrom(G.edges(true, null));
         // Delete nodes from currentGraph not in G.
-        currentGraph.remove_nodes_from(currentGraph.nodes().filter(function(n) {
-            return !G.has_node(n);
+        currentGraph.removeNodesFrom(currentGraph.nodes().filter(function(n) {
+            return !G.hasNode(n);
         }));
         // Delete edges from currentGraph not in G.
-        currentGraph.remove_edges_from(currentGraph.edges().filter(function(e) {
-            return !G.has_edge(e[0], e[1]);
+        currentGraph.removeEdgesFrom(currentGraph.edges().filter(function(e) {
+            return !G.hasEdge(e[0], e[1]);
         }));
     } else {
-        G.parent_graph = this.G;
+        G.parentGraph = this.G;
         this.setGraphToDisplay2(G);
     }
     this.sliceStart = start;
@@ -959,18 +959,18 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
 };
 
 SpriteMorph.prototype.redrawGraphSlice = function() {
-    if(currentGraph.parent_graph === this.G) {
+    if(currentGraph.parentGraph === this.G) {
         this.showGraphSlice(this.sliceStart, this.sliceRadius);
     }
 }
 
 function hideGraph() {
-    displayGraph(jsnx.Graph());
+    displayGraph(new jsnx.Graph());
     currentGraphSprite = null;
 }
 
 SpriteMorph.prototype.isActiveGraph = function() {
-    return currentGraph === this.G || currentGraph.parent_graph === this.G || hiddenCurrentGraph === this.G;
+    return currentGraph === this.G || currentGraph.parentGraph === this.G || hiddenCurrentGraph === this.G;
 };
 
 SpriteMorph.prototype.resumeLayout = function() {
@@ -987,22 +987,22 @@ SpriteMorph.prototype.hideActiveGraph = function() {
 
 SpriteMorph.prototype.clearGraph = function() {
     this.G.clear();
-    if(currentGraph.parent_graph === this.G) {
+    if(currentGraph.parentGraph === this.G) {
         this.setActiveGraph();
     }
 };
 
 SpriteMorph.prototype.numberOfNodes = function () {
-    return this.G.number_of_nodes();
+    return this.G.numberOfNodes();
 };
 
 SpriteMorph.prototype.numberOfEdges = function () {
-    return this.G.number_of_edges();
+    return this.G.numberOfEdges();
 };
 
 SpriteMorph.prototype.addNode = function(nodes) {
     var ide = this.parentThatIsA(IDE_Morph),
-        totalNodes = this.G.number_of_nodes() + nodes.length();
+        totalNodes = this.G.numberOfNodes() + nodes.length();
     if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
         // Too many nodes. Hide the graph and throw up a message.
         hiddenCurrentGraph = this.G;
@@ -1010,15 +1010,15 @@ SpriteMorph.prototype.addNode = function(nodes) {
         ide.showMessage(formatTooManyNodesMessage(totalNodes,
                                                   ide.maxVisibleNodes));
     }
-    this.G.add_nodes_from(nodes.asArray().map(parseNode));
+    this.G.addNodesFrom(nodes.asArray().map(parseNode));
     // No need to update the slice, as adding nodes can never update a slice
     // due to not being connected.
 };
 
 SpriteMorph.prototype.removeNode = function(node) {
-    this.G.remove_node(parseNode(node));
+    this.G.removeNode(parseNode(node));
 
-    if(currentGraph.has_node(node)) {
+    if(currentGraph.hasNode(node)) {
         this.redrawGraphSlice();
     }
 };
@@ -1035,12 +1035,12 @@ SpriteMorph.prototype.renameNode = function(from, to) {
     try {
         saveLayout(graphEl);
 
-        // The following doesn't work because jsnx.relabel.relabel_nodes()
+        // The following doesn't work because jsnx.relabel.relabelNodes()
         // performs the operations in the wrong order:
         //
         // var mapping = {};
         // mapping[from] = to;
-        // jsnx.relabel.relabel_nodes(this.G, mapping, false);
+        // jsnx.relabel.relabelNodes(this.G, mapping, false);
 
         // Since there's no way to just change the ID of a node, we have to
         // remove the old node and then create a new node with the desired new
@@ -1048,19 +1048,19 @@ SpriteMorph.prototype.renameNode = function(from, to) {
         from = parseNode(from);
         to = parseNode(to);
 
-        var edges = jsnx.map(this.G.edges(from, true), function(d) {
+        var edges = this.G.edges(from, true).map(function(d) {
             return [to, d[1], d[2]];
         });
 
-        if(this.G.is_directed()) {
-            edges = edges.concat(jsnx.map(this.G.in_edges(from, true), function(d) {
+        if(this.G.isDirected()) {
+            edges = edges.concat(this.G.inEdges(from, true).map(function(d) {
                 return [d[0], to, d[2]];
             }));
         }
         var data = this.G.node.get(from);
-        this.G.remove_node(from);
-        this.G.add_node(to, data);
-        this.G.add_edges_from(edges);
+        this.G.removeNode(from);
+        this.G.addNode(to, data);
+        this.G.addEdgesFrom(edges);
     } finally {
         restoreLayout(graphEl, layout);
     }
@@ -1068,16 +1068,16 @@ SpriteMorph.prototype.renameNode = function(from, to) {
 
 SpriteMorph.prototype.addEdge = function(edges) {
     edges = edges.asArray();
-    this.G.add_edges_from(edges.map(function(x) { return x.asArray().map(parseNode); }));
+    this.G.addEdgesFrom(edges.map(function(x) { return x.asArray().map(parseNode); }));
 
     this.redrawGraphSlice();
 };
 
 SpriteMorph.prototype.removeEdge = function(edge) {
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
-    this.G.remove_edge(a, b);
+    this.G.removeEdge(a, b);
 
-    if(currentGraph.has_node(a) || currentGraph.has_node(b)) {
+    if(currentGraph.hasNode(a) || currentGraph.hasNode(b)) {
         this.redrawGraphSlice();
     }
 };
@@ -1109,7 +1109,7 @@ var NODE_ATTR_HANDLERS = {
             if(this.isActiveGraph()) {
                 var nodeElement = findNodeElement(node);
                 updateNodeAppearance(nodeElement);
-                nodeElement.select("text").attr(LAYOUT_OPTS.label_attr);
+                nodeElement.select("text").attr(LAYOUT_OPTS.labelAttr);
             }
         }
     },
@@ -1138,7 +1138,7 @@ var NODE_ATTR_HANDLERS = {
         default: DEFAULT_LABEL_COLOR,
         set: function(node, data, val) {
             if(this.isActiveGraph()) {
-                findNodeElement(node).select("text").style(LAYOUT_OPTS.label_style);
+                findNodeElement(node).select("text").style(LAYOUT_OPTS.labelStyle);
             }
         }
     },
@@ -1229,7 +1229,7 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
     }
     
     node = parseNode(node);
-    if(!this.G.has_node(node)) {
+    if(!this.G.hasNode(node)) {
         throw new NodeNotInGraphError(node);
     }
 
@@ -1253,14 +1253,14 @@ SpriteMorph.prototype.setNodeAttrib = function(attrib, node, val) {
             updateNodeAppearance(nodeElement);
             nodeElement.select('text')
                 .text(getNodeLabel({data: data, node: node}))
-                .style(LAYOUT_OPTS.label_style);
+                .style(LAYOUT_OPTS.labelStyle);
         }
     }
 };
 
 SpriteMorph.prototype.getNodeAttrib = function(attrib, node) {
     node = parseNode(node);
-    if(!this.G.has_node(node)) {
+    if(!this.G.hasNode(node)) {
         throw new NodeNotInGraphError(node);
     }
 
@@ -1327,7 +1327,7 @@ var EDGE_ATTR_HANDLERS = {
         default: DEFAULT_EDGE_COLOR,
         set: function(edge, data, val) {
             if(data.__d3datum__) {
-                findEdgeElement(edge).select(".line").style(LAYOUT_OPTS.edge_style);
+                findEdgeElement(edge).select(".line").style(LAYOUT_OPTS.edgeStyle);
             }
         }
     },
@@ -1342,7 +1342,7 @@ var EDGE_ATTR_HANDLERS = {
                     // Maintain the graph layout as it is.
                     saveLayout(graphEl);
                     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
-                    this.G.add_edge(a, b, data);
+                    this.G.addEdge(a, b, data);
                 } finally {
                     restoreLayout(graphEl, layout);
                 }
@@ -1356,7 +1356,7 @@ var EDGE_ATTR_HANDLERS = {
         default: DEFAULT_LABEL_COLOR,
         set: function(edge, data, val) {
             if(data.__d3datum__) {
-                findEdgeElement(edge).select("text").style(LAYOUT_OPTS.edge_label_style);
+                findEdgeElement(edge).select("text").style(LAYOUT_OPTS.edgeLabelStyle);
             }
         }
     },
@@ -1370,7 +1370,7 @@ SpriteMorph.prototype.setEdgeAttrib = function(attrib, edge, val) {
     }
     
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
-    if(!this.G.has_edge(a, b)) {
+    if(!this.G.hasEdge(a, b)) {
         throw new EdgeNotInGraphError(edge);
     }
 
@@ -1396,7 +1396,7 @@ SpriteMorph.prototype.getEdgeAttrib = function(attrib, edge) {
     var a = parseNode(edge.at(1)),
         b = parseNode(edge.at(2));
 
-    if(!this.G.has_edge(a, b)) {
+    if(!this.G.hasEdge(a, b)) {
         throw new EdgeNotInGraphError(edge);
     }
 
@@ -1464,7 +1464,7 @@ SpriteMorph.prototype.setNodeCostume = function(node, costumename) {
     // with the given name. Other costumes which share the same name will be
     // unusable unless renamed.
     node = parseNode(node);
-    if(!this.G.has_node(node)) {
+    if(!this.G.hasNode(node)) {
         throw new NodeNotInGraphError(node);
     }
 
@@ -1488,7 +1488,7 @@ SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
     // with the given name. Other costumes which share the same name will be
     // unusable unless renamed.
     var a = parseNode(edge.at(1)), b = parseNode(edge.at(2));
-    if(!this.G.has_edge(a, b)) {
+    if(!this.G.hasEdge(a, b)) {
         throw new EdgeNotInGraphError(edge);
     }
 
@@ -1501,8 +1501,8 @@ SpriteMorph.prototype.setEdgeCostume = function(edge, costumename) {
         });
     }
     if(props.__d3datum__) {
-        graphEl.select(".line").style("fill", LAYOUT_OPTS["edge_style"]["fill"]);
-        graphEl.select(".line").attr("transform", LAYOUT_OPTS["edge_attr"]["transform"]);
+        graphEl.select(".line").style("fill", LAYOUT_OPTS["edgeStyle"]["fill"]);
+        graphEl.select(".line").attr("transform", LAYOUT_OPTS["edgeAttr"]["transform"]);
         layout.resume();
     }
 };
@@ -1514,15 +1514,15 @@ SpriteMorph.prototype.getNodes = function() {
 
 SpriteMorph.prototype.getNodesWithAttr = function(attr, val) {
     var myself = this;
-    return new List(jsnx.toArray(jsnx.filter(this.G.nodes_iter(), function(node) {
+    return new List(jsnx.toArray(jsnx.filter(this.G.nodesIter(), function(node) {
         return snapEquals(myself.getNodeAttrib(attr, node), val);
     })));
 };
 
 SpriteMorph.prototype.getEdges = function() {
-    return new List(jsnx.toArray(jsnx.map(this.G.edges_iter(), function (edge) {
+    return new List(this.G.edges().map(function (edge) {
         return new List(edge);
-    })));
+    }));
 };
 
 SpriteMorph.prototype.getDegree = function(node) {
@@ -1530,17 +1530,17 @@ SpriteMorph.prototype.getDegree = function(node) {
 };
 
 SpriteMorph.prototype.getInDegree = function(node) {
-    return this.G.in_degree(parseNode(node));
+    return this.G.inDegree(parseNode(node));
 };
 
 SpriteMorph.prototype.getOutDegree = function(node) {
-    return this.G.out_degree(parseNode(node));
+    return this.G.outDegree(parseNode(node));
 };
 
 SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
     var edges = [],
         myself = this;
-    jsnx.forEach(this.G.edges_iter(), function (edge) {
+    jsnx.forEach(this.G.edgesIter(), function (edge) {
         var s_edge = new List(edge);
         if (snapEquals(myself.getEdgeAttrib(attr, s_edge), val)) {
             edges.push(s_edge);
@@ -1550,12 +1550,12 @@ SpriteMorph.prototype.getEdgesWithAttr = function(attr, val) {
 };
 
 SpriteMorph.prototype.hasNode = function(node) {
-    return this.G.has_node(parseNode(node));
+    return this.G.hasNode(parseNode(node));
 };
 
 SpriteMorph.prototype.hasEdge = function(edge) {
     var from = parseNode(edge.at(1)), to = parseNode(edge.at(2));
-    return this.G.has_edge(from, to);
+    return this.G.hasEdge(from, to);
 };
 
 SpriteMorph.prototype.getOutgoing = function(node) {
@@ -1571,113 +1571,113 @@ SpriteMorph.prototype.getNeighborEdges = function(node) {
 };
 
 SpriteMorph.prototype.getOutgoingEdges = function(node) {
-    return new List(this.G.out_edges([parseNode(node)]).map(function(x) { return new List(x); }));
+    return new List(this.G.outEdges([parseNode(node)]).map(function(x) { return new List(x); }));
 };
 
 SpriteMorph.prototype.getIncomingEdges = function(node) {
-    return new List(this.G.in_edges([parseNode(node)]).map(function(x) { return new List(x); }));
+    return new List(this.G.inEdges([parseNode(node)]).map(function(x) { return new List(x); }));
 };
 
 SpriteMorph.prototype.isConnected = function() {
-    if (this.G.is_directed()) {
+    if (this.G.isDirected()) {
         throw new Error("Not allowed for directed graphs. Use 'is strongly/weakly connected.'");
     }
 
-    if (this.G.number_of_nodes() === 0) {
+    if (this.G.numberOfNodes() === 0) {
         return false;
     }
 
-    var l = jsnx.single_source_shortest_path_length(this.G,
-        this.G.nodes_iter().next()).count();
+    var l = jsnx.singleSourceShortestPathLength(this.G,
+        this.G.nodes()[0]).size;
 
-    return l === this.G.number_of_nodes();
+    return l === this.G.numberOfNodes();
 };
 
 SpriteMorph.prototype.isStronglyConnected = function() {
-    if (!this.G.is_directed()) {
+    if (!this.G.isDirected()) {
         throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
     }
 
-    if (this.G.number_of_nodes() === 0) {
+    if (this.G.numberOfNodes() === 0) {
         return false;
     }
 
     // Adapted version of Kosaraju's algorithm.
-    var start = this.G.nodes_iter().next();
+    var start = this.G.nodesIter().next().value;
 
     var stack = [start];
-    var visited = new jsnx.contrib.Set();
+    var visited = new Set();
     while(stack.length > 0) {
         var node = stack.pop();
         visited.add(node);
-        jsnx.forEach(this.G.successors_iter(node), function(successor) {
+        jsnx.forEach(this.G.successorsIter(node), function(successor) {
             if(!visited.has(successor)) {
                 stack.push(successor);
             }
         });
     }
 
-    if(visited.count() !== this.G.number_of_nodes())
+    if(visited.size !== this.G.numberOfNodes())
         return false;
 
     var stack = [start];
-    var visited = new jsnx.contrib.Set();
+    var visited = new Set();
     while(stack.length > 0) {
         var node = stack.pop();
         visited.add(node);
-        jsnx.forEach(this.G.predecessors_iter(node), function(predecessor) {
+        jsnx.forEach(this.G.predecessorsIter(node), function(predecessor) {
             if(!visited.has(predecessor)) {
                 stack.push(predecessor);
             }
         });
     }
 
-    return visited.count() === this.G.number_of_nodes();
+    return visited.size === this.G.numberOfNodes();
 };
 
 SpriteMorph.prototype.isWeaklyConnected = function() {
-    if (!this.G.is_directed()) {
+    if (!this.G.isDirected()) {
         throw new Error("Not allowed for undirected graphs. Use 'is connected.'");
     }
 
-    if (this.G.number_of_nodes() === 0) {
+    if (this.G.numberOfNodes() === 0) {
         return false;
     }
 
-    var stack = [this.G.nodes_iter().next()];
-    var visited = new jsnx.contrib.Set();
+    var stack = [this.G.nodesIter().next().value];
+    var visited = new Set();
     while(stack.length > 0) {
         var node = stack.pop();
         visited.add(node);
-        jsnx.forEach(this.G.successors_iter(node), function(successor) {
+        jsnx.forEach(this.G.successorsIter(node), function(successor) {
             if(!visited.has(successor)) {
                 stack.push(successor);
             }
         });
-        jsnx.forEach(this.G.predecessors_iter(node), function(predecessor) {
+        jsnx.forEach(this.G.predecessorsIter(node), function(predecessor) {
             if(!visited.has(predecessor)) {
                 stack.push(predecessor);
             }
         });
     }
-    return visited.count() === this.G.number_of_nodes();
+    return visited.size === this.G.numberOfNodes();
 };
 
 SpriteMorph.prototype.isCyclic = function() {
-    if(this.G.is_directed()) {
+    if(this.G.isDirected()) {
         try {
-            jsnx.topological_sort(this.G);
+            jsnx.topologicalSort(this.G);
             return false;
         } catch (e) {
             return e instanceof jsnx.JSNetworkXUnfeasible;
         }
     } else {
-        var iter = jsnx.sentinelIterator(this.G.nodes_iter(), null),
-            visited = new jsnx.contrib.Set(),
+        var iter = this.G.nodesIter(),
+            visited = new Set(),
             hasCycle = false,
             stack, node, pred;
 
-        while((node = iter.next()) !== null) {
+        for (node of iter) {
             if(visited.has(node))
                 continue;
 
@@ -1686,7 +1686,7 @@ SpriteMorph.prototype.isCyclic = function() {
             while(stack.length > 0 && !hasCycle) {
                 var node = stack.pop();
                 visited.add(node);
-                jsnx.forEach(this.G.neighbors_iter(node), function(neighbor) {
+                jsnx.forEach(this.G.neighborsIter(node), function(neighbor) {
                     if(visited.has(neighbor)) {
                         // Make sure we haven't seen this edge before.
                         if(neighbor !== pred[node]) {
@@ -1756,13 +1756,13 @@ SpriteMorph.prototype.setMatrixEntryWeighted = function(a, b, weightKey, val) {
 };
 
 SpriteMorph.prototype.isEmpty = function() {
-    return this.G.number_of_nodes() === 0;
+    return this.G.numberOfNodes() === 0;
 };
 
 function areDisjoint(a, b) {
     var nodeName, nodes = b.nodes();
     for (var i = 0; i < nodes.length; i++) {
-        if(a.has_node(nodes[i])) {
+        if(a.hasNode(nodes[i])) {
             return false;
         }
     }
@@ -1781,7 +1781,7 @@ SpriteMorph.prototype.addGraph = function(other) {
         throw new NotDisjointError("The graphs are not disjoint.");
     }
     var ide = this.parentThatIsA(IDE_Morph),
-        totalNodes = this.G.number_of_nodes() + other.number_of_nodes();
+        totalNodes = this.G.numberOfNodes() + other.numberOfNodes();
     if(totalNodes > ide.maxVisibleNodes && this.G === currentGraph) {
         // Too many nodes. Hide the graph and throw up a message.
         hiddenCurrentGraph = this.G;
@@ -1790,41 +1790,41 @@ SpriteMorph.prototype.addGraph = function(other) {
                                                   ide.maxVisibleNodes));
     }
     // FIXME: JSNetworkX throws an exception if iterators are used here.
-    this.G.add_nodes_from(other.nodes(true));
-    this.G.add_edges_from(other.edges(null, true));
+    this.G.addNodesFrom(other.nodesIter());
+    this.G.addEdgesFrom(other.edgesIter());
 }
 
 SpriteMorph.prototype.renumberAndAdd = function(other, startNum) {
-    var relabeled = jsnx.relabel.relabel_nodes(other, function (n) { return n + startNum; });
+    var relabeled = jsnx.relabel.relabelNodes(other, function (n) { return n + startNum; });
     this.addGraph(relabeled);
 }
 
 SpriteMorph.prototype.generateBalancedTree = function(r, h, n) {
-    var tree = jsnx.generators.classic.balanced_tree(r, h, new this.G.constructor());
+    var tree = jsnx.generators.classic.balancedTree(r, h, new this.G.constructor());
     this.renumberAndAdd(tree, n);
 };
 
 SpriteMorph.prototype.generateCycleGraph = function(l, n) {
-    var cycle = jsnx.generators.classic.cycle_graph(l, new this.G.constructor());
+    var cycle = jsnx.generators.classic.cycleGraph(l, new this.G.constructor());
     this.renumberAndAdd(cycle, n);
 };
 
 SpriteMorph.prototype.generateCompleteGraph = function(k, n) {
-    var complete = jsnx.generators.classic.complete_graph(k, new this.G.constructor());
+    var complete = jsnx.generators.classic.completeGraph(k, new this.G.constructor());
     this.renumberAndAdd(complete, n);
 };
 
 SpriteMorph.prototype.generatePathGraph = function(k, n) {
-    var path = jsnx.generators.classic.path_graph(k, new this.G.constructor());
+    var path = jsnx.generators.classic.pathGraph(k, new this.G.constructor());
     this.renumberAndAdd(path, n);
 };
 
 SpriteMorph.prototype.generateGridGraph = function(w, h) {
-    var grid = jsnx.generators.classic.grid_2d_graph(w, h, false, new this.G.constructor());
+    var grid = jsnx.generators.classic.grid2dGraph(w, h, false, new this.G.constructor());
     // Grid graphs by default come with labels as [x, y], which blow up with
     // the renderer for some reason. Stringify the labels instead.
     //   Update: add one to the x and y, to be consistent (#261)
-    grid = jsnx.relabel.relabel_nodes(grid, function(x) { return (x[0] + 1) + "," + (x[1] + 1); });
+    grid = jsnx.relabel.relabelNodes(grid, function(x) { return (x[0] + 1) + "," + (x[1] + 1); });
     this.addGraph(grid);
 };
 
@@ -1835,12 +1835,12 @@ SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
     if(!graph) {
         graph = this.G;
     }
-    jsnx.forEach(graph.nodes_iter(true), function(n) {
+    jsnx.forEach(graph.nodesIter(true), function(n) {
         Object.keys(n[1]).forEach(function(attr) {
             nodeattrset[attr] = true;
         });
     });
-    jsnx.forEach(graph.edges_iter(true), function(e) {
+    jsnx.forEach(graph.edgesIter(true), function(e) {
        Object.keys(e[2]).forEach(function(attr) {
             edgeattrset[attr] = true;
         });
@@ -1929,7 +1929,7 @@ SpriteMorph.prototype.loadGraphFromFile = function(addTo) {
 }
 
 SpriteMorph.prototype.topologicalSort = function() {
-    return new List(jsnx.algorithms.dag.topological_sort(this.G));
+    return new List(jsnx.algorithms.dag.topologicalSort(this.G));
 };
 
 SpriteMorph.prototype.reportEdge = function(a, b) {
@@ -2363,7 +2363,7 @@ SpriteMorph.prototype.getWordNetSynsets = function(lemma) {
         throw new Error("WordNet is not loaded. Please load WordNet.")
     }
 
-    return new List(jsnx.toArray(jsnx.filter(this.wordnet_nouns.nodes_iter(), function(synset) {
+    return new List(jsnx.toArray(jsnx.filter(this.wordnet_nouns.nodesIter(), function(synset) {
         return synset.substr(0, lemma.length + 1) === lemma.toString() + '.';
     })));
 };
@@ -2373,7 +2373,7 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
         throw new Error("WordNet is not loaded. Please load WordNet.")
     }
 
-    if(this.wordnet_nouns.has_node(noun)) {
+    if(this.wordnet_nouns.hasNode(noun)) {
         return this.wordnet_nouns.node.get(noun).definition;
     } else {
         throw new Error(noun.toString() + " could not be found.")
@@ -2384,7 +2384,7 @@ SpriteMorph.prototype.setGraph = function(newGraph) {
     var wasActive = this.isActiveGraph();
     this.G = newGraph;
     if(wasActive) {
-        if(currentGraph.parent_graph) {
+        if(currentGraph.parentGraph) {
             this.showGraphSlice(this.sliceStart, this.sliceRadius);
         } else {
             this.setActiveGraph();
@@ -2393,55 +2393,55 @@ SpriteMorph.prototype.setGraph = function(newGraph) {
 };
 
 SpriteMorph.prototype.convertToDigraph = function() {
-    if(!jsnx.is_directed(this.G)) {
-        this.setGraph(jsnx.DiGraph(this.G));
+    if(!jsnx.isDirected(this.G)) {
+        this.setGraph(new jsnx.DiGraph(this.G));
     }
 };
 
 SpriteMorph.prototype.convertToGraph = function() {
-    if(jsnx.is_directed(this.G)) {
-        this.setGraph(jsnx.Graph(this.G));
+    if(jsnx.isDirected(this.G)) {
+        this.setGraph(new jsnx.Graph(this.G));
     }
 };
 
 SpriteMorph.prototype.isNodeDisplayed = function(node) {
     if(this.isActiveGraph()) {
-        return currentGraph.has_node(parseNode(node));
+        return currentGraph.hasNode(parseNode(node));
     }
     return false;
 };
 
 SpriteMorph.prototype.hideNodeInSubgraph = function(node) {
-    if(this.isActiveGraph() && currentGraph.parent_graph == this.G) {
+    if(this.isActiveGraph() && currentGraph.parentGraph == this.G) {
         node = parseNode(node);
-        currentGraph.remove_nodes_from([node]);
+        currentGraph.removeNodes_from([node]);
     }
 };
 
 SpriteMorph.prototype.showEdgeInSubgraph = function(edge) {
-    if(this.isActiveGraph() && currentGraph.parent_graph == this.G && this.hasEdge(edge)) {
+    if(this.isActiveGraph() && currentGraph.parentGraph == this.G && this.hasEdge(edge)) {
         var a = parseNode(edge.at(1)),
             b = parseNode(edge.at(2));
-        currentGraph.add_node(a, this.G.node.get(a));
-        currentGraph.add_node(b, this.G.node.get(b));
-        currentGraph.add_edge(a, b, this.G.edge.get(a).get(b));
+        currentGraph.addNode(a, this.G.node.get(a));
+        currentGraph.addNode(b, this.G.node.get(b));
+        currentGraph.addEdge(a, b, this.G.edge.get(a).get(b));
     }
 };
 
 SpriteMorph.prototype.hideEdgeInSubgraph = function(edge) {
-    if(this.isActiveGraph() && currentGraph.parent_graph == this.G) {
+    if(this.isActiveGraph() && currentGraph.parentGraph == this.G) {
         var a = parseNode(edge.at(1)),
             b = parseNode(edge.at(2));
-        currentGraph.remove_edge(a, b);
+        currentGraph.removeEdge(a, b);
     }
 };
 
 SpriteMorph.prototype.newNode = function() {
     // Get a unique number for a node ID.
     var maximum = this.maximumNode;
-    if(maximum === undefined || this.G.has_node(maximum + 1)) {
+    if(maximum === undefined || this.G.hasNode(maximum + 1)) {
         maximum = 0;
-        jsnx.forEach(this.G.nodes_iter(), function(node) {
+        jsnx.forEach(this.G.nodesIter(), function(node) {
             if(node > maximum) {
                 maximum = node;
             }
@@ -2645,7 +2645,7 @@ SpriteMorph.prototype.loadGraph = function (handle) {
             type: 'reporter',
             category: 'edges',
             spec: '%edgeAttr of edge %l',
-            defaults: ['shape']
+            defaults: ['label']
         },
         getEdgeAttribDict: {
             type: 'reporter',
@@ -3516,7 +3516,7 @@ SpriteMorph.prototype.graphFromJSON = function(json, addTo) {
 
 SpriteMorph.prototype.importGraph = function(G, addTo) {
     var myself = this;
-    jsnx.forEach(G.nodes_iter(true), function (node) {
+    jsnx.forEach(G.nodesIter(true), function (node) {
         var data = node[1], k;
         for (k in data) {
             if (data.hasOwnProperty(k)) {
@@ -3535,7 +3535,7 @@ SpriteMorph.prototype.importGraph = function(G, addTo) {
             }
         }
     });
-    jsnx.forEach(G.edges_iter(true), function (edge) {
+    jsnx.forEach(G.edgesIter(true), function (edge) {
         var data = edge[2], k;
         for (k in data) {
             if (data.hasOwnProperty(k)) {
@@ -3600,17 +3600,17 @@ function clone(obj){
 // Turn a graph into an object ready to be stringified to the NetworkX JSON
 // graph format.
 function graphToObject(G) {
-    var multigraph = G.is_multigraph();
+    var multigraph = G.isMultigraph();
     var manual = currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout;
 
     var mapping = {};
     var i = 0;
-    jsnx.forEach(G.nodes_iter(), function(node) {
+    jsnx.forEach(G.nodesIter(), function(node) {
         mapping[node] = i++;
     });
 
     var data = {};
-    data.directed = G.is_directed();
+    data.directed = G.isDirected();
     data.multigraph = multigraph;
     data.manual = manual;
     var costumes = {};
@@ -3622,7 +3622,7 @@ function graphToObject(G) {
     }
 
     data.nodes = [];
-    jsnx.forEach(G.nodes_iter(true), function(node) {
+    jsnx.forEach(G.nodesIter(true), function(node) {
         var d = {id: node[0]};
         mergeObjectIn(d, node[1]);
         if (d.__d3datum__.fixed) {
@@ -3643,7 +3643,7 @@ function graphToObject(G) {
 
     if (multigraph) {
         data.links = [];
-        jsnx.forEach(G.edges_iter(true), function(edge) {
+        jsnx.forEach(G.edgesIter(true), function(edge) {
             var u = edge[0], v = edge[1], k = edge[2], d = edge[3],
                 link = {source: mapping[u], target: mapping[v], key: k};
             mergeObjectIn(link, d);
@@ -3653,7 +3653,7 @@ function graphToObject(G) {
         });
     } else {
         data.links = [];
-        jsnx.forEach(G.edges_iter(true), function(edge) {
+        jsnx.forEach(G.edgesIter(true), function(edge) {
             var u = edge[0], v = edge[1], d = edge[2],
                 link = {source: mapping[u], target: mapping[v]};
             mergeObjectIn(link, d);
@@ -3678,16 +3678,16 @@ function parseDot(string) {
         graph;
     dotgraph.walk();
     if(dotgraph.rootGraph.type == "graph") {
-        graph = jsnx.Graph();
+        graph = new jsnx.Graph();
     } else if(dotgraph.rootGraph.type == "digraph") {
-        graph = jsnx.DiGraph();
+        graph = new jsnx.DiGraph();
     } else {
         throw new Error("Invalid DOT graph type");
     }
     for(var node in dotgraph.nodes) {
         if(dotgraph.nodes.hasOwnProperty(node)) {
             var ournode = parseNode(node);
-            graph.add_node(ournode);
+            graph.addNode(ournode);
             var attrs = dotgraph.nodes[node].attrs;
             for(var attr in attrs) {
                 if(attrs.hasOwnProperty(attr)) {
@@ -3705,7 +3705,7 @@ function parseDot(string) {
             dotgraph.edges[edgeid].forEach(function(datum) {
                 var edge = datum.edge;
                 var a = parseNode(edge[0]), b = parseNode(edge[1]);
-                graph.add_edge(a, b);
+                graph.addEdge(a, b);
                 var attrs = datum.attrs;
                 for(var attr in attrs) {
                     if(attrs.hasOwnProperty(attr)) {
@@ -3731,9 +3731,9 @@ function parseAdjacencyList (list) {
         row = list[i];
 
         if(row.length === 3) {
-            G.add_edge(parseNode(row[0]), parseNode(row[1]), {label: row[2]})
+            G.addEdge(parseNode(row[0]), parseNode(row[1]), {label: row[2]})
         } else if(row.length === 2)  {
-            G.add_edge(parseNode(row[0]), parseNode(row[1]));
+            G.addEdge(parseNode(row[0]), parseNode(row[1]));
         }
         // Silently swallow non-conforming lines.
     }
@@ -3746,7 +3746,7 @@ function parseAdjacencyMatrix (mat) {
         row, a, b, label_;
 
     for (var i = 1; i < mat[0].length; i++) {
-        G.add_node(mat[0][i].toString());
+        G.addNode(mat[0][i].toString());
     }
 
     for (var i = 1; i < mat.length; i++) {
@@ -3758,9 +3758,9 @@ function parseAdjacencyMatrix (mat) {
                 label_ = row[j].toString();
                 // Let's hope no one ever uses '1' as an edge label.
                 if(label_ === '1') {
-                    G.add_edge(a, b);
+                    G.addEdge(a, b);
                 } else {
-                    G.add_edge(a, b, {label: label_});
+                    G.addEdge(a, b, {label: label_});
                 }
             }
         }
@@ -3778,13 +3778,13 @@ function objectToGraph (data) {
         graph, d, node, nodedata, link_data, source, target, edgedata;
 
     if(multigraph) {
-        graph = jsnx.MultiGraph();
+        graph = new jsnx.MultiGraph();
     } else {
-        graph = jsnx.Graph();
+        graph = new jsnx.Graph();
     }
 
     if(directed) {
-        graph = graph.to_directed();
+        graph = graph.toDirected();
     }
 
     currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout = manual;
@@ -3810,7 +3810,7 @@ function objectToGraph (data) {
         if (nodedata.x || nodedata.y) {
             nodedata.fixed = true;
         }
-        graph.add_node(node, nodedata);
+        graph.addNode(node, nodedata);
     }
 
     for (var i = 0; i < data.links.length; i++) {
@@ -3821,7 +3821,7 @@ function objectToGraph (data) {
         target = link_data.target;
         delete link_data.target;
         edgedata = link_data;
-        graph.add_edge(mapping[source], mapping[target], edgedata);
+        graph.addEdge(mapping[source], mapping[target], edgedata);
     }
 
     return graph;
@@ -3835,7 +3835,7 @@ function graphToCSV(G) {
     for (var i = 0; i < nodes.length; i++) {
         var row = [nodes[i]];
         for (var j = 0; j < nodes.length; j++) {
-            if(G.has_edge(nodes[i], nodes[j])) {
+            if(G.hasEdge(nodes[i], nodes[j])) {
                 var label = G.edge.get(nodes[i]).get(nodes[j]).label;
                 if(label) {
                     row.push(label);
@@ -3854,8 +3854,8 @@ function graphToCSV(G) {
 
 function graphToDot(G) {
     var edgeout = "",
-        graphtype = jsnx.is_directed(G) ? "digraph" : "graph",
-        edgeseparator = jsnx.is_directed(G) ? "->" : "--";
+        graphtype = jsnx.isDirected(G) ? "digraph" : "graph",
+        edgeseparator = jsnx.isDirected(G) ? "->" : "--";
 
     function formatID(x) { return '"' + x.toString().replace('"', '\\"') + '"'; }
     function formatAttrs(attrs) {
@@ -3872,7 +3872,7 @@ function graphToDot(G) {
         }
     }
 
-    var nodeout = jsnx.toArray(jsnx.map(G.nodes_iter(true), function(x) {
+    var nodeout = new Array(G.nodesIter(true).map(function(x) {
         var node = x[0],
             data = x[1],
             dotattrs = {};
@@ -3897,7 +3897,7 @@ function graphToDot(G) {
                 ";"].join("");
     })).join("\n");
 
-    var edgeout = jsnx.toArray(jsnx.map(G.edges_iter(true), function(x) {
+    var edgeout = new Array(G.edgesIter(true).map(function(x) {
         var a = x[0],
             b = x[1],
             data = x[2],
