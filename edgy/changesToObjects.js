@@ -1828,6 +1828,28 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
     this.addGraph(grid);
 };
 
+SpriteMorph.prototype.generateFullRaryTree = function(r, n, i) {
+    var graph = jsnx.generators.fullRaryTree(r, n, new this.G.constructor());
+    this.renumberAndAdd(graph, i);
+};
+
+SpriteMorph.prototype.generateHavelHakimiGraph = function(degrees, n) {
+    if (this.G.isDirected()) {
+        throw new Error("Not allowed on directed graphs.");
+    }
+    var graph = jsnx.generators.havelHakimiGraph(degrees.asArray().map(
+        function(degree) {
+            return parseInt(degree);
+        }
+    ), new this.G.constructor());
+    this.renumberAndAdd(graph, n);
+};
+
+SpriteMorph.prototype.generateBinomialGraph = function(n, p, i) {
+    var graph = jsnx.generators.gnpRandomGraph(n, p, this.G.isDirected());
+    this.renumberAndAdd(graph, i);
+};
+
 SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
     var myself = this,
         nodeattrset = {},
@@ -2829,6 +2851,24 @@ SpriteMorph.prototype.loadGraph = function (handle) {
             spec: 'generate a %n by %n 2D grid graph',
             defaults: [4, 4]
         },
+        generateFullRaryTree: {
+            type: 'command',
+            category: 'network',
+            spec: 'generate full %n -ary tree on %n nodes numbered from %n',
+            defaults: [3, 4, 1]
+        },
+        generateHavelHakimiGraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'generate Havel-Hakimi graph with degree sequence %l numbered from %n',
+            defaults: [null, 1]
+        },
+        generateBinomialGraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'generate binomial graph on %n nodes with edge probability %n numbered from %n',
+            defaults: [6, 0.2, 1]
+        },
         loadGraphFromURL: {
             type: 'command',
             category: 'external',
@@ -3187,6 +3227,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('generateCompleteGraph'));
             blocks.push(block('generatePathGraph'));
             blocks.push(block('generateGridGraph'));
+            blocks.push(block('generateFullRaryTree'));
+            blocks.push(block('generateHavelHakimiGraph'));
+            blocks.push(block('generateBinomialGraph'));
         } else if(category === 'nodes') {
             // Node attributes.
             button = new PushButtonMorph(
