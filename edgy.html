@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>Snap! Build Your Own Blocks. Beta</title>
+		<title>Edgy: Graph Algorithms</title>
         <link rel="shortcut icon" href="k5_logo.png" type="image/gif">
 		<script type="text/javascript" src="es6-shim.js"></script>
 		<script type="text/javascript" src="d3.v3.js"></script>
@@ -41,7 +41,7 @@
 		<script type="text/javascript" src="jszip.js"></script>
 		<script type="text/javascript" src="ucsv-1.1.0.js"></script>
 		<script type="text/javascript" src="Blob.js"></script>
-		<script type="text/javascript" src="FileSaver.js"></script>
+		<script type="text/javascript" src="FileSaver.min.js"></script>
 		<script type="text/javascript" src="edgy/changesToMorphic.js"></script>
 		<script type="text/javascript" src="edgy/clipboard.js"></script>
 		<script type="text/javascript" src="edgy/resigclass.js"></script>
@@ -65,10 +65,11 @@
 		<script type="text/javascript" id="replace-me-post">
 		</script>
 		<script type="text/javascript">
-			setInterval(loop, 1);
 			function loop() {
 				world.doOneCycle();
+                window.requestAnimationFrame(loop);
 			}
+            loop();
 
 			window.onInteractiveLoad = function() {
 				window.onbeforeunload = function() { };

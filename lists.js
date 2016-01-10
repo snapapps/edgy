@@ -7,7 +7,7 @@
     written by Jens Mönig and Brian Harvey
     jens@moenig.org, bh@cs.berkeley.edu
 
-    Copyright (C) 2014 by Jens Mönig and Brian Harvey
+    Copyright (C) 2015 by Jens Mönig and Brian Harvey
 
     This file is part of Snap!.
 
@@ -61,7 +61,7 @@ PushButtonMorph, SyntaxElementMorph, Color, Point, WatcherMorph,
 StringMorph, SpriteMorph, ScrollFrameMorph, CellMorph, ArrowMorph,
 MenuMorph, snapEquals, Morph, isNil, localize, MorphicPreferences*/
 
-modules.lists = '2014-July-28';
+modules.lists = '2015-November-20';
 
 var List;
 var ListWatcherMorph;
@@ -112,7 +112,7 @@ function List(array) {
 }
 
 List.prototype.toString = function () {
-    return 'a List [' + this.asArray() + ']';
+    return 'a List [' + this.length + ' elements]';
 };
 
 // List updating:
@@ -125,6 +125,9 @@ List.prototype.changed = function () {
 
 List.prototype.cons = function (car, cdr) {
     var answer = new List();
+    if (!(cdr instanceof List || isNil(cdr))) {
+        throw new Error("cdr isn't a list: " + cdr);
+    }
     answer.first = isNil(car) ? null : car;
     answer.rest = cdr || null;
     answer.isLinked = true;
@@ -155,9 +158,8 @@ List.prototype.add = function (element, index) {
     if no index is specifed, append the element
 */
     var idx = index || this.length() + 1,
-        obj = element === 0 ? 0
-                : element === false ? false
-                        : element || null;
+        obj = isNil(element) ? null : element;
+
     this.becomeArray();
     this.contents.splice(idx - 1, 0, obj);
     this.changed();
@@ -631,6 +633,7 @@ ListWatcherMorph.prototype.setStartIndex = function (index) {
 };
 
 ListWatcherMorph.prototype.fixLayout = function () {
+    if (!this.label) {return; }
     Morph.prototype.trackChanges = false;
     if (this.frame) {
         this.arrangeCells();
@@ -677,6 +680,18 @@ ListWatcherMorph.prototype.arrangeCells = function () {
         lastCell = cell;
     }
     this.frame.contents.adjustBounds();
+};
+
+ListWatcherMorph.prototype.expand = function (maxExtent) {
+    // make sure to show all (first 100) cells
+    var fe = this.frame.contents.extent(),
+        ext = new Point(fe.x + 6, fe.y + this.label.height() + 6);
+    if (maxExtent) {
+        ext = ext.min(maxExtent);
+    }
+    this.setExtent(ext);
+    this.handle.setRight(this.right() - 3);
+    this.handle.setBottom(this.bottom() - 3);
 };
 
 // ListWatcherMorph hiding/showing:

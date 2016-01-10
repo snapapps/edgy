@@ -12,9 +12,14 @@ IDE_Morph.prototype.init = (function init (oldInit) {
         var retval = oldInit.call(this, isAutoFill);
         this.currentCategory = 'network';
         this.maxVisibleNodes = DEFAULT_MAX_VISIBLE_NODES;
+        this.logoURL = 'edgy_logo.png';
         return retval;
     }
 }(IDE_Morph.prototype.init));
+
+IDE_Morph.prototype.resourceURL = function (folder, file) {
+    return 'edgy/' + folder + '/' + file;
+};
 
 IDE_Morph.prototype.save = (function save(oldSave) {
     return function() {
@@ -42,6 +47,13 @@ IDE_Morph.prototype.createStage = (function createStage (oldCreateStage) {
         return retval;
     }
 }(IDE_Morph.prototype.createStage));
+
+IDE_Morph.prototype.fixLayout = (function(oldFixLayout) {
+    return function() {
+        oldFixLayout.call(this);
+        this.stage.changed();
+    }
+}(IDE_Morph.prototype.fixLayout));
 
 IDE_Morph.prototype.setMaxVisibleNodes = function () {
     var myself = this;
