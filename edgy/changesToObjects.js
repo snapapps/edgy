@@ -2008,75 +2008,32 @@ SpriteMorph.prototype.sortEdges = function(edges, attr, ascdesc) {
     return new List(edgesArr.map(function(x) { return new List(x); }));
 };
 
-// Efficient built-in for-each over lists, because loading tools.xml is slow.
-Process.prototype.doForEach = function(uv, list, body) {
-    if(!list.length() || !body)
-        return;
-
-    if(this.context.loopIdx === undefined) {
-        this.context.upvars = new UpvarReference(this.context.upvars);
-        this.context.loopIdx = 1;
-    } else if(this.context.loopIdx < list.length()) {
-        this.context.loopIdx++;
-    } else {
-        return;
-    }
-
-    this.context.outerContext.variables.addVar(uv, list.at(this.context.loopIdx));
-    this.context.upvars.addReference(
-        list.at(this.context.loopIdx),
-        this.context.inputs[0],
-        this.context.outerContext.variables
-    );
-
-    this.pushContext('doYield');
-    if (body) {
-        this.pushContext(body.blockSequence());
-    }
-    this.pushContext();
-}
-
 // Efficient built-in numeric for, because loading tools.xml is slow.
-Process.prototype.doNumericFor = function(uv, start, end, body) {
-    if(!body)
-        return;
-
-    if(!isNumeric(start)) {
-        throw new Error("start '"+ start.toString() +"' is not a number");
-    }
-    if(!isNumeric(end)) {
-        throw new Error("end '"+ end.toString() +"' is not a number");
-    }
-
+Process.prototype.doNumericFor = function(upvar, start, end, body) {
     start = parseInt(start, 10);
     end = parseInt(end, 10);
 
-    if(this.context.loopIdx === undefined) {
-        this.context.upvars = new UpvarReference(this.context.upvars);
-        this.context.loopIdx = start;
-    } else if(this.context.loopIdx !== end) {
-        if(start < end) {
-            this.context.loopIdx++;
-        } else {
-            this.context.loopIdx--;
-        }
-    } else {
-        return;
+    if (isNil(this.context.inputs[4])) {this.context.inputs[4] = start; }
+    var index = this.context.inputs[4];
+    this.context.outerContext.variables.addVar(upvar);
+    this.context.outerContext.variables.setVar(
+        upvar,
+        index
+    );
+    
+    var countDown = start > end;
+    
+    if ((countDown && index < end) || (!countDown && index > end)) {
+        return null;
     }
 
-    this.context.outerContext.variables.addVar(uv, this.context.loopIdx);
-    this.context.upvars.addReference(
-        this.context.loopIdx,
-        this.context.inputs[0],
-        this.context.outerContext.variables
-    );
-
+    this.context.inputs[4] = countDown ? index - 1 : index + 1;
     this.pushContext('doYield');
     if (body) {
         this.pushContext(body.blockSequence());
     }
     this.pushContext();
-}
+};
 
 Process.prototype.getLastfmFriends = function(username) {
     var myself = this, url, api_key;
