@@ -1258,7 +1258,7 @@ SnapSerializer.prototype.loadValue = function (model) {
         for (var i = 0; i < elements.length; i++) {
             entries.push(new Entry(elements[i], priorities[i]));
         }
-        return new PriorityQueue(entries, type);
+        return new PQueue(entries, type);
     case 'sprite':
         v  = new SpriteMorph(myself.project.globalVariables);
         if (model.attributes.id) {
