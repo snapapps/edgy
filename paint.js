@@ -5,7 +5,7 @@
     inspired by the Scratch paint editor.
 
     written by Kartik Chandra
-    Copyright (C) 2014 by Kartik Chandra
+    Copyright (C) 2015 by Kartik Chandra
 
     This file is part of Snap!.
 
@@ -49,13 +49,17 @@
     May 14 - bugfixes, Snap integration (Jens)
     May 16 - flat design adjustments (Jens)
     July 12 - pipette tool, code formatting adjustments (Jens)
-    September 16 - flood fill freeze fix (Kartik)
+    Sept 16 - flood fill freeze fix (Kartik)
     Jan 08 - mouse leave dragging fix (Kartik)
     Feb 11 - dynamically adjust to stage dimensions (Jens)
     Apr 30 - localizations (Manuel)
     June 3 - transformations (Kartik)
     June 4 - tweaks (Jens)
-
+    Aug 24 - floodfill alpha-integer issue (Kartik)
+    Sep 29 - tweaks (Jens)
+    Sep 28 [of the following year :)] - Try to prevent antialiasing (Kartik)
+    Oct 02 - revert disable smoothing (Jens)
+    Dec 15 - center rotation point on costume creating (Craxic)
  */
 
 /*global Point, Rectangle, DialogBoxMorph, fontHeight, AlignmentMorph,
@@ -68,7 +72,7 @@
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.paint = '2014-June-4';
+modules.paint = '2015-December-15';
 
 // Declarations
 
@@ -304,6 +308,7 @@ PaintEditorMorph.prototype.refreshToolButtons = function () {
 };
 
 PaintEditorMorph.prototype.ok = function () {
+    this.paper.updateAutomaticCenter();
     this.callback(
         this.paper.paper,
         this.paper.rotationCenter
@@ -582,10 +587,35 @@ PaintCanvasMorph.prototype.init = function (shift) {
         var key = this.world().currentKey;
         return (key === 16);
     };
+    // should we calculate the center of the image ourselves,
+    // or use the user position
+    this.automaticCrosshairs = true;
     this.buildContents();
 };
 
+// Calculate the center of all the non-transparent pixels on the canvas.
+PaintCanvasMorph.prototype.calculateCanvasCenter = function(canvas) {
+    var canvasBounds = Costume.prototype.canvasBoundingBox(canvas);
+    if (canvasBounds === null) {
+        return null;
+    }
+    // Can't use canvasBounds.center(), it rounds down.
+    return new Point((canvasBounds.origin.x + canvasBounds.corner.x) / 2, (canvasBounds.origin.y + canvasBounds.corner.y) / 2);
+};
+
+// If we are in automaticCrosshairs mode, recalculate the rotationCenter.
+PaintCanvasMorph.prototype.updateAutomaticCenter = function () {
+    if (this.automaticCrosshairs) {
+        // Calculate this.rotationCenter from this.paper
+        var rotationCenter = this.calculateCanvasCenter(this.paper);
+        if (rotationCenter !== null) {
+            this.rotationCenter = rotationCenter;
+        }
+    }
+};
+
 PaintCanvasMorph.prototype.scale = function (x, y) {
+    this.updateAutomaticCenter();
     this.mask = newCanvas(this.extent());
     var c = newCanvas(this.extent());
     c.getContext("2d").save();
@@ -642,6 +672,7 @@ PaintCanvasMorph.prototype.clearCanvas = function () {
 PaintCanvasMorph.prototype.toolChanged = function (tool) {
     this.mask = newCanvas(this.extent());
     if (tool === "crosshairs") {
+        this.updateAutomaticCenter();
         this.drawcrosshair();
     }
     this.drawNew();
@@ -757,7 +788,7 @@ PaintCanvasMorph.prototype.floodfill = function (sourcepoint) {
             data[currentpoint * 4] = this.settings.primarycolor.r;
             data[currentpoint * 4 + 1] = this.settings.primarycolor.g;
             data[currentpoint * 4 + 2] = this.settings.primarycolor.b;
-            data[currentpoint * 4 + 3] = this.settings.primarycolor.a;
+            data[currentpoint * 4 + 3] = this.settings.primarycolor.a * 255;
         }
     }
     ctx.putImageData(img, 0, 0);
@@ -905,6 +936,8 @@ PaintCanvasMorph.prototype.mouseMove = function (pos) {
         }
         break;
     case "crosshairs":
+        // Disable automatic crosshairs: user has now chosen where they should be.
+        this.automaticCrosshairs = false;
         this.rotationCenter = relpos.copy();
         this.drawcrosshair(mctx);
         break;

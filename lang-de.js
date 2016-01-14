@@ -6,7 +6,7 @@
 
     written by Jens Mönig
 
-    Copyright (C) 2014 by Jens Mönig
+    Copyright (C) 2015 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -185,7 +185,7 @@ SnapTranslator.dict.de = {
     'translator_e-mail':
         'jens@moenig.org', // optional
     'last_changed':
-        '2014-07-29', // this, too, will appear in the Translators tab
+        '2015-12-22', // this, too, will appear in the Translators tab
 
     // GUI
     // control bar:
@@ -411,14 +411,28 @@ SnapTranslator.dict.de = {
         'setze Stiftdicke auf %n',
     'stamp':
         'stemple',
+    'fill':
+        'male aus',
 
     // control:
     'when %greenflag clicked':
         'Wenn %greenflag angeklickt',
     'when %keyHat key pressed':
         'Wenn Taste %keyHat gedr\u00fcckt',
-    'when I am clicked':
-        'Wenn ich angeklickt werde',
+    'when I am %interaction':
+        'Wenn ich %interaction werde',
+    'clicked':
+        'angeklickt',
+    'pressed':
+        'gedr\u00fcckt',
+    'dropped':
+        'abgestellt',
+    'mouse-entered':
+        'vom Mauszeiger betreten',
+    'mouse-departed':
+        'vom Mauszeiger verlassen',
+    'when %b':
+        'Wenn %b',
     'when I receive %msgHat':
         'Wenn ich %msgHat empfange',
     'broadcast %msg':
@@ -647,6 +661,11 @@ SnapTranslator.dict.de = {
         '\u00d6ffnen...',
     'Save':
         'Sichern',
+    'Save to disk':
+        'Abpeichern',
+    'store this project\nin the downloads folder\n(in supporting browsers)':
+        'dieses Projekt herunterladen\nund lokal speichern\n'
+            + '(nicht von allen Browsern unters\u00fctzt)',
     'Save As...':
         'Sichern als...',
     'Import...':
@@ -665,6 +684,33 @@ SnapTranslator.dict.de = {
         'Bl\u00f6cke exportieren...',
     'show global custom block definitions as XML\nin a new browser window':
         'zeigt globale Benutzerblockdefinitionen\nals XML im Browser an',
+    'Unused blocks...':
+          'Ungebrauchte Bl\u00f6cke...',
+    'find unused global custom blocks\nand remove their definitions':
+        'nicht verwendete Bl\u00f6cke finden\nund entfernen',
+    'Remove unused blocks':
+        'Ungebrauchte Bl\u00f6cke entfernen',
+    'there are currently no unused\nglobal custom blocks in this project':
+        'momentan keine nicht verwendeten\nBl\u00f6cke in diesem Projekt',
+    'unused block(s) removed':
+        'ungebrauchte Bl\u00f6cke entfernt',
+    'Export summary...':
+        'Zusammenfassung exportieren...',
+    'open a new browser browser window\n with a summary of this project':
+        'eine Zusammenfassung diese Projects\nin einem neuen Browserfenster'
+            + 'anzeigen',
+    'Contents':
+        'Inhalt',
+    'Kind of':
+        'Eine Art',
+    'Part of':
+        'Ein Teil von',
+    'Parts':
+        'Teile',
+    'Blocks':
+        'Bausteine',
+    'For all Sprites':
+        'Allen gemeinsam',
     'Import tools':
         'Tools laden',
     'load the official library of\npowerful blocks':
@@ -765,6 +811,10 @@ SnapTranslator.dict.de = {
         'ausschalten, um Skripte\nnormal auszuf\u00fchren',
     'check to enable\nIDE animations':
         'einschalten um IDE-\nAnimationen zu erlauben',
+    'Flat design':
+        'Helles Design',
+    'Keyboard Editing':
+        'Tastaturunterstützung',
     'Thread safe scripts':
         'Threadsicherheit',
     'uncheck to allow\nscript reentrance':
@@ -783,6 +833,8 @@ SnapTranslator.dict.de = {
         'einschalten f\u00fcr flache\nPinselstrichenden',
     'uncheck for round ends of lines':
         'auschalten f\u00fcr runde\nPinselstrichenden',
+    'Inheritance support':
+        'Prototypische Vererbung',
 
     // inputs
     'with inputs':
@@ -1146,6 +1198,8 @@ SnapTranslator.dict.de = {
         'Pfeil nach rechts',
     'left arrow':
         'Pfeil nach links',
+    'any key':
+        'beliebige Taste',
     'a':
         'a',
     'b':
@@ -1226,6 +1280,8 @@ SnapTranslator.dict.de = {
     // math functions
     'abs':
         'Betrag',
+    'ceiling':
+        'Aufgerundet',
     'floor':
         'Abgerundet',
     'sqrt':
@@ -1279,5 +1335,5 @@ SnapTranslator.dict.de = {
     'last':
         'letztes',
     'any':
-        'beliebiges'
+        'beliebig'
 };
