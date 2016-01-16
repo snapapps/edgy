@@ -2949,7 +2949,7 @@ SpriteMorph.prototype.loadGraph = function (handle) {
         doForEach: {
             type: 'command',
             category: 'control',
-            spec: 'for each %upvar of %l %c',
+            spec: 'for each %upvar of %l %cs',
             defaults: ['item']
         },
         doNumericFor: {

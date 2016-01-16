@@ -756,10 +756,9 @@ function PQueue(items, type) {
             function(a, b) { return a.priority < b.priority; };
     this.items = [null].concat(items || [null]);
     this.count = items.length;
+    this.build();
+    
     this.lastChanged = Date.now();
-    for (var i = Math.floor(this.count / 2); i > 0; i--) {
-        this.downHeap(i);
-    }
 }
 
 PQueue.prototype = new BinaryHeap();
@@ -773,6 +772,12 @@ PQueue.prototype.upHeap = function(i) {
 PQueue.prototype.downHeap = function(i) {
     BinaryHeap.prototype.downHeap.call(this, i);
     this.lastChanged = Date.now();
+}
+
+PQueue.prototype.build = function() {
+    for (var i = Math.floor(this.count / 2); i > 0; i--) {
+        this.downHeap(i);
+    }
 }
 
 PQueue.prototype.top = function() {
@@ -794,6 +799,14 @@ PQueue.prototype.pop = function() {
 PQueue.prototype.isEmpty = function() {
     return this.length() === 0;
 }
+
+PQueue.prototype.contains = function(item) {
+    for (var i = 1; i <= this.count; i++) {
+        if (item == this.items[i].element)
+            return true;
+    }
+    return false;
+};
 
 PQueue.prototype.toString = function() {
     if (this.length() > 0) {
@@ -1038,8 +1051,7 @@ SpriteMorph.prototype.updatePQueue = function(element, pqueue, priority) {
     if (index >= 0) {
         pqueue.items[index + 1].priority = parseFloat(priority);
 
-        pqueue.upHeap(index);
-        pqueue.downHeap(index);
+        pqueue.build();
     }
 };
 
@@ -1114,7 +1126,7 @@ Add the collection categories.
 
 (function() {
     SpriteMorph.prototype.categories.push('collections');
-    SpriteMorph.prototype.blockColor.collections = new Color(74, 108, 212);
+    SpriteMorph.prototype.blockColor.collections = new Color(217, 77, 17);
     SpriteMorph.prototype.initBlocks();
 }());
 
