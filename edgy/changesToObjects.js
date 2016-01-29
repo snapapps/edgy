@@ -2359,6 +2359,53 @@ SpriteMorph.prototype.getWordNetDefinition = function(noun) {
     }
 };
 
+Process.prototype.searchGoogleBooks = function(query) {
+    var myself = this, url, api_key;
+
+    if (!this.context.gettingBooks) {
+        this.context.gettingBooks = true;
+        this.context.books = null;
+        url = 'https://www.googleapis.com/books/v1/volumes' +
+                  '?q=' + encodeURIComponent(query) +
+                  '&callback={callback}';
+        d3.jsonp(url, function(data) {
+            myself.context.books = data;
+        });
+    }
+
+    if (this.context.books) {
+        var data = this.context.books;
+        this.popContext();
+        this.pushContext('doYield');
+        
+        return new List(data.items.map(function(volume) {
+            var map = new Map(),
+                info = volume.volumeInfo
+            
+            map.set('title', info.title);
+            map.set('authors', new List(info.authors));
+            map.set('publisher', info.publisher);
+            map.set('publishedDate', info.publishedDate);
+            map.set('description', info.description);
+            
+            var isbn = [];
+            
+            info.industryIdentifiers.forEach(function(id) {
+                if (id.type == 'ISBN_10' || id.type == 'ISBN_13') {
+                    isbn.push(id.identifier);
+                }
+            });
+            
+            map.set('isbn', isbn);
+            
+            return map;
+        }));
+    }
+
+    this.pushContext('doYield');
+    this.pushContext();
+};
+
 SpriteMorph.prototype.setGraph = function(newGraph) {
     var wasActive = this.isActiveGraph();
     this.G = newGraph;
@@ -2936,6 +2983,12 @@ SpriteMorph.prototype.loadGraph = function (handle) {
             spec: 'name of person %n',
             defaults: [1]
         },
+        searchGoogleBooks: {
+            type: 'reporter',
+            category: 'external',
+            spec: 'get book info for %s',
+            defaults: ['Hello world']
+        },
         convertToDigraph: {
             type: 'command',
             category: 'network',
@@ -3446,6 +3499,8 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('getTMDBCast'));
             blocks.push(block('getTMDBMoviesByPerson'));
             blocks.push(block('getTMDBPersonName'));
+            blocks.push('-');
+            blocks.push(block('searchGoogleBooks'));
         } else if (category === 'looks') {
             blocks.push(block('doSayFor'));
             blocks.push(block('bubble'));
