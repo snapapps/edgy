@@ -212,7 +212,7 @@ VariableExportDialogMorph.prototype.exportVariables = function () {
     var serializer = this.serializer;
     
     var str = this.variables.reduce(function (vars, v) {
-        var val = myself.varFrame.vars[v],
+        var val = myself.varFrame.vars[v].value,
             dta;
         
         if (val === undefined || val === null) {
