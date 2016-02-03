@@ -3927,7 +3927,7 @@ function graphToDot(G) {
         }
     }
 
-    var nodeout = new Array(G.nodesIter(true).map(function(x) {
+    var nodeout = G.nodes(true).map(function(x) {
         var node = x[0],
             data = x[1],
             dotattrs = {};
@@ -3950,9 +3950,9 @@ function graphToDot(G) {
         }
         return [formatID(node), " ", formatAttrs(dotattrs),
                 ";"].join("");
-    })).join("\n");
+    }).join("\n");
 
-    var edgeout = new Array(G.edgesIter(true).map(function(x) {
+    var edgeout = G.edges(true).map(function(x) {
         var a = x[0],
             b = x[1],
             data = x[2],
@@ -3972,7 +3972,7 @@ function graphToDot(G) {
         return [formatID(a), " ", edgeseparator, " ",
                 formatID(b), formatAttrs(dotattrs),
                 ";"].join("");
-    })).join("\n");
+    }).join("\n");
 
     return [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
 }
