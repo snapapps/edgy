@@ -4007,49 +4007,163 @@ WatcherMorph.prototype.userMenu = (function (oldUserMenu) {
     return function() {
         var myself = this;
         var menu = oldUserMenu.call(this);
+        var world = this.parentThatIsA(WorldMorph);
         
-        function readList(aFile) {
-            var frd = new FileReader();
-            frd.onloadend = function (e) {
-                var array = CSV.csvToArray(e.target.result);
-                var list = new List(
-                    array.map(function(v) {
-                        if (v.length > 1) {
-                            return new List(v);
+        function importDialog(array) {
+            var modes = [
+                ["List", function() {
+                    return new List(
+                        array.map(function(v) {
+                            if (v.length > 1) {
+                                return new List(v);
+                            }
+                            else
+                                return v;
+                        })
+                    );
+                }],
+                ["Dictionary", function() {
+                    var headers = array[0];
+                    var map = new Map();
+                    
+                    for (var i = 0; i < headers.length; i++) {
+                        map.set(headers[i], array[1][i]);
+                    }
+                    
+                    return map;
+                }],
+                ["Table (list of dictionaries)", function() {
+                    var headers = array[0];
+                    var list = new List();
+                    
+                    for (var i = 1; i < array.length; i++) {
+                        var row = array[i];
+                        var map = new Map();
+                        for (var j = 0; j < row.length; j++) {
+                            map.set(headers[j], row[j]);
                         }
-                        else
-                            return v;
-                    })
-                );
+                        list.add(map);
+                    }
+                    
+                    return list;
+                }],
+                ["Table (dictionary of lists)", function() {
+                    var headers = array[0];
+                    var map = new Map();
+                    
+                    for (var i = 0; i < headers.length; i++) {
+                        var list = new List();
+                        
+                        for (var j = 1; j < array.length; j++) {
+                            list.add(array[j][i]);
+                        }
+                        
+                        map.set(headers[i], list);
+                    }
+                    
+                    return map;
+                }],
+            ];
+            
+            new DialogBoxMorph(null, function(mode) {
+                var result;
                 
-                myself.target.setVar(
-                    myself.getter,
-                    list
-                );
-            };
-
-            frd.readAsText(aFile);
+                modes.forEach(function(m) {
+                    if (m[0] == mode) {
+                        myself.target.setVar(
+                            myself.getter,
+                            m[1].call(this)
+                        );
+                    }
+                });
+            }).prompt(
+                "Import CSV",
+                "List",
+                world,
+                new TextMorph('Select the kind of data to be imported.'),
+                modes.map(function(mode) {
+                    return [mode[0], mode[0]];
+                }),
+                true
+            );
         }
         
-        function readMap(aFile) {
-            var frd = new FileReader();
-            frd.onloadend = function (e) {
-                var array = CSV.csvToArray(e.target.result);
-                var map = new Map();
-                array.forEach(function(v) {
-                    map.set(v[0], v[1]);
+        function exportValue(value) {
+            var array;
+            
+            if (value instanceof List) {
+                var isTable = true;
+                array = value.asArray().map(function(v) {
+                    if (!(v instanceof Map)) {
+                        isTable = false;
+                    }
+                    if (v instanceof List) {
+                        return v.asArray();
+                    }
+                    return v;
                 });
                 
-                myself.target.setVar(
-                    myself.getter,
-                    map
-                );
-            };
-
-            frd.readAsText(aFile);
+                if (isTable) {
+                    var headers = [];
+                    
+                    array = array.map(function(map) {
+                        var arr = [];
+                        map.forEach(function(value, key) {
+                            if (headers.indexOf(key) == -1) {
+                                headers.push(key);
+                            }
+                            
+                            arr[headers.indexOf(key)] = value;
+                        });
+                        return arr;
+                    });
+                    
+                    array.unshift(headers);
+                }
+            }
+            else { // This is a Map
+                var isTable = true;
+                var headers = [];
+                var values = [];
+                
+                value.forEach(function(v, key) {
+                    if (!(v instanceof List)) {
+                        isTable = false;
+                    }
+                    headers.push(key);
+                    values.push(v);
+                })
+                
+                if (isTable) {
+                    array = [];
+                    
+                    for (var i = 0; i < headers.length; i++) {
+                        var column = values[i].asArray();
+                        for (var j = 0; j < column.length; j++) {
+                            while (array.length <= j) {
+                                array.push([]);
+                            }
+                            
+                            array[j][i] = column[j];
+                        }
+                    }
+                    
+                    array.unshift(headers);
+                }
+                else {
+                    array = [headers, values];
+                }
+            }
+            
+            window.open(
+                'data:text/plain;charset=utf-8,' +
+                encodeURIComponent(
+                    CSV.arrayToCsv(array)
+                )
+            );
         }
         
-        function getFile(onchange) {
+        function getFile() {
             var inp = document.createElement('input'),
                 ide = myself.parentThatIsA(IDE_Morph);
             if (ide.filePicker) {
@@ -4074,7 +4188,14 @@ WatcherMorph.prototype.userMenu = (function (oldUserMenu) {
                     ide.filePicker = null;
                     if (inp.files.length > 0) {
                         file = inp.files[inp.files.length - 1];
-                        onchange(file);
+
+                        var frd = new FileReader();
+                        frd.onloadend = function (e) {
+                            var array = CSV.csvToArray(e.target.result);
+                            importDialog(array);
+                        };
+
+                        frd.readAsText(file);
                     }
                 },
                 false
@@ -4085,13 +4206,8 @@ WatcherMorph.prototype.userMenu = (function (oldUserMenu) {
         }
         
         menu.addItem(
-            'import list...',
-            getFile.bind(this, readList)
-        );
-        
-        menu.addItem(
-            'import dictionary...',
-            getFile.bind(this, readMap)
+            'import CSV...',
+            getFile
         );
         
         var isList = this.currentValue instanceof List;
@@ -4101,25 +4217,7 @@ WatcherMorph.prototype.userMenu = (function (oldUserMenu) {
             menu.addItem(
                 'export CSV...',
                 function () {
-                    var value;
-                    if (isList) {
-                        value = this.currentValue.asArray().map(function(v) {
-                            if (v instanceof List) {
-                                // Change 2D list into 2D CSV
-                                return v.asArray();
-                            }
-                            return v;
-                        });
-                    }
-                    else {
-                        value = Array.from(this.currentValue.entries());
-                    }
-                    window.open(
-                        'data:text/plain;charset=utf-8,' +
-                        encodeURIComponent(
-                            CSV.arrayToCsv(value)
-                        )
-                    );
+                    exportValue(myself.currentValue)
                 }
             );
         }
