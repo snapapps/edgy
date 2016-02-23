@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Edgy Graph</title>
+		<script src="d3.v3.min.js"></script>
+		<script src="cola.v3.min.js"></script>
+		<script src="jsnetworkx.js"></script>
+		<script src="edgy/embed.js"></script>
+		<style>
+			html, body {
+				margin: 0;
+				padding: 0;
+				height: 100%;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			drawGraph(decodeURIComponent(window.location.hash.substring(1)), "body");
+		</script>
+	</body>
+</html>

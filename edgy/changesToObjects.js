@@ -702,6 +702,36 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             });
             submenu.popUpAtHand(world);
         });
+        
+        menu.addItem("export interactive graph", function () {
+            var json = JSON.stringify(graphToObject(currentGraph));
+            var a = document.createElement('a');
+            a.href = 'embed.html'; // Get the absolute URL
+            
+            new DialogBoxMorph(
+                this,
+                function() {},
+                this
+            ).promptCode(
+                'export interactive graph',
+                [
+                    '<iframe style="width:',
+                    myself.width(),
+                    'px;',
+                    'height:',
+                    myself.height(),
+                    'px',
+                    '" src="',
+                    a.href,
+                    '#', 
+                    encodeURIComponent(json),
+                    '">iFrames must be supported to display this graph.</iframe>'
+                ].join(''),
+                world,
+                null,
+                'Copy this code into a webpage to embed this graph.'
+            );
+        })
 
         menu.addItem("import graph from file", function () {
             currentGraphSprite.loadGraphFromFile(false);
