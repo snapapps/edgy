@@ -51,6 +51,12 @@ MultiArgPairsMorph.prototype.removeInput = function(contents) {
         this.removeChild(oldPart);
     }
 };
+MultiArgPairsMorph.prototype.toXML = function (serializer) {
+    return serializer.format(
+        '<pairs>%</pairs>',
+        serializer.store(this.inputs())
+    );
+};
 
 /**
 MapMorph, a morph representing Map object outputs.
@@ -74,28 +80,12 @@ MapMorph.prototype.init = function (map, parentCell) {
     var myself = this;
 
     this.map = map || new Map();
-    this.mapEntries = map.entries();
-    if(!(this.mapEntries instanceof Array)){
-        // convert iterator to array ([].slice.call doesn't work for firefox)
-        var mapEntries = [];
-        var iter = this.mapEntries;
-        while(true){
-            var nextValue = iter.next();
-            if(nextValue.done)
-                break;
-            mapEntries.push(nextValue.value);
-        }
-        this.mapEntries = mapEntries;
-    }
-    this.start = 1;
-    this.range = 100;
-    this.lastUpdated = Date.now();
-    this.lastCell = null;
     this.parentCell = parentCell || null; // for circularity detection
-
+    this.lastUpdated = Date.now();
+    
     // elements declarations
     this.label = new StringMorph(
-        localize('size: ') + this.map.size,
+        localize('length: ') + this.map.size,
         SyntaxElementMorph.prototype.fontSize,
         null,
         false,
@@ -104,42 +94,24 @@ MapMorph.prototype.init = function (map, parentCell) {
         MorphicPreferences.isFlat ? new Point() : new Point(1, 1),
         new Color(255, 255, 255)
     );
-    this.label.mouseClickLeft = function () {myself.startIndexMenu(); };
-
-
+    
     this.frame = new ScrollFrameMorph(null, 10);
     this.frame.alpha = 0;
     this.frame.acceptsDrops = false;
     this.frame.contents.acceptsDrops = false;
-
+    
+    this.column = new AlignmentMorph("column");
+    this.column.alignment = "left";
+    this.frame.contents.add(this.column);
+    
     this.handle = new HandleMorph(
         this,
-        80,
+        90,
         70,
         3,
         3
     );
     this.handle.setExtent(new Point(13, 13));
-
-    this.arrow = new ArrowMorph(
-        'down',
-        SyntaxElementMorph.prototype.fontSize
-    );
-    this.arrow.mouseClickLeft = function () {myself.startIndexMenu(); };
-    this.arrow.setRight(this.handle.right());
-    this.arrow.setBottom(this.handle.top());
-    this.handle.add(this.arrow);
-
-    this.plusButton = new PushButtonMorph(
-        this.map,
-        'add',
-        '+'
-    );
-    this.plusButton.padding = 0;
-    this.plusButton.edge = 0;
-    this.plusButton.outlineColor = this.color;
-    this.plusButton.drawNew();
-    this.plusButton.fixLayout();
 
     MapMorph.uber.init.call(
         this,
@@ -150,102 +122,65 @@ MapMorph.prototype.init = function (map, parentCell) {
 
     this.color = new Color(220, 220, 220);
     this.isDraggable = true;
-    this.setExtent(new Point(80, 70).multiplyBy(
+    this.setExtent(new Point(90, 70).multiplyBy(
         SyntaxElementMorph.prototype.scale
     ));
     this.add(this.label);
     this.add(this.frame);
-    this.add(this.plusButton);
     this.add(this.handle);
     this.handle.drawNew();
-    this.update();
+    this.update(true);
     this.fixLayout();
 };
 
-MapMorph.prototype.update = function () {
-    var i, idx, ceil, morphs, cell, cnts, label, button, max,
-        starttime, maxtime = 1000;
-
-    this.frame.contents.children.forEach(function (m) {
-
-        if (m instanceof CellMorph && m.contentsMorph instanceof MapMorph) {
-            m.contentsMorph.update();
+MapMorph.prototype.update = function (anyway) {
+    this.column.children.forEach(function(child) {
+        var key = child.children[1];
+        var value = child.children[2];
+        
+        if (key && key.contentsMorph.update) {
+            key.contentsMorph.update();
+        }
+        
+        if (value && value.contentsMorph.update) {
+            value.contentsMorph.update();
         }
     });
-
+    
+    if (this.lastUpdated > this.map.lastChanged && !anyway) {
+        return null;
+    }
+    
     this.updateLength(true);
-
-    // adjust start index to current mapEntries length
-    this.start = Math.max(
-        Math.min(
-            this.start,
-            Math.floor((this.map.size - 1) / this.range) * this.range + 1
-        ),
-        1
-    );
-
-    // refresh existing cells
-    // highest index shown:
-    max = Math.min(
-        this.start + this.range - 1,
-        this.map.size
-    );
-
-    // number of morphs available for refreshing
-    ceil = Math.min(
-        (max - this.start + 1) * 3,
-        this.frame.contents.children.length
-    );
-
-    for (i = 0; i < ceil; i += 3) {
-        idx = this.start + (i / 3);
-
-        cell = this.frame.contents.children[i];
-        label = this.frame.contents.children[i + 1];
-        button = this.frame.contents.children[i + 2];
-        cnts = this.mapEntries[idx];
-
-        if (cell.contents !== cnts) {
-            cell.contents = cnts;
-            cell.drawNew();
-            if (this.lastCell) {
-                cell.setLeft(this.lastCell.left());
+    
+    var myself = this;
+    // Rebuild contents
+    var i = 0;
+    this.map.forEach(function(value, key) {
+        var row = myself.column.children[i];
+        if (row) {
+            // Row already exists
+            var keyCell = row.children[1];
+            var valueCell = row.children[2];
+            
+            if (keyCell.contents != key) {
+                keyCell.contents = key;
+                keyCell.drawNew();
             }
-        }
-        this.lastCell = cell;
-
-        if (label.text !== idx.toString()) {
-            label.text = idx.toString();
-            label.drawNew();
-        }
-
-        button.action = idx;
-    }
-
-    // remove excess cells
-    // number of morphs to be shown
-    morphs = (max - this.start + 1) * 3;
-
-    while (this.frame.contents.children.length > morphs) {
-        this.frame.contents.children[morphs].destroy();
-    }
-
-    // add additional cells
-    ceil = morphs; //max * 3;
-    i = this.frame.contents.children.length;
-
-    starttime = Date.now();
-    if (ceil > i + 1) {
-        for (i; i < ceil; i += 3) {
-            if (Date.now() - starttime > maxtime) {
-                this.fixLayout();
-                this.frame.contents.adjustBounds();
-                this.frame.contents.setLeft(this.frame.left());
-                return null;
+            
+            if (valueCell.contents != value) {
+                valueCell.contents = value;
+                valueCell.drawNew();
             }
-            idx = this.start + (i / 3);
-            label = new StringMorph(
-                idx.toString(),
+            
+            row.drawNew();
+            row.fixLayout();
+        }
+        else {
+            // Row doesn't exist
+            var row = new AlignmentMorph("row", 2);
+            row.add(new StringMorph(
+                i + 1,
                 SyntaxElementMorph.prototype.fontSize,
                 null,
                 false,
@@ -253,41 +188,30 @@ MapMorph.prototype.update = function () {
                 false,
                 MorphicPreferences.isFlat ? new Point() : new Point(1, 1),
                 new Color(255, 255, 255)
-            );
-            cell = new CellMorph(
-                this.mapEntries[idx-1],
-                this.cellColor,
-                idx,
-                this.parentCell
-            );
-            button = new PushButtonMorph(
-                this.mapEntries.remove,
-                idx-1,
-                '-',
-                this.mapEntries
-            );
-            button.padding = 1;
-            button.edge = 0;
-            button.corner = 1;
-            button.outlineColor = this.color.darker();
-            button.drawNew();
-            button.fixLayout();
-
-            this.frame.contents.add(cell);
-            if (this.lastCell) {
-                cell.setPosition(this.lastCell.bottomLeft());
-            } else {
-                cell.setTop(this.frame.contents.top());
-            }
-            this.lastCell = cell;
-            label.setCenter(cell.center());
-            label.setRight(cell.left() - 2);
-            this.frame.contents.add(label);
-            this.frame.contents.add(button);
+            ));
+            row.add(new CellMorph(key, myself.cellColor, null, myself.parentCell));
+            row.add(new CellMorph(value, myself.cellColor, null, myself.parentCell));
+            myself.column.add(row);
+            row.drawNew();
+            var oldFixLayout = row.fixLayout;
+            row.fixLayout = function() {
+                oldFixLayout.call(this);
+                myself.fixLayout(true);
+            };
         }
+        i++;
+    });
+    
+    // Delete excess rows
+    while (this.map.size < this.column.children.length) {
+        this.column.children[this.map.size].destroy();
     }
-    this.lastCell = null;
 
+    this.column.drawNew();
+    this.column.fixLayout();
+    
+    this.lastUpdated = Date.now();
+    
     this.fixLayout();
     this.frame.contents.adjustBounds();
     this.frame.contents.setLeft(this.frame.left());
@@ -306,75 +230,41 @@ MapMorph.prototype.updateLength = function (notDone) {
     this.label.setBottom(this.bottom() - 3);
 };
 
-MapMorph.prototype.startIndexMenu = function () {
-    var i,
-        range,
-        myself = this,
-        items = Math.ceil(this.map.size / this.range),
-        menu = new MenuMorph(
-            function (idx) {myself.setStartIndex(idx); },
-            null,
-            myself
-        );
-    menu.addItem('1...', 1);
-    for (i = 1; i < items; i += 1) {
-        range = i * 100 + 1;
-        menu.addItem(range + '...', range);
-    }
-    menu.popUpAtHand(this.world());
-};
-
-MapMorph.prototype.setStartIndex = function (index) {
-    this.start = index;
-};
-
-MapMorph.prototype.fixLayout = function () {
+MapMorph.prototype.fixLayout = function (inside) {
     Morph.prototype.trackChanges = false;
+    
+    if (this.column) {
+        if (!inside) {
+            this.column.children.forEach(function(child) {
+                child.drawNew();
+                child.fixLayout();
+            });
+        }
+        
+        this.column.drawNew();
+        this.column.fixLayout();
+        this.column.silentSetPosition(this.frame.position());
+    }
+    
     if (this.frame) {
-        this.arrangeCells();
         this.frame.silentSetPosition(this.position().add(3));
-        this.frame.bounds.corner = this.bounds.corner.subtract(new Point(
-            3,
-            17
-        ));
+        this.frame.bounds.corner = this.bounds.corner.subtract(new Point(3, 17));
         this.frame.drawNew();
+        
+        this.frame.contents.setTop(this.frame.top());
+        this.frame.contents.setLeft(this.frame.left());
         this.frame.contents.adjustBounds();
     }
-
+    
     this.label.setCenter(this.center());
     this.label.setBottom(this.bottom() - 3);
-    this.plusButton.setLeft(this.left() + 3);
-    this.plusButton.setBottom(this.bottom() - 3);
-
+    
     Morph.prototype.trackChanges = true;
     this.changed();
 
     if (this.parent && this.parent.fixLayout) {
         this.parent.fixLayout();
     }
-};
-
-MapMorph.prototype.arrangeCells = function () {
-    var i, cell, label, button, lastCell,
-        end = this.frame.contents.children.length;
-    for (i = 0; i < end; i += 3) {
-        cell = this.frame.contents.children[i];
-        label = this.frame.contents.children[i + 1];
-        button = this.frame.contents.children[i + 2];
-        if (lastCell) {
-            cell.setTop(lastCell.bottom());
-        }
-        if (label) {
-            label.setTop(cell.center().y - label.height() / 2);
-            label.setRight(cell.left() - 2);
-        }
-        if (button) {
-            button.setCenter(cell.center());
-            button.setLeft(cell.right() + 2);
-        }
-        lastCell = cell;
-    }
-    this.frame.contents.adjustBounds();
 };
 
 // MapMorph hiding/showing:
@@ -390,6 +280,19 @@ MapMorph.prototype.drawNew = function () {
     WatcherMorph.prototype.drawNew.call(this);
     this.fixLayout();
 };
+
+// Monkey patch WatcherMorph so it knows about our MapMorph
+(function() {
+WatcherMorph.prototype.update = (function(oldUpdate) {
+    return function() {
+        var result = oldUpdate.call(this);
+        if (this.cellMorph.contentsMorph instanceof MapMorph) {
+            this.cellMorph.contentsMorph.update();
+        }
+        return result;
+    };
+}(WatcherMorph.prototype.update));
+})();
 
 // MultiArgPairsMorph input.
 
@@ -442,6 +345,10 @@ SyntaxElementMorph.prototype.showBubble = (function(){
             morphToShow = new MapMorph(value);
             morphToShow.isDraggable = false;
             isClickable = true;
+        } else if (value instanceof PriorityQueue) {
+            morphToShow = new PriorityQueueMorph(value);
+            morphToShow.isDraggable = false;
+            isClickable = true;
         } else {
             return oldShowBubble.call(this, value);
         }
@@ -459,22 +366,81 @@ SyntaxElementMorph.prototype.showBubble = (function(){
     };
 })();
 
-// Show the result of maps in the output box.
+// Show the result of maps and priority queues in the output box.
 
 CellMorph.prototype.drawNew = (function() {
     // Draw snap's results.
     var oldDrawNew = CellMorph.prototype.drawNew;
 
     return function () {
-        if (this.contents instanceof Map) {
-            this.contentsMorph = new MapMorph(this.contents, this);
-            this.contentsMorph.isDraggable = false;
-            this.contents = this.contentsMorph;
-            oldDrawNew.call(this);
-        }else {
-            oldDrawNew.call(this);
+        var fontSize = SyntaxElementMorph.prototype.fontSize,
+            isSameList = (this.contentsMorph instanceof ListWatcherMorph
+                && this.contentsMorph.list === this.contents);
+        
+        if (this.isBig) {
+            fontSize = fontSize * 1.5;
         }
+        
+        // re-build my contents
+        if (this.contentsMorph && !isSameList) {
+            this.contentsMorph.destroy();
+        }
+        
+        if (this.contents instanceof Map || this.contents instanceof PriorityQueue) {
+            if (this.isCircular()) {
+                this.contents = new TextMorph(
+                    '(...)',
+                    fontSize,
+                    null,
+                    false, // bold
+                    true, // italic
+                    'center'
+                );
+                this.contents.setColor(new Color(255, 255, 255));
+            }
+            else {
+                if (this.contents instanceof Map) {
+                    this.contents = new MapMorph(this.contents, this);
+                    this.contents.isDraggable = false;
+                }
+                else if (this.contents instanceof PriorityQueue) {
+                    this.contents = new PriorityQueueMorph(this.contents, this);
+                    this.contents.isDraggable = false;
+                }
+            }
+        }
+        
+        oldDrawNew.call(this);
     };
+})();
+
+(function() {
+CellMorph.prototype.isCircular = (function(oldIsCircular) {
+    return function(collection) {
+        if (!this.parentCell) { return false; }
+        if (collection instanceof Map || collection instanceof PriorityQueue) {
+            return this.contents === collection || this.parentCell.isCircular(collection);
+        }
+        return oldIsCircular.call(this, collection);
+    };
+}(CellMorph.prototype.isCircular));
+})();
+
+// Make list update pqueues and maps inside
+(function() {
+ListWatcherMorph.prototype.update = (function(oldUpdate) {
+    return function(anyway) {
+        this.frame.contents.children.forEach(function (m) {
+            if (m instanceof CellMorph && 
+                !(m.contentsMorph instanceof ListWatcherMorph) && 
+                m.contentsMorph.update) {
+                
+                m.contentsMorph.update();
+            }
+        });
+        return oldUpdate.call(this, anyway);
+    };
+}(ListWatcherMorph.prototype.update));
 })();
 
 /**
@@ -540,11 +506,12 @@ SpriteMorph.prototype.getDict = function(key, dict) {
 };
 
 SpriteMorph.prototype.setDict = function(key, dict, val) {
+    dict.lastChanged = Date.now();
     return dict.set(key, val);
 };
 
 SpriteMorph.prototype.keysInDict = function(dict) {
-    return Array.from(dict.keys());
+    return new List(Array.from(dict.keys()));
 };
 
 SpriteMorph.prototype.keyInDict = function(dict, key) {
@@ -553,6 +520,7 @@ SpriteMorph.prototype.keyInDict = function(dict, key) {
 };
 
 SpriteMorph.prototype.removeFromDict = function(key, dict) {
+    dict.lastChanged = Date.now();
     return dict.delete(key);
 };
 
@@ -746,182 +714,320 @@ SpriteMorph.prototype.isQueueEmpty = function (list) {
 }());
 
 /**
-Integer priority queue implemented by a binary min-heap inside an array, head is the first element of the array.
+Priority queue
 */
 
-// modified from http://eloquentjavascript.net/appendix2.html
+// Inherits from binary heap
+var PriorityQueue;
 
-var BinaryHeap = {
-    push: function(heap, element) {
-        heap.push(element);
-        // bubble up element
-        BinaryHeap.bubbleUp(heap, heap.length - 1);
-    },
+function PriorityQueue(items, type) {
+    this.type = type || 'max';
+    this.predicate = this.type == 'max' ? function(a, b) { return a > b; } :
+        function(a, b) { return a < b; };
+    this.items = [null].concat(items || [null]);
+    this.count = items.length;
+    this.lastChanged = Date.now();
+    for (var i = Math.floor(this.count / 2); i > 0; i--) {
+        this.downHeap(i);
+    }
+}
 
-    pop: function(heap) {
-        // Store the first element so we can return it later.
-        var result = heap[0];
-        // Get the element at the end of the array.
-        var end = heap.pop();
-        // If there are any elements left, put the end element at the
-        // start, and let it sink down.
-        if (heap.length > 0) {
-            heap[0] = end;
-            BinaryHeap.sinkDown(heap, 0);
+PriorityQueue.prototype = new BinaryHeap();
+PriorityQueue.prototype.constructor = PriorityQueue;
+
+PriorityQueue.prototype.upHeap = function(i) {
+    BinaryHeap.prototype.upHeap.call(this, i);
+    this.lastChanged = Date.now();
+}
+
+PriorityQueue.prototype.downHeap = function(i) {
+    BinaryHeap.prototype.downHeap.call(this, i);
+    this.lastChanged = Date.now();
+}
+
+PriorityQueue.prototype.top = function() {
+    if (this.isEmpty()) {
+        throw new Error("Priority queue is empty");
+    }
+    
+    return BinaryHeap.prototype.top.call(this).element;
+}
+
+PriorityQueue.prototype.pop = function() {
+    if (this.isEmpty()) {
+        throw new Error("Priority queue is empty");
+    }
+    
+    BinaryHeap.prototype.pop.call(this);
+}
+
+PriorityQueue.prototype.isEmpty = function() {
+    return this.length() === 0;
+}
+
+PriorityQueue.prototype.toString = function() {
+    if (this.length() > 0) {
+        if (this.top() === this) {
+            return "Priority Queue: Top(...)";
+        }
+        else {
+            return "Priority Queue: Top(" + this.top().toString() + ")";
+        }
+    }
+    return "Priority Queue: Empty";
+}
+
+PriorityQueue.prototype.toArray = function() {
+    var array = [];
+    for (var i = 1; i <= this.count; i++) {
+        array.push(this.items[i].element);
+    }
+    return array;
+};
+
+PriorityQueue.prototype.toXML = function (serializer, mediaContext) {
+    var xml = '';
+    this.items.slice(1).forEach(function(entry) {
+        var element = entry.element;
+        var priority = entry.priority;
+        
+        var e = serializer.format(
+            '<element>%</element>',
+            typeof element === 'object' ?
+                    serializer.store(element, mediaContext)
+                    : typeof element === 'boolean' ?
+                            serializer.format('<bool>$</bool>', element)
+                            : serializer.format('<l>$</l>', element)
+        );
+        
+        var p = serializer.format(
+            '<priority>%</priority>',
+            typeof priority === 'object' ?
+                    serializer.store(priority, mediaContext)
+                    : typeof priority === 'boolean' ?
+                            serializer.format('<bool>$</bool>', priority)
+                            : serializer.format('<l>$</l>', priority)
+        );
+        
+        xml += e + p;
+    });
+    
+    return serializer.format('<pqueue type="@">%</pqueue>', this.type || 'max', xml);
+};
+
+function Entry(element, priority) {
+    this.element = element;
+    this.priority = priority;
+}
+
+Entry.prototype.toString = function() {
+    return this.element.toString();
+}
+
+var PriorityQueueMorph;
+
+// PriorityQueueMorph watches a pqueue
+function PriorityQueueMorph(pqueue, parentCell) {
+    this.init(pqueue, parentCell);
+}
+
+// Inherits from BoxMorph
+PriorityQueueMorph.prototype = new BoxMorph();
+PriorityQueueMorph.prototype.constructor = PriorityQueueMorph;
+PriorityQueueMorph.uber = BoxMorph.prototype;
+
+// Default settings
+PriorityQueueMorph.prototype.cellColor =
+    SpriteMorph.prototype.blockColor.lists;
+
+PriorityQueueMorph.prototype.init = function(pqueue, parentCell) {
+    var myself = this;
+    this.pqueue = pqueue || new PriorityQueue();
+    this.parentCell = parentCell || null;
+    this.lengthLabel = new StringMorph(
+        localize('length: ') + this.pqueue.length(),
+        SyntaxElementMorph.prototype.fontSize,
+        null,
+        false,
+        false,
+        false,
+        MorphicPreferences.isFlat ? new Point() : new Point(1, 1),
+        new Color(255, 255, 255)
+    );
+    this.topLabel = new StringMorph(
+        localize('top: '),
+        SyntaxElementMorph.prototype.fontSize,
+        null,
+        false,
+        false,
+        false,
+        MorphicPreferences.isFlat ? new Point() : new Point(1, 1),
+        new Color(255, 255, 255)
+    );
+
+    this.cell = new CellMorph(
+        this.pqueue.isEmpty() ? "(Empty)" : this.pqueue.top(),
+        this.cellColor,
+        null,
+        this.parentCell
+    );
+
+    PriorityQueueMorph.uber.init.call(
+        this,
+        SyntaxElementMorph.prototype.rounding,
+        1.000001, // shadow bug in Chrome,
+        new Color(120, 120, 120)
+    );
+    this.color = new Color(220, 220, 220);
+    this.isDraggable = true;
+    this.setExtent(new Point(80, 70).multiplyBy(
+        SyntaxElementMorph.prototype.scale
+    ));
+
+    this.add(this.lengthLabel);
+    this.add(this.topLabel);
+    this.add(this.cell);
+    this.update();
+    this.fixLayout();
+}
+
+PriorityQueueMorph.prototype.update = function(anyway) {
+    if (this.cell.contentsMorph.update) {
+        this.cell.contentsMorph.update();
+    }
+    
+    if (this.lastUpdated > this.pqueue.lastChanged && !anyway) {
+        return null;
+    }
+
+    var contents = this.pqueue.isEmpty() ? "(Empty)" : this.pqueue.top();
+    if (this.cell.contents != contents) {
+        this.cell.contents = contents;
+        this.cell.drawNew();
+    }
+
+    this.updateLength();
+    this.fixLayout();
+
+    this.lastUpdated = Date.now();
+}
+
+PriorityQueueMorph.prototype.updateLength = function(notDone) {
+    this.lengthLabel.text = localize('length: ') + this.pqueue.length();
+    if (notDone) {
+        this.lengthLabel.color = new Color(0, 0, 100);
+    }
+    else {
+        this.lengthLabel.color = new Color(0, 0, 0);
+    }
+    this.lengthLabel.drawNew();
+    this.lengthLabel.setCenter(this.center());
+    this.lengthLabel.setBottom(this.bottom() - 3);
+}
+
+PriorityQueueMorph.prototype.fixLayout = function () {
+    Morph.prototype.trackChanges = false;
+
+    this.topLabel.setLeft(this.left() + 6);
+    this.topLabel.setTop(this.top() + 6);
+    this.cell.setLeft(this.topLabel.right() + 3);
+    this.cell.setTop(this.top() + 3);
+    this.lengthLabel.setCenter(this.center());
+    this.lengthLabel.setBottom(this.bottom() - 3);
+    this.silentSetExtent(this.cell.extent()
+        .add(this.topLabel.extent())
+        .add(new Point(12, 12))
+    );
+    WatcherMorph.prototype.drawNew.call(this);
+    Morph.prototype.trackChanges = true;
+
+    this.changed();
+    if (this.parent && this.parent.fixLayout) {
+        this.parent.fixLayout();
+    }
+}
+
+PriorityQueueMorph.prototype.drawNew = function () {
+    WatcherMorph.prototype.drawNew.call(this);
+    this.fixLayout();
+};
+
+// Monkey patch WatcherMorph so it knows about our PriorityQueueMorph
+(function() {
+WatcherMorph.prototype.update = (function(oldUpdate) {
+    return function() {
+        var result = oldUpdate.call(this);
+        if (this.cellMorph.contentsMorph instanceof PriorityQueueMorph) {
+            this.cellMorph.contentsMorph.update();
         }
         return result;
-    },
+    };
+}(WatcherMorph.prototype.update));
+})();
 
-    heapify: function(heap) {
-        for(var i=Math.floor(heap.length/2);i>=0;i--){
-            BinaryHeap.sinkDown(heap, i);
-        }
-    },
+SpriteMorph.prototype.reportNewMaxPQueue = function(elements) {
+    var entries = [];
+    for (var i = 0; i < elements.contents.length; i += 2) {
+        entries.push(new Entry(elements.contents[i], parseFloat(elements.contents[i + 1])));
+    }
+    return new PriorityQueue(
+        entries,
+        'max'
+    );
+};
 
-    remove: function(heap, node) {
-        var length = heap.length;
-        // Find node by searching through the array.
-        var i = heap.indexOf(node);
-        if ( i == -1)
-            return;
-        // Use the last element to fill up the hole.
-        var end = heap.pop();
-        // If the element we popped was the one we needed to remove,
-        // we're done.
-        if (i == length - 1)
-            return;
-        // Otherwise, we replace the removed element with the popped
-        // one, and allow it to float up or sink down as appropriate.
-        heap[i] = end;
-        BinaryHeap.bubbleUp(heap, i);
-        BinaryHeap.sinkDown(heap, i);
-    },
+SpriteMorph.prototype.reportNewMinPQueue = function(elements) {
+    var entries = [];
+    for (var i = 0; i < elements.contents.length; i += 2) {
+        entries.push(new Entry(elements.contents[i], parseFloat(elements.contents[i + 1])));
+    }
+    return new PriorityQueue(
+        entries,
+        'min'
+    );
+};
 
-    replace: function(heap, node1, node2){
-        if (node1 == node2)
-            return;
-        // Find node by searching through the array.
-        var i = heap.indexOf(node1);
-        if ( i == -1)
-            return;
-        heap[i] = node2;
-        // Float up or sink down as appropriate.
-        BinaryHeap.bubbleUp(heap, i);
-        BinaryHeap.sinkDown(heap, i);
-    },
+SpriteMorph.prototype.reportPQueueTop = function(pqueue) {
+    return pqueue.top();
+};
 
-    bubbleUp: function(heap, n) {
-        var element = heap[n];
-        // When at 0, an element can not go up any further.
-        while (n > 0) {
-            // Compute the parent element's index, and fetch it.
-            var parentN = Math.floor((n + 1) / 2) - 1,
-            parent = heap[parentN];
-            // If the parent has a lesser score, things are in order and we
-            // are done.
-            if (element >= parent)
-                break;
+SpriteMorph.prototype.reportPQueueLength = function (pqueue) {
+    return pqueue.length();
+};
 
-            // Otherwise, swap the parent with the current element and
-            // continue.
-            heap[parentN] = element;
-            heap[n] = parent;
-            n = parentN;
-        }
-    },
+SpriteMorph.prototype.pushPQueue = function(element, pqueue, priority) {
+    pqueue.push(new Entry(element, parseFloat(priority)));
+};
 
-    sinkDown: function(heap, n) {
-        // Look up the target element and its score.
-        var length = heap.length, element = heap[n];
+SpriteMorph.prototype.popPQueue = function(pqueue) {
+    pqueue.pop();
+};
 
-        while(true) {
-            // Compute the indices of the child elements.
-            var child2N = (n + 1) * 2, child1N = child2N - 1;
-            // New position of element, if any.
-            var swap = null;
-            var child1, child2;
-            if (child1N < length) {
-                child1 = heap[child1N];
-                if (child1 < element)
-                    swap = child1N;
-            }
-            if (child2N < length) {
-                child2 = heap[child2N];
-                if (child2 < (swap === null ? element : child1))
-                    swap = child2N;
-            }
+SpriteMorph.prototype.updatePQueue = function(element, pqueue, priority) {
+    var index = pqueue.toArray().indexOf(element);
+    if (index >= 0) {
+        pqueue.items[index + 1].priority = parseFloat(priority);
 
-            // No need to swap further, we are done.
-            if (swap === null)
-                break;
-
-            // Otherwise, swap and continue.
-            heap[n] = heap[swap];
-            heap[swap] = element;
-            n = swap;
-        }
+        pqueue.upHeap(index + 1);
+        pqueue.downHeap(index + 1);
     }
 };
 
-SpriteMorph.prototype.reportNewPQueue = function(list) {
-    //create new list otherwise we'll end up in an infinite loop
-    var res = new List();
-    var elements = list.asArray();
-    //convert all to ints
-    for(var i=0;i<elements.length;i++){
-        elements[i] = parseInt(elements[i]);
-    }
-    BinaryHeap.heapify(elements);
-    res.contents = elements;
-    res.changed();
-    return res;
-};
-
-SpriteMorph.prototype.reportPQueueTop = function(list) {
-    return list.at(1);
-};
-
-SpriteMorph.prototype.reportPQueueLength = function (list) {
-    return list.length();
-};
-
-SpriteMorph.prototype.pushPQueue = function (element, list) {
-    element = parseInt(element);
-    var elements = list.asArray();
-    BinaryHeap.push(elements, element);
-    list.contents = elements;
-    list.isLinked = false;
-    list.changed();
-};
-
-SpriteMorph.prototype.popPQueue = function (list) {
-    var elements = list.asArray();
-    BinaryHeap.pop(elements);
-    list.contents = elements;
-    list.isLinked = false;
-    list.changed();
-};
-
-SpriteMorph.prototype.replacePQueue = function (element1, element2, list) {
-    element1 = parseInt(element1);
-    element2 = parseInt(element2);
-    var elements = list.asArray();
-    BinaryHeap.replace(elements, element1, element2);
-    list.contents = elements;
-    list.isLinked = false;
-    list.changed();
-};
-
-SpriteMorph.prototype.isPQueueEmpty = function (list) {
-    return list.length() === 0;
+SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
+    return pqueue.isEmpty();
 };
 
 (function() {
     var blocks = {
-        reportNewPQueue: {
+        reportNewMaxPQueue: {
             type: 'reporter',
             category: 'lists',
-            spec: 'pqueue %expN',
+            spec: 'max pqueue %exppairs',
+        },
+        reportNewMinPQueue: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'min pqueue %exppairs',
         },
         reportPQueueTop: {
             type: 'reporter',
@@ -936,17 +1042,17 @@ SpriteMorph.prototype.isPQueueEmpty = function (list) {
         pushPQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'push %n to pqueue %l',
+            spec: 'push %s to pqueue %l with priority %s',
         },
         popPQueue: {
             type: 'command',
             category: 'lists',
             spec: 'pop from pqueue %l',
         },
-        replacePQueue: {
+        updatePQueue: {
             type: 'command',
             category: 'lists',
-            spec: 'replace %n to %n in pqueue %l',
+            spec: 'update %s in pqueue %l to priority %s',
         },
         isPQueueEmpty: {
             type: 'predicate',
@@ -1012,12 +1118,13 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('popQueue'));
             blocks.push(block('isQueueEmpty'));
             blocks.push('-');
-            blocks.push(block('reportNewPQueue'));
+            blocks.push(block('reportNewMaxPQueue'));
+            blocks.push(block('reportNewMinPQueue'));
             blocks.push(block('reportPQueueTop'));
             blocks.push(block('reportPQueueLength'));
             blocks.push(block('pushPQueue'));
             blocks.push(block('popPQueue'));
-            blocks.push(block('replacePQueue'));
+            blocks.push(block('updatePQueue'));
             blocks.push(block('isPQueueEmpty'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));

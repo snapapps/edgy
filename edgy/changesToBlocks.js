@@ -49,4 +49,55 @@ PenMorph.prototype.drawNew = function (facing) {
     SymbolMorph.prototype.drawSymbolTurtle(this.image, this.color.toString());
 };
 
+BlockMorph.prototype.userMenu = (function(oldUserMenu) {
+    return function() {
+        var myself = this,
+            menu = oldUserMenu.call(this);
+        if (!this.isTemplate) {
+            menu.addLine();
+            menu.addItem(
+                "export...",
+                function () {
+                    var exportSequence = function() {
+                        var serializer = new SnapSerializer();
+                        var xml = myself.topBlock().toScriptXML(serializer);
+                        window.open("data:text/xml," + xml);
+                    };
+                    
+                    // Test if a block contains/is a custom block
+                    var testDependencies = function(element) {
+                        while (element) {
+                            if (element.children.some(testDependencies))
+                                return true;
+                            
+                            if (element.definition instanceof CustomBlockDefinition)
+                                return true;
+                            
+                            // Also check the next block in a block sequence
+                            element = element.nextBlock ? element.nextBlock() : null;
+                        }
+                        return false;
+                    };
+
+                    var ide = this.parentThatIsA(IDE_Morph);
+                    var unmetDependencies = testDependencies(myself.topBlock());
+                    if (unmetDependencies && ide) {
+                        ide.confirm(
+                            "This sequence contains a custom block whose definition will not be exported. Continue?",
+                            "Block sequence export",
+                            exportSequence
+                        );
+                    }
+                    else {
+                        exportSequence();
+                    }
+                   
+                },
+                'open a new window\nwith this block sequence as XML'
+            );
+        }
+        return menu;
+    };
+}(BlockMorph.prototype.userMenu));
+
 }());

@@ -602,39 +602,12 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
             submenu.popUpAtHand(world);
         });
 
-        menu.addItem("import from file", function () {
-            var inp = document.createElement('input');
-            inp.type = 'file';
-            inp.style.color = "transparent";
-            inp.style.backgroundColor = "transparent";
-            inp.style.border = "none";
-            inp.style.outline = "none";
-            inp.style.position = "absolute";
-            inp.style.top = "0px";
-            inp.style.left = "0px";
-            inp.style.width = "0px";
-            inp.style.height = "0px";
-            inp.addEventListener(
-                "change",
-                function () {
-                    document.body.removeChild(inp);
-                    var frd = new FileReader();
-                    var s = currentGraphSprite;
-                    frd.onloadend = function(e) {
-                        try {
-                            s.loadGraphFromString(e.target.result);
-                        } catch(e) {
-                            ide.showMessage("Error loading file: " + e.message);
-                        }
-                    }
-                    for (var i = 0; i < inp.files.length; i += 1) {
-                        frd.readAsText(inp.files[i]);
-                    }
-                },
-                false
-            );
-            document.body.appendChild(inp);
-            inp.click();
+        menu.addItem("import graph from file", function () {
+            currentGraphSprite.loadGraphFromFile(false);
+        });
+        
+        menu.addItem("import subgraph from file", function () {
+            currentGraphSprite.loadGraphFromFile(true);
         });
 
         return menu;
@@ -801,10 +774,12 @@ function parseNode(node) {
 // Graph block bindings
 
 SpriteMorph.prototype.newGraph = function() {
+    this.maximumNode = 0;
     this.setGraph(jsnx.Graph());
 };
 
 SpriteMorph.prototype.newDiGraph = function() {
+    this.maximumNode = 0;
     this.setGraph(jsnx.DiGraph());
 };
 
@@ -1060,16 +1035,16 @@ var NODE_ATTR_HANDLERS = {
         },
         set: function(node, data, val) {
             if(data.__d3datum__) {
-                data.__d3datum__.x = data.__d3datum__.px = val;
-
-                // We need to run the layout for one tick with the node fixed,
-                // so it changes position. Then we can restore the fixedness
-                // to whatever it was before.
-                var fixed = data.__d3datum__.fixed;
-                data.__d3datum__.fixed |= 1;
-                layout.resume();
-                layout.tick();
-                data.__d3datum__.fixed = fixed;
+                if (typeof val == "number") {
+                    data.__d3datum__.x = data.__d3datum__.px = val;
+                    data.__d3datum__.fixed = true;
+                    layout.resume();
+                }
+                else {
+                    data.__d3datum__.fixed = currentGraphSprite
+                        .parentThatIsA(IDE_Morph)
+                        .useManualLayout;
+                }
             }
 
             // If the node is not fixed, having fixed x does not make sense.
@@ -1086,16 +1061,16 @@ var NODE_ATTR_HANDLERS = {
         },
         set: function(node, data, val) {
             if(data.__d3datum__) {
-                data.__d3datum__.y = data.__d3datum__.py = val;
-
-                // We need to run the layout for one tick with the node fixed,
-                // so it changes position. Then we can restore the fixedness
-                // to whatever it was before.
-                var fixed = data.__d3datum__.fixed;
-                data.__d3datum__.fixed |= 1;
-                layout.resume();
-                layout.tick();
-                data.__d3datum__.fixed = fixed;
+                if (typeof val == "number") {
+                    data.__d3datum__.y = data.__d3datum__.py = val;
+                    data.__d3datum__.fixed = true;
+                    layout.resume();
+                }
+                else {
+                    data.__d3datum__.fixed = currentGraphSprite
+                        .parentThatIsA(IDE_Morph)
+                        .useManualLayout;
+                }
             }
 
             // If the node is not fixed, having fixed y does not make sense.
@@ -1662,7 +1637,8 @@ SpriteMorph.prototype.generateGridGraph = function(w, h) {
     var grid = jsnx.generators.classic.grid_2d_graph(w, h, false, new this.G.constructor());
     // Grid graphs by default come with labels as [x, y], which blow up with
     // the renderer for some reason. Stringify the labels instead.
-    grid = jsnx.relabel.relabel_nodes(grid, function(x) { return x.toString(); });
+    //   Update: add one to the x and y, to be consistent (#261)
+    grid = jsnx.relabel.relabel_nodes(grid, function(x) { return (x[0] + 1) + "," + (x[1] + 1); });
     this.addGraph(grid);
 };
 
@@ -1691,9 +1667,9 @@ SpriteMorph.prototype.addAttrsFromGraph = function(graph) {
     });
 }
 
-SpriteMorph.prototype.loadGraphFromString = function(string) {
+SpriteMorph.prototype.loadGraphFromString = function(string, addTo) {
     try {
-        this.graphFromJSON(string, true);
+        this.graphFromJSON(string, addTo);
         return;
     } catch(e) {
         if(!(e instanceof SyntaxError)) {
@@ -1702,7 +1678,7 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
     }
 
     try {
-        this.importGraph(parseDot(string), true);
+        this.importGraph(parseDot(string), addTo);
         return;
     } catch(e) {
         if(!(e instanceof DotParser.SyntaxError)) {
@@ -1713,10 +1689,10 @@ SpriteMorph.prototype.loadGraphFromString = function(string) {
     var data = CSV.csvToArray(string);
     if(data[0][0] === '' || data[0][0] === null) {
         // Try parsing as adjacency matrix.
-        this.importGraph(parseAdjacencyMatrix(data), true);
+        this.importGraph(parseAdjacencyMatrix(data), addTo);
     } else {
         // Try parsing as adjacency list.
-        this.importGraph(parseAdjacencyList(data), true);
+        this.importGraph(parseAdjacencyList(data), addTo);
     }
 };
 
@@ -1725,11 +1701,46 @@ SpriteMorph.prototype.loadGraphFromURL = function(url) {
     request.open('GET', url, false);
     request.send(null);
     if (request.status === 200) {
-        this.loadGraphFromString(request.responseText);
+        this.loadGraphFromString(request.responseText, true);
     } else {
         throw new Error("Could not load URL: " + request.statusText);
     }
 };
+
+SpriteMorph.prototype.loadGraphFromFile = function(addTo) {
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.style.color = "transparent";
+    inp.style.backgroundColor = "transparent";
+    inp.style.border = "none";
+    inp.style.outline = "none";
+    inp.style.position = "absolute";
+    inp.style.top = "0px";
+    inp.style.left = "0px";
+    inp.style.width = "0px";
+    inp.style.height = "0px";
+    inp.addEventListener(
+        "change",
+        function () {
+            document.body.removeChild(inp);
+            var frd = new FileReader();
+            var s = currentGraphSprite;
+            frd.onloadend = function(e) {
+                try {
+                    s.loadGraphFromString(e.target.result, addTo);
+                } catch(e) {
+                    throw new Error("Error loading file: " + e.message);
+                }
+            }
+            for (var i = 0; i < inp.files.length; i += 1) {
+                frd.readAsText(inp.files[i]);
+            }
+        },
+        false
+    );
+    document.body.appendChild(inp);
+    inp.click();
+}
 
 SpriteMorph.prototype.topologicalSort = function() {
     return new List(jsnx.algorithms.dag.topological_sort(this.G));
@@ -2277,6 +2288,14 @@ SpriteMorph.prototype.setEdgeDisplayAttrib = function (attr) {
     redrawGraph();
 };
 
+SpriteMorph.prototype.saveGraph = function () {
+    return this.graphToJSON();
+};
+
+SpriteMorph.prototype.loadGraph = function (handle) {
+    this.graphFromJSON(handle);
+};
+
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
@@ -2321,6 +2340,16 @@ SpriteMorph.prototype.setEdgeDisplayAttrib = function (attr) {
             type: 'command',
             category: 'network',
             spec: 'clear'
+        },
+        saveGraph: {
+            type: 'reporter',
+            category: 'network',
+            spec: 'save graph'
+        },
+        loadGraph: {
+            type: 'command',
+            category: 'network',
+            spec: 'load graph %s'
         },
         numberOfNodes: {
             type: 'reporter',
@@ -2871,6 +2900,9 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('setActiveGraph'));
             blocks.push(block('showGraphSlice'));
             blocks.push(block('hideActiveGraph'));
+            blocks.push('-');
+            blocks.push(block('saveGraph'));
+            blocks.push(block('loadGraph'));
             blocks.push('-');
             blocks.push(block('getMatrixEntry'));
             blocks.push(block('setMatrixEntry'));
@@ -3607,5 +3639,31 @@ function graphToDot(G) {
 
     return [graphtype, " {\n", nodeout, "\n\n", edgeout, "\n}\n"].join("");
 }
+
+StageMorph.prototype.thumbnail = (function(oldThumbnail) {
+    return function(extentPoint, excludedSprite) {
+        var canvas = oldThumbnail.call(this, extentPoint, excludedSprite);
+        // Also draw the graph on top of the thumbnail
+        var svgDiv = document.getElementById("graph-display");
+        if (svgDiv && svgDiv.childNodes.length == 1) {
+            // We have to set the xmlns of the <svg> or the browser doesn't know what to do
+            svgDiv.childNodes[0].setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            var img = new Image();
+            // Set the source to the data url of the svg
+            img.src = "data:image/svg+xml," + svgDiv.innerHTML;
+            // Make a canvas
+            var context = canvas.getContext("2d");
+            // Draw the image
+            var done = false;
+            try {
+                context.drawImage(img, 0, 0);
+            }
+            catch (e) {
+                // Didn't work, just go on like normal
+            }
+        }
+        return canvas;
+    };
+}(StageMorph.prototype.thumbnail));
 
 }());
