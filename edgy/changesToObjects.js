@@ -704,9 +704,41 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
         });
         
         menu.addItem("export interactive graph", function () {
-            var json = JSON.stringify(graphToObject(currentGraph));
+            var object = graphToObject(currentGraph);
+            
+            object.nodeDisplayAttribute = currentGraph.nodeDisplayAttribute;
+            object.edgeDisplayAttribute = currentGraph.edgeDisplayAttribute;
+            
+            switch (edgyLayoutAlgorithm) {
+                case d3.layout.force:
+                    object.layoutAlgorithm = "force";
+                    break;
+                case cola.d3adaptor:
+                    object.layoutAlgorithm = "cola";
+                    break;
+                case d3.layout.tree:
+                    object.layoutAlgorithm = "tree";
+                    break;
+            }
+            
+            var json = JSON.stringify(object);
             var a = document.createElement('a');
             a.href = 'embed.html'; // Get the absolute URL
+            
+            var svgDiv = document.getElementById("graph-display");
+            var code = [
+                '<iframe style="width:',
+                myself.width(),
+                'px;',
+                'height:',
+                myself.height(),
+                'px',
+                '" src="',
+                a.href,
+                '#', 
+                encodeURIComponent(json),
+                '">iFrames are required to display this graph.</iframe>'
+            ].join('');
             
             new DialogBoxMorph(
                 this,
@@ -714,19 +746,7 @@ StageMorph.prototype.userMenu = (function changed (oldUserMenu) {
                 this
             ).promptCode(
                 'export interactive graph',
-                [
-                    '<iframe style="width:',
-                    myself.width(),
-                    'px;',
-                    'height:',
-                    myself.height(),
-                    'px',
-                    '" src="',
-                    a.href,
-                    '#', 
-                    encodeURIComponent(json),
-                    '">iFrames must be supported to display this graph.</iframe>'
-                ].join(''),
+                code,
                 world,
                 null,
                 'Copy this code into a webpage to embed this graph.'

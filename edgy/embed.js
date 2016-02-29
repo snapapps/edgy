@@ -1,5 +1,6 @@
-function drawGraph(json, container, attribute) {
-	var graphEl = d3.select(container);
+function drawGraph(json, container) {
+	var graphEl = d3.select(container),
+        layout = cola.d3adaptor;
 	
 	// Taken from http://stackoverflow.com/a/122190/126977
 	function clone(obj){
@@ -17,7 +18,9 @@ function drawGraph(json, container, attribute) {
 	function objectToGraph (data) {
 		var multigraph = data.multigraph,
 			directed = data.directed,
-			manual = data.manual,
+            nodeDisplayAttribute = data.nodeDisplayAttribute,
+            edgeDisplayAttribute = data.edgeDisplayAttribute,
+            layoutAlgorithm = data.layoutAlgorithm,
 			mapping = [],
 			graph, d, node, nodedata, link_data, source, target, edgedata;
 
@@ -49,6 +52,7 @@ function drawGraph(json, container, attribute) {
 			mapping.push(node);
 			nodedata = clone(d);
 			delete nodedata.id;
+            
 			if (nodedata.x || nodedata.y) {
 				nodedata.fixed = true;
 			}
@@ -65,6 +69,21 @@ function drawGraph(json, container, attribute) {
 			edgedata = link_data;
 			graph.addEdge(mapping[source], mapping[target], edgedata);
 		}
+
+        graph.nodeDisplayAttribute = nodeDisplayAttribute || 'id';
+        graph.edgeDisplayAttribute = edgeDisplayAttribute || 'label';
+
+        switch (layoutAlgorithm) {
+            case "force":
+                layout = d3.layout.force;
+                break;
+            case "cola":
+                layout = cola.d3adaptor;
+                break;
+            case "tree":
+                layout = d3.layout.tree;
+                break;
+        }
 
 		return graph;
 	}
@@ -146,6 +165,10 @@ function drawGraph(json, container, attribute) {
 		return (d.data.label || "").toString();
 	}
 
+    function edgyLayoutAlgorithm() {
+        return layout();
+    }
+
 	var DEFAULT_NODE_COLOR = "white",
 		DEFAULT_EDGE_COLOR = "black",
 		DEFAULT_LABEL_COLOR = "black",
@@ -153,7 +176,7 @@ function drawGraph(json, container, attribute) {
 		EDGE_WIDTH_FACTOR = 8,
 		DEFAULT_LINK_DISTANCE = 60,
 		LAYOUT_OPTS = {
-			layout: cola.d3adaptor,
+			layout: edgyLayoutAlgorithm,
 			element: graphEl.node(),
 			withLabels: true,
 			withEdgeLabels: true,
@@ -326,6 +349,21 @@ function drawGraph(json, container, attribute) {
 
 	var currentGraph = objectToGraph(JSON.parse(json));
 	
-	currentGraph.nodeDisplayAttribute = attribute || 'id';
-	jsnx.draw(currentGraph, LAYOUT_OPTS);
+	jsnx.draw(currentGraph, LAYOUT_OPTS, true);
+    
+    // Follow stored fixedness, x and y values in layout.
+    jsnx.forEach(currentGraph.nodesIter(true), function(node) {
+        var data = node[1];
+        if(data.fixed) {
+            data.__d3datum__.fixed |= 1;
+        }
+
+        if(data.x !== undefined) {
+            data.__d3datum__.px = data.__d3datum__.x = data.x;
+        }
+
+        if(data.y !== undefined) {
+            data.__d3datum__.px = data.__d3datum__.y = data.y;
+        }
+    });
 }
