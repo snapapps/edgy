@@ -495,7 +495,15 @@ Dict
 SpriteMorph.prototype.reportNewDict = function(elements) {
     var res = new Map();
     for(var i=0;i<elements.contents.length;i+=2){
-        res.set(elements.contents[i], elements.contents[i+1]);
+        var key = elements.contents[i];
+        
+        // Fix for #378
+        var k = parseInt(key);
+        if (k.toString() == key) {
+            key = k;
+        }
+        
+        res.set(key, elements.contents[i+1]);
     }
     return res;
 };
@@ -505,6 +513,12 @@ SpriteMorph.prototype.reportDictLength = function(dict) {
 };
 
 SpriteMorph.prototype.getDict = function(key, dict) {
+    // Fix for #378
+    var k = parseInt(key);
+    if (k.toString() == key) {
+        key = k;
+    }
+    
     var val = dict.get(key);
     // Avoid infinite loop due to Snap! handling of undefined in reporters.
     if(val === undefined)
@@ -514,6 +528,13 @@ SpriteMorph.prototype.getDict = function(key, dict) {
 
 SpriteMorph.prototype.setDict = function(key, dict, val) {
     dict.lastChanged = Date.now();
+    
+    // Fix for #378
+    var k = parseInt(key);
+    if (k.toString() == key) {
+        key = k;
+    }
+    
     return dict.set(key, val);
 };
 
@@ -522,12 +543,25 @@ SpriteMorph.prototype.keysInDict = function(dict) {
 };
 
 SpriteMorph.prototype.keyInDict = function(dict, key) {
+    // Fix for #378
+    var k = parseInt(key);
+    if (k.toString() == key) {
+        key = k;
+    }
+    
     var val = dict.get(key);
     return !(val === undefined);
 };
 
 SpriteMorph.prototype.removeFromDict = function(key, dict) {
     dict.lastChanged = Date.now();
+    
+    // Fix for #378
+    var k = parseInt(key);
+    if (k.toString() == key) {
+        key = k;
+    }
+    
     return dict.delete(key);
 };
 
