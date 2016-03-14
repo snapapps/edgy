@@ -864,7 +864,8 @@ PQueue.prototype.toArray = function() {
 
 PQueue.prototype.toXML = function (serializer, mediaContext) {
     var xml = '';
-    this.items.slice(1).forEach(function(entry) {
+    for (var i = 1; i <= this.count; i++) {
+        var entry = this.items[i];
         var element = entry.element;
         var priority = entry.priority;
         
@@ -887,7 +888,7 @@ PQueue.prototype.toXML = function (serializer, mediaContext) {
         );
         
         xml += e + p;
-    });
+    };
     
     return serializer.format('<pqueue type="@">%</pqueue>', this.type || 'max', xml);
 };
