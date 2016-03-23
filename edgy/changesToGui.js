@@ -242,6 +242,8 @@ IDE_Morph.prototype.toggleUseManualLayout = function () {
         this.currentSprite.resumeLayout();
     } else {
         jsnx.forEach(currentGraph.nodesIter(true), function(node) {
+            node[1].__d3datum__.px = node[1].__d3datum__.x;
+            node[1].__d3datum__.py = node[1].__d3datum__.y;
             node[1].__d3datum__.fixed = true;
         });
         this.useManualLayout = true;
