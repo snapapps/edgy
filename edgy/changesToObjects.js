@@ -62,6 +62,9 @@ function contextMenuCostumesList() {
 graphEl.on("DOMNodeInserted", function() {
     var node = d3.select(d3.event.relatedNode);
     if(node.classed("node")) {
+        node.on("mousedown", function() {
+            fixNodes();
+        });
         // Node context menu.
         node.on("mouseup", function() {
             var d = node.datum();
@@ -250,6 +253,19 @@ function restoreLayout(el, layout) {
         d.fixed = n.__oldpos__.fixed;
         delete n.__oldpos__;
     });
+}
+
+// Fixes nodes in place if manual layout is enabled
+function fixNodes() {
+    var manual = currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout;
+
+    if (manual) {
+        jsnx.forEach(currentGraph.nodesIter(true), function(node) {
+            node[1].__d3datum__.px = node[1].__d3datum__.x;
+            node[1].__d3datum__.py = node[1].__d3datum__.y;
+            node[1].__d3datum__.fixed = true;
+        });
+    }
 }
 
 function updateGraphDimensions(stage) {
@@ -582,6 +598,10 @@ var DEFAULT_NODE_COLOR = "white",
 redrawGraph = function() {
     layout = jsnx.draw(currentGraph, LAYOUT_OPTS, true);
 
+    layout.on('end', function() {
+        fixNodes();
+    });
+
     if(layout.flowLayout && window.ide_ && window.ide_.useDownwardEdgeConstraint) {
         // Activate downward edge (tree-like) layout.
         layout.flowLayout("y", DEFAULT_LINK_DISTANCE);
@@ -601,7 +621,7 @@ redrawGraph = function() {
         }
 
         if(data.y !== undefined) {
-            data.__d3datum__.px = data.__d3datum__.y = data.y;
+            data.__d3datum__.py = data.__d3datum__.y = data.y;
         }
     });
 
