@@ -1002,7 +1002,7 @@ SpriteMorph.prototype.showGraphSlice = function(start, radius) {
         this.G.reverse(false);
         var distancesB = jsnx.singleSourceShortestPathLength(this.G, start, radius);
         this.G.reverse(false);
-        G = this.G.subgraph(distancesA.keys().concat(distancesB.keys()));
+        G = this.G.subgraph(Array.from(distancesA.keys()).concat(distancesB.keys()));
     }
     else {
         var distances = jsnx.singleSourceShortestPathLength(this.G, start, radius);
