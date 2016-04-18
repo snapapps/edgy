@@ -1584,7 +1584,7 @@ SpriteMorph.prototype.getNodes = function() {
 
 SpriteMorph.prototype.getNodesWithAttr = function(attr, val) {
     var myself = this;
-    return new List(jsnx.toArray(jsnx.filter(this.G.nodesIter(), function(node) {
+    return new List(jsnx.toArray(this.G.nodes().filter(function(node) {
         return snapEquals(myself.getNodeAttrib(attr, node), val);
     })));
 };
