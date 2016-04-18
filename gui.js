@@ -2280,7 +2280,7 @@ IDE_Morph.prototype.settingsMenu = function () {
         );
     }
     menu.addLine();
-    menu.addItem('Language...', 'languageMenu');
+    // menu.addItem('Language...', 'languageMenu'); // disabled due to #403.
     menu.addItem(
         'Zoom blocks...',
         'userSetBlocksScale'

@@ -342,4 +342,30 @@ IDE_Morph.prototype.droppedText = (function(oldDroppedText) {
     };
 }(IDE_Morph.prototype.droppedText));
 
+// Remove cloud options as per #401
+IDE_Morph.prototype.createControlBar = (function(oldCreateControlBar) {
+    return function() {
+        oldCreateControlBar.call(this);
+        
+        this.controlBar.cloudButton.destroy();
+        
+        var myself = this;
+        var padding = 5;
+        
+        this.controlBar.fixLayout = (function(oldFixLayout) {
+            return function() {
+                oldFixLayout.call(this);
+                
+                this.settingsButton.setCenter(myself.controlBar.center());
+                this.settingsButton.setRight(this.left());
+
+                this.projectButton.setCenter(myself.controlBar.center());
+                this.projectButton.setRight(this.settingsButton.left() - padding);
+                
+                this.updateLabel();
+            };
+        }(this.controlBar.fixLayout));
+    };
+}(IDE_Morph.prototype.createControlBar));
+
 }());
