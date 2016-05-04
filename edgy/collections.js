@@ -349,7 +349,12 @@ SyntaxElementMorph.prototype.showBubble = (function(){
             morphToShow = new PQueueMorph(value);
             morphToShow.isDraggable = false;
             isClickable = true;
-        } else {
+        } else if (value instanceof DisjointSet) {
+            morphToShow = new DisjointSetMorph(value);
+            morphToShow.isDraggable = false;
+            isClickable = true;
+        }
+        else {
             return oldShowBubble.call(this, value);
         }
         bubble = new SpeechBubbleMorph(
@@ -386,7 +391,7 @@ CellMorph.prototype.drawNew = (function() {
             this.contentsMorph.destroy();
         }
         
-        if (this.contents instanceof Map || this.contents instanceof PQueue) {
+        if (this.contents instanceof Map || this.contents instanceof PQueue || this.contents instanceof DisjointSet) {
             if (this.isCircular()) {
                 this.contents = new TextMorph(
                     '(...)',
@@ -405,6 +410,10 @@ CellMorph.prototype.drawNew = (function() {
                 }
                 else if (this.contents instanceof PQueue) {
                     this.contents = new PQueueMorph(this.contents, this);
+                    this.contents.isDraggable = false;
+                }
+                else if (this.contents instanceof DisjointSet) {
+                    this.contents = new DisjointSetMorph(this.contents, this);
                     this.contents.isDraggable = false;
                 }
             }
@@ -1156,6 +1165,181 @@ SpriteMorph.prototype.isPQueueEmpty = function(pqueue) {
 }());
 
 /**
+ * Disjoint Set
+ */
+
+var DisjointSet;
+
+function DisjointSet(objects) {
+    var myself = this;
+    
+    this.objects = new Map();
+    this.lastChanged = Date.now();
+    
+    if (objects) {
+        objects.forEach(function(object) {
+            myself.objects.set(object, {
+                parent: object,
+                rank: 0
+            })
+        });
+    }
+}
+
+DisjointSet.prototype.changed = function() {
+    this.lastChanged = Date.now();
+};
+
+DisjointSet.prototype.add = function(object) {
+    this.objects.set(object, {
+        parent: object,
+        rank: 0
+    });
+    this.changed();
+};
+
+DisjointSet.prototype.union = function(x, y) {
+    xRoot = this.find(x);
+    yRoot = this.find(y);
+    if (xRoot == yRoot)
+        return;
+    
+    xValue = this.objects.get(xRoot);
+    yValue = this.objects.get(yRoot);
+    
+    if (xValue.rank < yValue.rank) {
+        xValue.parent = yRoot;
+    }
+    else if (xValue.rank > yValue.rank) {
+        yValue.parent = xRoot;
+    }
+    else {
+        yValue.parent = xRoot;
+        xValue.rank++;
+    }
+    this.changed();
+};
+
+DisjointSet.prototype.find = function(x) {
+    var value = this.objects.get(x);
+    if (value.parent != x) {
+        value.parent = this.find(value.parent);
+    }
+    return value.parent;
+};
+
+// Watches a DisjointSet
+var DisjointSetMorph;
+
+function DisjointSetMorph(set, parentCell) {
+    this.init(set, parentCell);
+}
+
+// Inherits from ListWatcherMorph
+
+DisjointSetMorph.prototype = new ListWatcherMorph();
+DisjointSetMorph.prototype.constructor = DisjointSetMorph;
+DisjointSetMorph.uber = ListWatcherMorph.prototype;
+
+DisjointSetMorph.prototype.init = function(set, parentCell) {
+    this.set = set;
+    
+    DisjointSetMorph.uber.init.call(this, null, parentCell);
+    
+    this.update(true);
+};
+
+DisjointSetMorph.prototype.update = function(anyway) {
+    if (this.lastUpdated === this.set.lastChanged && !anyway) {
+        return null;
+    }
+    
+    var myself = this;
+    var sets = new Map();
+    var items = this.set.objects.forEach(function(value, key) {
+        var find = myself.set.find(key);
+        if (!sets.has(find)) {
+            sets.set(find, new List());
+        }
+        sets.get(find).add(key);
+    });
+    
+    this.list = new List(Array.from(sets.values()));
+    
+    DisjointSetMorph.uber.update.call(this, anyway);
+    
+    this.lastUpdated = this.set.lastChanged;
+};
+
+// Monkey patch WatcherMorph so it knows about our DisjointSetMorph
+(function() {
+WatcherMorph.prototype.update = (function(oldUpdate) {
+    return function() {
+        var result = oldUpdate.call(this);
+        if (this.cellMorph.contentsMorph instanceof DisjointSetMorph) {
+            this.cellMorph.contentsMorph.update();
+        }
+        return result;
+    };
+}(WatcherMorph.prototype.update));
+})();
+
+SpriteMorph.prototype.reportNewDisjointSet = function(items) {
+    return new DisjointSet(items.asArray());
+};
+
+SpriteMorph.prototype.addItemToDisjointSet = function(item, set) {
+    set.add(item);
+};
+
+SpriteMorph.prototype.unionDisjointSet = function(x, y, set) {
+    set.union(x, y);
+};
+
+SpriteMorph.prototype.findInDisjointSet = function(x, set) {
+    return set.find(x);
+};
+
+(function() {
+    var blocks = {
+        reportNewDisjointSet: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'disjoint set %exp',
+            defaults: ['item']
+        },
+        addItemToDisjointSet: {
+            type: 'command',
+            category: 'lists',
+            spec: 'add %s to disjoint set %l',
+            defaults: ['item']
+        },
+        unionDisjointSet: {
+            type: 'command',
+            category: 'lists',
+            spec: 'union %s and %s in disjoint set %l',
+        },
+        findInDisjointSet: {
+            type: 'reporter',
+            category: 'lists',
+            spec: 'find %s in disjoint set %l',
+        }
+    };
+
+    SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+        return function() {
+            oldInitBlocks.call(this);
+            // Add the new blocks.
+            for (blockName in blocks) {
+                if(blocks.hasOwnProperty(blockName)) {
+                    SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+                }
+            }
+        };
+    }(SpriteMorph.prototype.initBlocks));
+}());
+
+/**
 Add the collection categories.
 */
 
@@ -1213,6 +1397,11 @@ SpriteMorph.prototype.blockTemplates = (function blockTemplates (oldBlockTemplat
             blocks.push(block('popPQueue'));
             blocks.push(block('updatePQueue'));
             blocks.push(block('isPQueueEmpty'));
+            blocks.push('-');
+            blocks.push(block('reportNewDisjointSet'));
+            blocks.push(block('addItemToDisjointSet'));
+            blocks.push(block('unionDisjointSet'));
+            blocks.push(block('findInDisjointSet'));
         } else {
             return blocks.concat(oldBlockTemplates.call(this, category));
         }
