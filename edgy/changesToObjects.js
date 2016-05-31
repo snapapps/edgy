@@ -1742,12 +1742,14 @@ SpriteMorph.prototype.isCyclic = function() {
             return e instanceof jsnx.JSNetworkXUnfeasible;
         }
     } else {
-        var iter = this.G.nodesIter(),
+        var nodes = this.G.nodes(),
             visited = new Set(),
             hasCycle = false,
             stack, node, pred;
 
-        for (node of iter) {
+        for (var i = 0; i < nodes.length; i++) {
+            node = nodes[i];
+            
             if(visited.has(node))
                 continue;
 
