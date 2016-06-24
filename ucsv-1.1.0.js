@@ -185,7 +185,7 @@ var CSV = (function () {
 			cur = s.charAt(i);
 
 			// If we are at a EOF or EOR
-			if (inQuote === false && (cur === ',' || cur === "\r" || cur === "\n")) {
+			if (inQuote === false && (cur === ',' || cur === ';' || cur === "\r" || cur === "\n")) {
 				field = processField(field);
 				// Add the current field to the current row
 				row.push(field);
