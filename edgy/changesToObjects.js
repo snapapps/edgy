@@ -3851,7 +3851,7 @@ function parseDot(string) {
 }
 
 function parseAdjacencyList (list) {
-    var G = jsnx.DiGraph(),
+    var G = new jsnx.DiGraph(),
         row;
 
     for (var i = 0; i < list.length; i++) {
@@ -3869,7 +3869,7 @@ function parseAdjacencyList (list) {
 }
 
 function parseAdjacencyMatrix (mat) {
-    var G = jsnx.DiGraph(),
+    var G = new jsnx.DiGraph(),
         row, a, b, label_;
 
     for (var i = 1; i < mat[0].length; i++) {
@@ -3879,7 +3879,7 @@ function parseAdjacencyMatrix (mat) {
     for (var i = 1; i < mat.length; i++) {
         row = mat[i];
         for (var j = 1; j < row.length; j++) {
-            if(row[j] !== null && row[j] !== '') {
+            if(row[j] !== null && row[j] !== '' && row[j] !== 0) {
                 a = parseNode(row[0].toString());
                 b = parseNode(mat[0][j].toString());
                 label_ = row[j].toString();
