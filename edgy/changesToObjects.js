@@ -650,8 +650,14 @@ function displayGraph (G) {
         layout.stop();
     }
     currentGraph = G;
-    currentGraph.nodeDisplayAttribute = 'id';
-    currentGraph.edgeDisplayAttribute = 'label';
+
+    if (currentGraph.nodeDisplayAttribute == null) {
+        currentGraph.nodeDisplayAttribute = 'id';
+    }
+    if (currentGraph.edgeDisplayAttribute == null) {
+        currentGraph.edgeDisplayAttribute = 'label';
+    }
+       
     redrawGraph();
 }
 
@@ -2479,15 +2485,15 @@ Process.prototype.searchGoogleBooks = function(query) {
 };
 
 SpriteMorph.prototype.setGraph = function(newGraph) {
-    var wasActive = this.isActiveGraph();
+    // var wasActive = this.isActiveGraph();
     this.G = newGraph;
-    if(wasActive) {
+    // if(wasActive) {
         if(currentGraph.parentGraph) {
             this.showGraphSlice(this.sliceStart, this.sliceRadius);
         } else {
             this.setActiveGraph();
         }
-    }
+    // }
 };
 
 SpriteMorph.prototype.convertToDigraph = function() {
@@ -3728,7 +3734,8 @@ function clone(obj){
 // graph format.
 function graphToObject(G) {
     var multigraph = G.isMultigraph();
-    var manual = currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout;
+    var ide = currentGraphSprite.parentThatIsA(IDE_Morph);
+    var manual = ide ? ide.useManualLayout : false;
 
     var mapping = {};
     var i = 0;
@@ -3739,7 +3746,23 @@ function graphToObject(G) {
     var data = {};
     data.directed = G.isDirected();
     data.multigraph = multigraph;
+    
+    switch (edgyLayoutAlgorithm) {
+        case d3.layout.force:
+            data.layoutAlgorithm = "force";
+            break;
+        case cola.d3adaptor:
+            data.layoutAlgorithm = "cola";
+            if (ide.useDownwardEdgeConstraint) {
+                data.layoutAlgorithm = "downward";
+            }
+            break;
+    }
+
     data.manual = manual;
+    data.nodeDisplayAttribute = currentGraph.nodeDisplayAttribute;
+    data.edgeDisplayAttribute = currentGraph.edgeDisplayAttribute;
+
     var costumes = {};
     data.graph = [["__costumes__", costumes]];
     for(var k in G.graph) {
@@ -3914,7 +3937,27 @@ function objectToGraph (data) {
         graph = graph.toDirected();
     }
 
-    currentGraphSprite.parentThatIsA(IDE_Morph).useManualLayout = manual;
+    var ide = currentGraphSprite.parentThatIsA(IDE_Morph);
+
+    graph.nodeDisplayAttribute = data.nodeDisplayAttribute;
+    graph.edgeDisplayAttribute = data.edgeDisplayAttribute;
+
+    switch (data.layoutAlgorithm) {
+        case "force":
+            edgyLayoutAlgorithm = d3.layout.force;
+            break;
+        case "cola":
+            edgyLayoutAlgorithm = cola.d3adaptor;
+        case "downward":
+            if (ide) {
+                ide.useDownwardEdgeConstraint = true;
+            }
+            break;
+    }
+
+    if (ide) {
+        ide.useManualLayout = manual;
+    }
 
     if(data.graph) {
         for (var i = 0; i < data.graph.length; i++) {
