@@ -28,4 +28,5 @@ Not sure on where to start in using Edgy? Click one of the links below to start 
 
 ## Development
 
-Edgy has been developed by [Steven Bird](http://estive.net/) and students (Mak Nazečić-Andrlon, Jarred Gallina) at the University of Melbourne.
+Edgy has been developed by [Steven Bird](http://stevenbird.net/) and students (Mak Nazečić-Andrlon, Jarred Gallina) at the University of Melbourne.
+

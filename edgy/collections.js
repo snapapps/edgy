@@ -372,25 +372,11 @@ SyntaxElementMorph.prototype.showBubble = (function(){
 })();
 
 // Show the result of maps and priority queues in the output box.
-
-CellMorph.prototype.drawNew = (function() {
+CellMorph.prototype.drawNew = (function(toggle, type) {
     // Draw snap's results.
     var oldDrawNew = CellMorph.prototype.drawNew;
 
     return function () {
-        var fontSize = SyntaxElementMorph.prototype.fontSize,
-            isSameList = (this.contentsMorph instanceof ListWatcherMorph
-                && this.contentsMorph.list === this.contents);
-        
-        if (this.isBig) {
-            fontSize = fontSize * 1.5;
-        }
-        
-        // re-build my contents
-        if (this.contentsMorph && !isSameList) {
-            this.contentsMorph.destroy();
-        }
-        
         if (this.contents instanceof Map || this.contents instanceof PQueue || this.contents instanceof DisjointSet) {
             if (this.isCircular()) {
                 this.contents = new TextMorph(
@@ -419,7 +405,7 @@ CellMorph.prototype.drawNew = (function() {
             }
         }
         
-        oldDrawNew.call(this);
+        oldDrawNew.call(this, toggle, type);
     };
 })();
 
