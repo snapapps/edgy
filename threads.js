@@ -68,11 +68,6 @@ var Process;
 var Context;
 var VariableFrame;
 
-// http://stackoverflow.com/a/1830844/126977
-function isNumeric(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
 function snapEquals(a, b) {
     if (a instanceof List || (b instanceof List)) {
         if (a instanceof List && (b instanceof List)) {
@@ -219,13 +214,9 @@ ThreadManager.prototype.startProcess = function (
         top.addHighlight();
     }
     this.processes.push(newProc);
-
-    clickstream.log("startProcess", {blockId: block.topBlock().blockID});
-
     if (rightAway) {
         newProc.runStep();
     }
-
     return newProc;
 };
 
@@ -236,7 +227,6 @@ ThreadManager.prototype.stopAll = function (excpt) {
             proc.stop();
         }
     });
-    clickstream.log("stopAll");
 };
 
 ThreadManager.prototype.stopAllForReceiver = function (rcvr, excpt) {
@@ -279,7 +269,6 @@ ThreadManager.prototype.resumeAll = function (stage) {
     if (stage) {
         stage.resumeAllActiveSounds();
     }
-    clickstream.log("resumeAll");
 };
 
 ThreadManager.prototype.step = function () {
@@ -920,7 +909,6 @@ Process.prototype.handleError = function (error, element) {
     this.stop();
     this.errorFlag = true;
     this.topBlock.addErrorHighlight();
-
     if (isNil(m) || isNil(m.world())) {m = this.topBlock; }
     m.showBubble(
         (m === element ? '' : 'Inside: ')
@@ -995,14 +983,10 @@ Process.prototype.reifyPredicate = function (topBlock, parameterNames) {
 };
 
 Process.prototype.reportJSFunction = function (parmNames, body) {
-    if (window.javascriptexecutionlevel === 'full') {
-        return Function.apply(
-            null,
-            parmNames.asArray().concat([body])
-        );
-    } else {
-        throw new Error('The current script attempted to execute JavaScript code at a higher privilege level than is currently allowed.\nCode execution was terminated.\nIf you trust the code within the JavaScript blocks and wish to execute it, set the "Execution level" setting to the appropriate level.');
-    }
+    return Function.apply(
+        null,
+        parmNames.asArray().concat([body])
+    );
 };
 
 Process.prototype.doRun = function (context, args) {
@@ -1016,15 +1000,10 @@ Process.prototype.evaluate = function (
 ) {
     if (!context) {return null; }
     if (context instanceof Function) {
-        // ALL calls to eval(), Function.apply() etc.. need to be handled this way, otherwise there will be a way to inject JS code..
-        if (window.javascriptexecutionlevel === 'full') {
-            return context.apply(
-                this.homeContext.receiver,
-                args.asArray().concat([this])
-            );
-        } else {
-            throw new Error('The current script attempted to execute JavaScript code at a higher privilege level than is currently allowed.\nCode execution was terminated.\nIf you trust the code within the JavaScript blocks and wish to execute it, set the "Execution level" setting to the appropriate level.');
-        }
+        return context.apply(
+            this.blockReceiver(),
+            args.asArray().concat([this])
+        );
     }
     if (context.isContinuation) {
         return this.runContinuation(context, args);
@@ -1586,58 +1565,6 @@ Process.prototype.reportCDR = function (list) {
 Process.prototype.doAddToList = function (element, list) {
     // this.assertType(list, 'list');
     list.add(element);
-};
-
-Process.prototype.doConcatToList = function (l, list) {
-    list.becomeArray();
-    l.becomeArray();
-    list.contents = list.contents.concat(l.contents);
-};
-
-Process.prototype.getRandomFromList = function (l) {
-    var idx = Math.floor(Math.random() * l.length()) + 1;
-    // Handle any accidental mis-rounding; should be rare: "on the order of one
-    // in 2^62" according to
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random)
-    return l.at(Math.min(idx, l.length()));
-}
-
-function snapClone(o, memo) {
-    memo = memo || new Map();
-
-    if(memo.has(o)) {
-        return memo.get(o);
-    }
-
-    if(o instanceof List) {
-        var c = new List(o.asArray().map(function(x) {
-            return snapClone(x, memo);
-        }));
-        memo.set(o, c);
-        return c;
-    } else if(o instanceof Map) {
-        var l = [];
-        o.forEach(function(v, k) {
-            l.push([snapClone(k, memo), snapClone(v, memo)]);
-        });
-        var c = new Map(l);
-        memo.set(o, c);
-        return c;
-    } else if(typeof o == "number" || typeof o == "string" || typeof o == "boolean") {
-        return o;
-    } else {
-        throw new Error("Encountered object of unknown type.");
-    }
-}
-
-Process.prototype.getClone = function (l) {
-    return snapClone(l);
-}
-
-Process.prototype.doListJoin = function (a, b) {
-    a.becomeArray();
-    b.becomeArray();
-    return new List(a.contents.concat(b.contents));
 };
 
 Process.prototype.doDeleteFromList = function (index, list) {

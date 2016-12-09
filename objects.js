@@ -1689,6 +1689,7 @@ SpriteMorph.prototype.variableBlock = function (varName) {
 
 // SpriteMorph block templates
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 SpriteMorph.prototype.blockTemplates = function (category) {
     var blocks = [], myself = this, varNames, button,
         cat = category || 'motion', txt,
@@ -2232,6 +2233,7 @@ SpriteMorph.prototype.palette = function (category) {
     return this.paletteCache[category];
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 SpriteMorph.prototype.freshPalette = function (category) {
     var palette = new ScrollFrameMorph(null, null, this.sliderColor),
         unit = SyntaxElementMorph.prototype.fontSize,
@@ -4508,6 +4510,7 @@ SpriteMorph.prototype.doubleDefinitionsFor = function (definition) {
     });
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 SpriteMorph.prototype.replaceDoubleDefinitionsFor = function (definition) {
     var doubles = this.doubleDefinitionsFor(definition),
         myself = this,
@@ -5712,7 +5715,7 @@ StageMorph.prototype.fireGreenFlagEvent = function () {
     if (ide) {
         ide.controlBar.pauseButton.refresh();
     }
-    clickstream.log("fireGreenFlag");
+
     return procs;
 };
 
@@ -5771,6 +5774,7 @@ StageMorph.prototype.editScripts = function () {
 
 // StageMorph block templates
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 StageMorph.prototype.blockTemplates = function (category) {
     var blocks = [], myself = this, varNames, button,
         cat = category || 'motion', txt;
@@ -6988,6 +6992,7 @@ Costume.prototype.flipped = function () {
 
 // Costume actions
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 Costume.prototype.edit = function (aWorld, anIDE, isnew, oncancel, onsubmit) {
     var myself = this,
         editor = new PaintEditorMorph();

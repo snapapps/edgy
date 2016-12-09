@@ -256,6 +256,7 @@ IDE_Morph.prototype.init = function (isAutoFill) {
     this.color = this.backgroundColor;
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 IDE_Morph.prototype.openIn = function (world) {
     var hash, usr, myself = this, urlLanguage = null;
 
@@ -1660,23 +1661,9 @@ IDE_Morph.prototype.fixLayout = function (situation) {
 };
 
 IDE_Morph.prototype.setProjectName = function (string) {
-    var newName = string.replace(/['"]/g, ''); // filter quotation marks
-    if(newName !== this.projectName) {
-        clickstream.log("set_project_name", {name: string});
-        this.setProjectId();
-    }
-    this.projectName = newName;
+    this.projectName = string.replace(/['"]/g, ''); // filter quotation marks
     this.hasChangedMedia = true;
     this.controlBar.updateLabel();
-};
-
-IDE_Morph.prototype.setProjectId = function (id) {
-    if(id === undefined) {
-        this.projectId = uuid.v1();
-        clickstream.log("set_project_id", {id: this.projectId});
-    } else {
-        this.projectId = id;
-    }
 };
 
 // IDE_Morph resizing
@@ -1789,9 +1776,6 @@ IDE_Morph.prototype.droppedText = function (aString, name) {
     }
     if (aString.indexOf('<blocks') === 0) {
         return this.openBlocksString(aString, lbl, true);
-    }
-	if (aString.indexOf('<variables') === 0) {
-        return this.openVariablesString(aString);
     }
     if (aString.indexOf('<sprites') === 0) {
         return this.openSpritesString(aString);
@@ -1998,9 +1982,6 @@ IDE_Morph.prototype.applySavedSettings = function () {
         tableLines = this.getSetting('tableLines'),
         autoWrapping = this.getSetting('autowrapping');
 
-    // Principle of least privilege: JavaScript block execution is disabled unless the user requires it for this particular session.
-    window.javascriptexecutionlevel = 'blocked';
-    
     // design
     if (design === 'flat') {
         this.setFlatDesign();
@@ -2384,6 +2365,7 @@ IDE_Morph.prototype.cloudMenu = function () {
     menu.popup(world, pos);
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 IDE_Morph.prototype.settingsMenu = function () {
     var menu,
         stage = this.stage,
@@ -2789,6 +2771,7 @@ IDE_Morph.prototype.settingsMenu = function () {
     menu.popup(world, pos);
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 IDE_Morph.prototype.projectMenu = function () {
     var menu,
         myself = this,
@@ -3466,31 +3449,6 @@ IDE_Morph.prototype.rawSaveProject = function (name) {
     }
 };
 
-IDE_Morph.prototype.saveProjectToDisk = function (plain) {
-    var data,
-        link = document.createElement('a'),
-        href = 'data:text/' + (plain ? 'plain' : 'xml') + ',';
-
-    if (Process.prototype.isCatchingErrors) {
-        try {
-            data = encodeURIComponent(this.serializer.serialize(this.stage));
-            link.setAttribute('href', href + data);
-            link.setAttribute('download', this.projectName + '.xml');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (err) {
-            this.showMessage('Saving failed: ' + err);
-        }
-    } else {
-        data = encodeURIComponent(this.serializer.serialize(this.stage));
-        link.setAttribute('href', href + data);
-        link.setAttribute('download', this.projectName + '.xml');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-};
 
 IDE_Morph.prototype.exportProject = function (name, plain, newWindow) {
     // Export project XML, saving a file to disk
@@ -3499,7 +3457,6 @@ IDE_Morph.prototype.exportProject = function (name, plain, newWindow) {
 
     if (name) {
         this.setProjectName(name);
-
         dataPrefix = 'data:text/' + plain ? 'plain,' : 'xml,';
         try {
             menu = this.showMessage('Exporting');
@@ -3515,7 +3472,6 @@ IDE_Morph.prototype.exportProject = function (name, plain, newWindow) {
                 throw err;
             }
         }
-
     }
 };
 
@@ -4604,21 +4560,6 @@ IDE_Morph.prototype.languageMenu = function () {
     });
     menu.popup(world, pos);
 };
-
-IDE_Morph.prototype.javaScriptExecutionLevelMenu = function() {
-    var menu = new MenuMorph(this),
-        world = this.world(),
-        pos = this.controlBar.settingsButton.bottomLeft(),
-        myself = this;
-    menu.addItem((window.javascriptexecutionlevel === 'full' ? '\u2713 ' : '    ')+'full', function() {
-        alert('You have given the current project permission to execute code at the same level as Edgy itself -- code within "JavaScript function" blocks will have access to all Edgy functionality, including modifying local storage and accessing cloud storage credentials. If you do not trust the author of this project, set the "Execution privileges" permission setting to a lower value.');
-        window.javascriptexecutionlevel = 'full';
-    });
-    menu.addItem((window.javascriptexecutionlevel === 'blocked' ? '\u2713 ' : '    ')+'blocked', function() {
-        window.javascriptexecutionlevel = 'blocked'; }
-    );
-    menu.popup(world, pos);
-}
 
 IDE_Morph.prototype.setLanguage = function (lang, callback) {
     var translation = document.getElementById('language'),
