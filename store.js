@@ -331,6 +331,7 @@ SnapSerializer.prototype.loadProjectModel = function (xmlNode, ide) {
     return this.rawLoadProjectModel(xmlNode);
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
     // private
     var myself = this,
@@ -792,6 +793,7 @@ SnapSerializer.prototype.loadVariables = function (varFrame, element) {
     });
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 SnapSerializer.prototype.loadCustomBlocks = function (
     object,
     element,
@@ -1133,23 +1135,6 @@ SnapSerializer.prototype.loadInput = function (model, input, block) {
             );
         });
         input.fixLayout();
-    } else if (model.tag === 'pairs') {
-        while (input.inputs().length > 0) {
-            input.removeInput();
-        }
-		var i = 0;
-        model.children.forEach(function (item) {
-            if (i % 2 == 0) {
-				input.addInput();
-            }
-			myself.loadInput(
-                item,
-                input.children[input.children.length - 3 + (i % 2)],
-                input
-            );
-			i++;
-        });
-        input.fixLayout();
     } else if (model.tag === 'block' || model.tag === 'custom-block') {
         block.silentReplaceInput(input, this.loadBlock(model, true));
     } else if (model.tag === 'color') {
@@ -1246,48 +1231,6 @@ SnapSerializer.prototype.loadValue = function (model) {
             return myself.loadValue(value);
         });
         return v;
-    case 'map':
-        var res = new Map();
-        var myself = this;
-        var keys = model.childrenNamed('key').map(function (item) {
-            var value = item.children[0];
-            if (!value) {
-                return 0;
-            }
-            return myself.loadValue(value);
-        });
-        var values = model.childrenNamed('value').map(function (item) {
-            var value = item.children[0];
-            if (!value) {
-                return 0;
-            }
-            return myself.loadValue(value);
-        });
-        for (var i = 0; i < keys.length; i++) {
-            res.set(keys[i], values[i]);
-        }
-        return res;
-    case 'pqueue':
-        var type = model.attributes.type;
-        var elements = model.childrenNamed('element').map(function (item) {
-            var value = item.children[0];
-            if (!value) {
-                return 0;
-            }
-            return myself.loadValue(value);
-        });
-        var priorities = model.childrenNamed('priority').map(function (item) {
-            var value = item.children[0];
-            if (!value) {
-                return 0;
-            }
-            return myself.loadValue(value);
-        });
-        var entries = [];
-        for (var i = 0; i < elements.length; i++) {
-            entries.push(new Entry(elements[i], priorities[i]));
-        }
-        return new PQueue(entries, type);
     case 'sprite':
         v  = new SpriteMorph(myself.project.globalVariables);
         if (model.attributes.id) {
@@ -1470,6 +1413,7 @@ SnapSerializer.prototype.loadColor = function (colorString) {
     );
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 SnapSerializer.prototype.openProject = function (project, ide) {
     var stage = ide.stage,
         sprites = [],
@@ -1529,6 +1473,7 @@ Array.prototype.toXML = function (serializer) {
 
 // Sprites
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 StageMorph.prototype.toXML = function (serializer) {
     var thumbnail = normalizeCanvas(
             this.thumbnail(SnapSerializer.prototype.thumbnailSize),
@@ -1625,6 +1570,7 @@ StageMorph.prototype.toXML = function (serializer) {
     );
 };
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 SpriteMorph.prototype.toXML = function (serializer) {
     var stage = this.parentThatIsA(StageMorph),
         ide = stage ? stage.parentThatIsA(IDE_Morph) : null,
@@ -1908,6 +1854,7 @@ CustomCommandBlockMorph.prototype.toBlockXML = function (serializer) {
 CustomReporterBlockMorph.prototype.toBlockXML
     = CustomCommandBlockMorph.prototype.toBlockXML;
 
+// NOTE: This function may cause merge conflicts with the Snap! repository.
 CustomBlockDefinition.prototype.toXML = function (serializer) {
     var myself = this;
 

@@ -1,6 +1,74 @@
 (function() {
 "use strict";
 
+function hashPassword(password, salt) {
+    // SHA-512 is *not* a good way of hashing passwords, but key
+    // derivation functions are painfully slow in JavaScript.
+    return hex_sha512(salt + password);
+}
+
+CustomCommandBlockMorph.prototype.edit = (function(oldEdit) {
+    return function () {
+        var myself = this;
+        if (!this.isPrototype && this.definition.password !== undefined) {
+            new DialogBoxMorph(null, function receivePassword(password) {
+                if(myself.definition.password === hashPassword(password,
+                    myself.definition.salt)) {
+                    new BlockEditorMorph(myself.definition, myself.receiver()).popUp();
+                } else {
+                    new DialogBoxMorph(null, receivePassword).prompt(
+                        'Invalid password', '',
+                        myself.world(),
+                        new TextMorph('Invalid password.\nEnter correct '
+                            + 'password to view how this block works.'));
+                }
+            }).prompt(
+                'Password protected block', '',
+                this.world(),
+                new TextMorph('Enter password to view how this block works.')
+            );
+        }
+        else {
+            oldEdit.call(this);
+        }
+    };
+}(CustomCommandBlockMorph.prototype.edit));
+
+BlockEditorMorph.prototype.init = (function(oldInit) {
+    return function (definition, target) {
+        var retVal = oldInit.call(this, definition, target);
+        
+        var isLive = Process.prototype.enableLiveCoding ||
+                Process.prototype.enableSingleStepping;
+
+        if (!isLive) {
+            this.addButton('protect', 'Protect');
+            this.fixLayout();
+        }
+
+        return retVal;
+    };
+}(BlockEditorMorph.prototype.init));
+
+BlockEditorMorph.prototype.protect = function () {
+    var myself = this;
+    console.log(this.definition);
+    new DialogBoxMorph(null, function (password) {
+        if(password) {
+            myself.definition.salt = (new Date()).toString();
+            myself.definition.password = hashPassword(password, myself.definition.salt);
+        } else {
+            delete myself.definition.salt;
+            delete myself.definition.password;
+        }
+    }).prompt(
+        'Password protect block', '',
+        this.world(),
+        new TextMorph('Enter a password to protect this block\'s contents ' +
+        'from being viewed/edited.\nLeave blank to remove any existing ' +
+        'password.'));
+};
+
 BlockExportDialogMorph.prototype.init = (function(oldInit) {
     return function(serializer, stage) {
         this.nodeAttributes = stage.nodeAttributes;

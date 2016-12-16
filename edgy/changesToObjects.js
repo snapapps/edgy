@@ -941,7 +941,7 @@ Costume.prototype.edit = (function edit(oldEdit) {
 }(Costume.prototype.edit));
 
 function autoNumericize(x) {
-    return isNumeric(x) ? parseFloat(x) : x;
+    return !isNaN(parseFloat(x)) && isFinite(x) ? parseFloat(x) : x;
 }
 
 function parseNode(node) {
@@ -4340,6 +4340,48 @@ WatcherMorph.prototype.userMenu = (function (oldUserMenu) {
         return menu;
     };
 }(WatcherMorph.prototype.userMenu));
+
+StageMorph.prototype.fireGreenFlagEvent = (function(oldFireGreenFlagEvent) {
+    return function() {
+        clickstream.log("fireGreenFlag");
+        return oldFireGreenFlagEvent.call(this);
+    };
+}(StageMorph.prototype.fireGreenFlagEvent));
+
+var variableBlocks = {
+    doConcatToList : {
+        type: 'command',
+        category: 'lists',
+        spec: 'concatenate %l to %l',
+    },
+    doListJoin : {
+        type: 'reporter',
+        category: 'lists',
+        spec: '%l and %l joined',
+    },
+    getRandomFromList: {
+        type: 'reporter',
+        category: 'lists',
+        spec: 'random item from %l'
+    },
+    getClone: {
+        type: 'reporter',
+        category: 'lists',
+        spec: 'clone %l'
+    },
+};
+
+SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
+    return function() {
+        oldInitBlocks.call(this);
+        // Add the new blocks.
+        for (blockName in variableBlocks) {
+            if(variableBlocks.hasOwnProperty(blockName)) {
+                SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+            }
+        }
+    };
+}(SpriteMorph.prototype.initBlocks));
 
 (function() {
     var alternatives = {

@@ -4,6 +4,82 @@
 (function() {
 "use strict";
 
+SnapSerializer.prototype.loadInput = (function(oldLoadInput) {
+    return function (model, input, block) {
+        var myself = this;
+        if (model.tag === 'pairs') {
+            while (input.inputs().length > 0) {
+                input.removeInput();
+            }
+            model.children.forEach(function (item, i) {
+                if (i % 2 == 0) {
+                    input.addInput();
+                }
+                myself.loadInput(
+                    item,
+                    input.children[input.children.length - 3 + (i % 2)],
+                    input
+                );
+            });
+            input.fixLayout();
+        }
+        else {
+            return oldLoadInput.call(this, model, input, block);
+        }
+    };
+}(SnapSerializer.prototype.loadInput));
+
+SnapSerializer.prototype.loadValue = (function(oldLoadValue) {
+    return function (model) {
+        switch (model.tag) {
+            case 'map':
+                var res = new Map();
+                var myself = this;
+                var keys = model.childrenNamed('key').map(function (item) {
+                    var value = item.children[0];
+                    if (!value) {
+                        return 0;
+                    }
+                    return myself.loadValue(value);
+                });
+                var values = model.childrenNamed('value').map(function (item) {
+                    var value = item.children[0];
+                    if (!value) {
+                        return 0;
+                    }
+                    return myself.loadValue(value);
+                });
+                for (var i = 0; i < keys.length; i++) {
+                    res.set(keys[i], values[i]);
+                }
+                return res;
+            case 'pqueue':
+                var type = model.attributes.type;
+                var elements = model.childrenNamed('element').map(function (item) {
+                    var value = item.children[0];
+                    if (!value) {
+                        return 0;
+                    }
+                    return myself.loadValue(value);
+                });
+                var priorities = model.childrenNamed('priority').map(function (item) {
+                    var value = item.children[0];
+                    if (!value) {
+                        return 0;
+                    }
+                    return myself.loadValue(value);
+                });
+                var entries = [];
+                for (var i = 0; i < elements.length; i++) {
+                    entries.push(new Entry(elements[i], priorities[i]));
+                }
+                return new PQueue(entries, type);
+        }
+
+        return oldLoadValue.call(this, model);
+    };
+}(SnapSerializer.prototype.loadValue));
+
 SnapSerializer.prototype.loadObject = (function loadObject (oldLoadObject) {
     return function (object, model)
     {

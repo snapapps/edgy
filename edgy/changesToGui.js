@@ -7,6 +7,90 @@ var edgyLayoutAlgorithm = cola.d3adaptor;
 (function() {
 "use strict";
 
+IDE_Morph.prototype.setProjectName = (function(oldSetProjectName) {
+    return function (string) {
+        var oldName = this.projectName;
+        
+        var retVal = oldSetProjectName.call(this, string);
+
+        if (oldName !== this.projectName) {
+            clickstream.log("set_project_name", {name: string});
+            this.setProjectId();
+        }
+
+        return retVal;
+    };
+}(IDE_Morph.prototype.setProjectName));
+
+IDE_Morph.prototype.setProjectId = function (id) {
+    if (id === undefined) {
+        this.projectId = uuid.v1();
+        clickstream.log("set_project_id", {id: this.projectId});
+    }
+    else {
+        this.projectId = id;
+    }
+};
+
+IDE_Morph.prototype.droppedText = (function(oldDroppedText) {
+    return function (aString, name) {
+        if (aString.indexOf('<variables') === 0) {
+            return this.openVariablesString(aString);
+        }
+        return oldDroppedText.call(this, aString, name);
+    };
+}(IDE_Morph.prototype.droppedText));
+
+IDE_Morph.prototype.applySavedSettings = (function(oldApplySavedSettins) {
+    return function () {
+        // Principle of least privilege: JavaScript block execution is disabled unless the user requires it for this particular session.
+        window.javascriptexecutionlevel = 'blocked';
+
+        oldApplySavedSettins.call(this);
+    };
+}(IDE_Morph.prototype.applySavedSettings));
+
+IDE_Morph.prototype.saveProjectToDisk = function (plain) {
+    var data,
+        link = document.createElement('a'),
+        href = 'data:text/' + (plain ? 'plain' : 'xml') + ',';
+
+    if (Process.prototype.isCatchingErrors) {
+        try {
+            data = encodeURIComponent(this.serializer.serialize(this.stage));
+            link.setAttribute('href', href + data);
+            link.setAttribute('download', this.projectName + '.xml');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            this.showMessage('Saving failed: ' + err);
+        }
+    } else {
+        data = encodeURIComponent(this.serializer.serialize(this.stage));
+        link.setAttribute('href', href + data);
+        link.setAttribute('download', this.projectName + '.xml');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
+
+IDE_Morph.prototype.javaScriptExecutionLevelMenu = function() {
+    var menu = new MenuMorph(this),
+        world = this.world(),
+        pos = this.controlBar.settingsButton.bottomLeft(),
+        myself = this;
+    menu.addItem((window.javascriptexecutionlevel === 'full' ? '\u2713 ' : '    ')+'full', function() {
+        alert('You have given the current project permission to execute code at the same level as Edgy itself -- code within "JavaScript function" blocks will have access to all Edgy functionality, including modifying local storage and accessing cloud storage credentials. If you do not trust the author of this project, set the "Execution privileges" permission setting to a lower value.');
+        window.javascriptexecutionlevel = 'full';
+    });
+    menu.addItem((window.javascriptexecutionlevel === 'blocked' ? '\u2713 ' : '    ')+'blocked', function() {
+        window.javascriptexecutionlevel = 'blocked'; }
+    );
+    menu.popup(world, pos);
+};
+
 IDE_Morph.prototype.init = (function init (oldInit) {
     return function(isAutoFill) {
         var retval = oldInit.call(this, isAutoFill);
