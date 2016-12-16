@@ -30,3 +30,44 @@ Not sure on where to start in using Edgy? Click one of the links below to start 
 
 Edgy has been developed by [Steven Bird](http://stevenbird.net/) and students (Mak Nazečić-Andrlon, Jarred Gallina) at the University of Melbourne.
 
+### Keeping Snap! clean
+
+In general, changes should be made in the files that reside in the `edgy` directory to avoid causing merge conflicts with Snap!.
+See the changeset files `edgy/changesToObjects.js`, `edgy/changesToGui.js` etc. 
+
+### Updating Snap! version
+
+To merge the upstream Snap! repository:
+- In a fork of the repository, add the upstream repo if it isn't already in `git remote -v`:
+  
+  ```bash
+  git remote add snap https://github.com/jmoenig/Snap--Build-Your-Own-Blocks.git
+  ```
+  
+- Make sure the upstream repo is up to date:
+  
+  ```bash
+  git fetch snap
+  ```
+  
+- Create a new branch (called `UpdateSnap`) from `master`
+  
+  ```bash
+  git checkout master
+  git checkout -b UpdateSnap
+  ```
+  
+- Merge the Snap! repository:
+  
+  ```bash
+  git merge snap/master
+  ```
+  
+  - Conflicts may have occurred in certain functions of `gui.js`, `objects.js` and/or `store.js`, which have been marked with the comment
+    
+    ```javascript
+    // NOTE: This function may cause merge conflicts with the Snap! repository.
+    ```
+    
+    These conflicts will have to be resolved manually.
+- Commit the results and create a pull request.
