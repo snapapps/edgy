@@ -4375,9 +4375,9 @@ SpriteMorph.prototype.initBlocks = (function (oldInitBlocks) {
     return function() {
         oldInitBlocks.call(this);
         // Add the new blocks.
-        for (blockName in variableBlocks) {
+        for (var blockName in variableBlocks) {
             if(variableBlocks.hasOwnProperty(blockName)) {
-                SpriteMorph.prototype.blocks[blockName] = blocks[blockName];
+                SpriteMorph.prototype.blocks[blockName] = variableBlocks[blockName];
             }
         }
     };
