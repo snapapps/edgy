@@ -10,7 +10,7 @@ ThreadManager.prototype.startProcess = (function(oldStartProcess) {
         isClicked,
         rightAway
     ) {
-        oldStartProcess.call(this, block, isThreadSafe, exportResult, callback, isClicked, rightAway);
+        return oldStartProcess.call(this, block, isThreadSafe, exportResult, callback, isClicked, rightAway);
         clickstream.log("startProcess", {blockId: block.topBlock().blockID});
     };
 }(ThreadManager.prototype.startProcess));
