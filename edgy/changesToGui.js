@@ -101,9 +101,11 @@ IDE_Morph.prototype.init = (function init (oldInit) {
     }
 }(IDE_Morph.prototype.init));
 
-IDE_Morph.prototype.resourceURL = function (folder, file) {
-    return 'edgy/' + folder + '/' + file;
-};
+IDE_Morph.prototype.resourceURL = (function (oldResourceURL) {
+    return function() {
+        return 'edgy/' + oldResourceURL.apply(this, arguments);
+    }
+}(IDE_Morph.prototype.resourceURL));
 
 IDE_Morph.prototype.save = (function save(oldSave) {
     return function() {
