@@ -31,10 +31,10 @@ SnapSerializer.prototype.loadInput = (function(oldLoadInput) {
 
 SnapSerializer.prototype.loadValue = (function(oldLoadValue) {
     return function (model) {
+        var myself = this;
         switch (model.tag) {
             case 'map':
                 var res = new Map();
-                var myself = this;
                 var keys = model.childrenNamed('key').map(function (item) {
                     var value = item.children[0];
                     if (!value) {
