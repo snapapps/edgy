@@ -265,7 +265,8 @@ BlockMorph.prototype.userMenu = (function(oldUserMenu) {
                     var exportSequence = function() {
                         var serializer = new SnapSerializer();
                         var xml = myself.topBlock().toScriptXML(serializer);
-                        window.open("data:text/xml," + xml);
+                        var blob = new Blob([xml], {type: "text/xml"});
+                        saveAs(blob, "blocks.xml");
                     };
                     
                     // Test if a block contains/is a custom block
