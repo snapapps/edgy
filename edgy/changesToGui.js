@@ -454,4 +454,8 @@ IDE_Morph.prototype.createControlBar = (function(oldCreateControlBar) {
     };
 }(IDE_Morph.prototype.createControlBar));
 
+IDE_Morph.prototype.saveCanvasAs = function (canvas, fileName, newWindow) {
+    canvas.toBlob(blob => saveAs(blob, fileName || "script.png"));
+};
+
 }());
