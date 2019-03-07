@@ -4270,12 +4270,9 @@ WatcherMorph.prototype.userMenu = (function (oldUserMenu) {
                 }
             }
             
-            window.open(
-                'data:text/plain;charset=utf-8,' +
-                encodeURIComponent(
-                    CSV.arrayToCsv(array)
-                )
-            );
+            var ide = myself.parentThatIsA(IDE_Morph);
+            ide.saveFileAs(CSV.arrayToCsv(array), 'text/csv', ide.projectName);
+            
         }
         
         function getFile() {

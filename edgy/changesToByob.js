@@ -168,13 +168,16 @@ BlockExportDialogMorph.prototype.exportBlocks = function () {
         str += this.exportNodeAttrs ? '<nodeattrs>' + this.serializer.serialize(this.nodeAttributes) + '</nodeattrs>': '';
         str += this.exportEdgeAttrs ? '<edgeattrs>' + this.serializer.serialize(this.edgeAttributes) + '</edgeattrs>' : '';
         if (this.blocks.length > 0) {
-            window.open(encodeURI('data:text/xml,<blocks app="'
+            var ide = this.world().children[0];
+            ide.saveXMLAs('<blocks app="'
                 + this.serializer.app
                 + '" version="'
                 + this.serializer.version
                 + '">'
                 + str
-                + '</blocks>'));
+                + '</blocks>',
+                ide.projectName + " blocks"
+            );
         } else {
             new DialogBoxMorph().inform(
                 'Export blocks',
