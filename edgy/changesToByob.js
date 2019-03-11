@@ -14,7 +14,7 @@ CustomCommandBlockMorph.prototype.edit = (function(oldEdit) {
             new DialogBoxMorph(null, function receivePassword(password) {
                 if(myself.definition.password === hashPassword(password,
                     myself.definition.salt)) {
-                    new BlockEditorMorph(myself.definition, myself.receiver()).popUp();
+                    new BlockEditorMorph(myself.definition, myself.scriptTarget()).popUp();
                 } else {
                     new DialogBoxMorph(null, receivePassword).prompt(
                         'Invalid password', '',

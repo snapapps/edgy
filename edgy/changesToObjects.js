@@ -3191,7 +3191,7 @@ InputSlotMorph.prototype.getAllNodeAttributeNames = function () {
     if (!block) {
         return dict;
     }
-    sprite = block.receiver();
+    sprite = block.scriptTarget();
 
     sprite.allNodeAttributes().forEach(function (name) {
         dict[name] = name;
@@ -3250,7 +3250,7 @@ InputSlotMorph.prototype.getEdgeAttributeNames = function () {
     if (!block) {
         return dict;
     }
-    sprite = block.receiver();
+    sprite = block.scriptTarget();
 
     sprite.allEdgeAttributes().forEach(function (name) {
         dict[name] = name;
