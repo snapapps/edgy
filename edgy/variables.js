@@ -231,13 +231,16 @@ VariableExportDialogMorph.prototype.exportVariables = function () {
     }, '');
     
     if (this.variables.length > 0) {
-        window.open(encodeURI('data:text/xml,<variables app="'
+        var ide = this.world().children[0];
+        ide.saveXMLAs('<variables app="'
             + this.serializer.app
             + '" version="'
             + this.serializer.version
             + '">'
             + str
-            + '</variables>'));
+            + '</variables>',
+            ide.projectName + ' variables'
+        );
     } else {
         new DialogBoxMorph().inform(
             'Export variables',
