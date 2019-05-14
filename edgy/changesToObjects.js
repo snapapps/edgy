@@ -2579,7 +2579,8 @@ SpriteMorph.prototype.loadGraph = function (handle) {
 (function() {
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("motion")];
     delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("pen")];
-    delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
+    // Commented out due to issue #451
+    // delete SpriteMorph.prototype.categories[SpriteMorph.prototype.categories.indexOf("sensing")];
     SpriteMorph.prototype.categories.push('network');
     SpriteMorph.prototype.categories.push('nodes');
     SpriteMorph.prototype.categories.push('edges');
